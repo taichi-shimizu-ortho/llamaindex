@@ -310,7 +310,12 @@ def search_with_citation_to_file(
             output_file.write(f"- **タイトル**: {title}\n")
         output_file.write(f"- **類似度スコア**: {node.score:.4f}\n\n")
 
-        output_file.write(f"**内容:**\n\n> [!abstract]\n> \n> {abstract}\n\n")
+        # キーワードでabstractもハイライト
+        highlighted_abstract = abstract
+        if keywords:
+            highlighted_abstract = highlight_keywords(abstract, keywords)
+
+        output_file.write(f"**内容:**\n\n> [!abstract]\n> \n> {highlighted_abstract}\n\n")
 
 
 # ── メイン ────────────────────────────────────────────────────────────────────
