@@ -7,4 +7,8 @@ requires-python = ">=3.14"
 dependencies = [
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
+    "llama-index-core",
+    "llama-index-llms-openai",
+    "llama-index-embeddings-openai",
+    "PyYAML",
 ]
