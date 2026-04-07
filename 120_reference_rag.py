@@ -31,7 +31,7 @@ TOP_K = 5
 
 # ══════════════════════════════════════════════════════════════════════════════
 
-Settings.llm = OpenAI(model="gpt-4o", temperature=0.1)
+Settings.llm = OpenAI(model="gpt-5.4-nano", temperature=0.1)
 Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
 
