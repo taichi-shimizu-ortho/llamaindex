@@ -82,11 +82,12 @@ def main(paper_name: str = "Nishimura2023"):
     )
 
     # (以下、対話ログ保存ロジックは維持)
-    # 保存ファイル名の生成（1回の起動ごとに1ファイル）
+    # 保存ファイル名の生成（1回の起動ごとに1ファイル、デバイス名を含める）
     output_dir = "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex"
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = os.path.join(output_dir, f"dialogue_{paper_name}_{timestamp}.md")
+    device_name = "mac"
+    output_file = os.path.join(output_dir, f"dialogue_{device_name}_{paper_name}_{timestamp}.md")
 
     print(f"\n--- 論文 RAG 起動: {paper_name} ---")
 
