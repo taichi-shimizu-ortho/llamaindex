@@ -7,14 +7,14 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings, Document
-from llama_index.core.node_parser import MarkdownNodeParser, SentenceSplitter
+from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
 load_dotenv()
 
 def find_paper(paper_name: str) -> str:
-    base_path = "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/10_article"
+    base_path = Path.home() / "Dropbox/obsidian/10_article"
     for root, _, files in os.walk(base_path):
         for file in files:
             if file.startswith(paper_name) and file.endswith(".md"):
@@ -44,34 +44,61 @@ def main(paper_name: str = "Nishimura2023"):
     # --- 【改善】 パースとインデックス作成 ---
     # 2. 構造パース
     md_parser = MarkdownNodeParser()
-    # 巨大なセクション（Discussion等）を検索に適したサイズに刻む
-    text_splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
     # 構造に基づきノード化
     all_nodes = md_parser.get_nodes_from_documents([doc])
 
     # 【改善】Main Textセクション（# 4）に含まれるノードのみを抽出
     # lower() を使い、大文字小文字の揺れを許容する
     nodes = [
-        node for node in all_nodes 
+        node for node in all_nodes
         if "main text" in str(node.metadata.get("header_path", "")).lower()
         or "#4" in str(node.metadata.get("header_path", ""))
     ]
     # フィルタリング結果の確認
     if nodes:
         print(f"Filtered {len(nodes)} Main text nodes")
-        # Node を Document に変換して再分割
-        docs_from_nodes = [
-            Document(text=node.get_content(), metadata=node.metadata)
-            for node in nodes
-        ]
-        final_nodes = text_splitter.get_nodes_from_documents(docs_from_nodes)
+        # 【重要】各ノードから ## セクション名を抽出してメタデータに追加
+        def extract_section_name(text: str) -> str:
+            """ノードテキストから ## セクション名を抽出"""
+            match = re.search(r'^##\s+(.+?)(?:\n|$)', text, re.MULTILINE)
+            return match.group(1).strip() if match else "Main Text"
+
+        def split_by_paragraphs(node):
+            """ノードを段落ごとに分割（空行x2で区切る）"""
+            section = extract_section_name(node.get_content())
+            # References だけは除外
+            if section.lower() == "references":
+                return []
+
+            content = node.get_content()
+            # ## ヘッダー行を削除
+            content_without_header = re.sub(r'^##.*?\n', '', content, count=1)
+            # 空行（改行x2）で段落分割
+            paragraphs = re.split(r'\n\n+', content_without_header.strip())
+            # 空白段落を除去
+            paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+            # 各段落を Document に
+            docs = []
+            for i, para in enumerate(paragraphs, 1):
+                doc = Document(
+                    text=para,
+                    metadata={
+                        "section_name": section,
+                        "header_path": f"## {section}",
+                        "paragraph_number": i
+                    }
+                )
+                docs.append(doc)
+            return docs
+
+        # 各ノードを段落ごとに分割
+        final_nodes = []
+        for node in nodes:
+            final_nodes.extend(split_by_paragraphs(node))
     else:
-        print("Warning: Main text nodes not found. Using all nodes.")
-        docs_from_nodes = [
-            Document(text=node.get_content(), metadata=node.metadata)
-            for node in all_nodes
-        ]
-        final_nodes = text_splitter.get_nodes_from_documents(docs_from_nodes)
+        print("Warning: Main text nodes not found.")
+        final_nodes = []
 
     # 3. インデックス構築
     print(f"Building index with {len(final_nodes)} nodes...")
@@ -90,7 +117,7 @@ def main(paper_name: str = "Nishimura2023"):
     output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     device_name = socket.gethostname()
-    output_file = output_dir / f"dialogue_{device_name}_{paper_name}_{timestamp}.md"
+    output_file = output_dir / f"{timestamp}_dialogue_{paper_name}_{device_name}.md"
 
     print(f"\n--- 論文 RAG 起動: {paper_name} ---")
 
@@ -109,15 +136,19 @@ def main(paper_name: str = "Nishimura2023"):
             full_response += text
         print("\n")
 
-        # 【改善】参照元の詳細表示
-        # header_path に "/4 Main Text/Discussion" 等が入るようになる
-        sources = []
-        for node in response.source_nodes:
+        # 【改善】参照元を個別に score とともに記録（ファイル出力用）
+        # header_path から セクション名を抽出（形式: "## Introduction"）
+        source_details = []
+        for i, node in enumerate(response.source_nodes, 1):
             path = node.node.metadata.get("header_path", "不明")
-            if path not in sources:
-                sources.append(path)
-        
-        print(f"【参照元】: {', '.join(sources)}")
+            # "## Results" のような形式から "Results" を抽出
+            match = re.search(r'##\s+(.+?)$', path)
+            section = match.group(1).strip() if match else path
+            score = node.score if hasattr(node, 'score') else 0.0
+            content = node.get_content()
+
+            source_str = f"{section} (score: {score:.4f})"
+            source_details.append(f"【参照元 {i}】{source_str}\n{content}\n")
 
         # 3. ファイルへの書き込み（turn変数がここで活きる）
         with open(output_file, "a", encoding="utf-8") as f:
@@ -126,8 +157,9 @@ def main(paper_name: str = "Nishimura2023"):
 
             f.write(f"## Q{turn}: {query}\n\n")
             f.write(f"**Answer**:\n{full_response}\n\n")
-            f.write(f"**Sources**:\n- " + "\n- ".join(sources) + "\n\n")
-            f.write("---\n\n")
+            f.write(f"**Source Details**:\n\n")
+            f.write("".join(source_details))
+            f.write("\n---\n\n")
 
         # 【重要】ループの最後でカウントアップ
         turn += 1

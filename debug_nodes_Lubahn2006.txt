@@ -1,0 +1,319 @@
+================================================================================
+NODE PARSING DEBUG: Lubahn2006
+================================================================================
+
+【0】クリーニング前後の比較
+--------------------------------------------------------------------------------
+Original content length: 31486 chars
+Cleaned content length: 31402 chars
+
+Original sections found: ['PDF![[Zotero_storage/storage/8WXSQ5R8/Lubahn2006.pdf]]', 'Introduction ', 'Materials and Methods', 'Results', 'Discussion', 'References']
+Cleaned sections found: ['PDF![[Zotero_storage/storage/8WXSQ5R8/Lubahn2006.pdf]]', 'Introduction ', 'Materials and Methods', 'Results', 'Discussion', 'References']
+
+【1】全ノード数: 11
+--------------------------------------------------------------------------------
+
+Node 0:
+  header_path: /
+  content length: 443 chars
+  first 100 chars: ---
+title: Immunohistochemical Detection of Relaxin Binding to the Volar Oblique Ligament
+tags:
+cite
+
+Node 1:
+  header_path: /
+  content length: 8 chars
+  first 100 chars: # 1 AI要約
+
+Node 2:
+  header_path: /
+  content length: 187 chars
+  first 100 chars: # 2 Citation
+**Lubahn J, Ivance D, Konieczko E, Cooney T**. Immunohistochemical Detection of Relaxin
+
+Node 3:
+  header_path: /
+  content length: 7 chars
+  first 100 chars: # 3 PDF
+
+Node 4:
+  header_path: /3 PDF/
+  content length: 2135 chars
+  first 100 chars: ## PDF![[Zotero_storage/storage/8WXSQ5R8/Lubahn2006.pdf]]
+
+
+
+>[!Info]
+> **FirstAuthor**:: Lubahn, Jo
+
+Node 5:
+  header_path: /
+  content length: 13 chars
+  first 100 chars: # 4 Main Text
+
+Node 6:
+  header_path: /4 Main Text/
+  content length: 2469 chars
+  first 100 chars: ## Introduction 
+
+Osteoarthritis of the basal joint of the thumb is relatively common in postmenopau
+
+Node 7:
+  header_path: /4 Main Text/
+  content length: 3118 chars
+  first 100 chars: ## Materials and Methods
+
+Eight VOL specimens were obtained intraoperatively from basal joint arthro
+
+Node 8:
+  header_path: /4 Main Text/
+  content length: 2437 chars
+  first 100 chars: ## Results
+
+All 8 VOLs manifested staining ([Fig. 1](#fig1)) but substantially less abundantly than 
+
+Node 9:
+  header_path: /4 Main Text/
+  content length: 3997 chars
+  first 100 chars: ## Discussion
+
+The data show that relaxin binds to the VOL in perimenopausal women. Binding was tiss
+
+Node 10:
+  header_path: /4 Main Text/
+  content length: 16546 chars
+  first 100 chars: ## References
+
+1. [1](#bbib1)
+	A.L. Armstrong, J.B. Hunter, T.R. Davis
+	The prevalence of degenerati
+
+
+【2】Main Text フィルタリング後: 5 nodes
+--------------------------------------------------------------------------------
+
+Filtered Node 0:
+  header_path: /4 Main Text/
+  content length: 2469 chars
+  first 150 chars:
+## Introduction 
+
+Osteoarthritis of the basal joint of the thumb is relatively common in postmenopausal women. Armstrong et al[<sup>1</sup>](#bib1) re
+
+Filtered Node 1:
+  header_path: /4 Main Text/
+  content length: 3118 chars
+  first 150 chars:
+## Materials and Methods
+
+Eight VOL specimens were obtained intraoperatively from basal joint arthroplasty cases. Specimens represented either the int
+
+Filtered Node 2:
+  header_path: /4 Main Text/
+  content length: 2437 chars
+  first 150 chars:
+## Results
+
+All 8 VOLs manifested staining ([Fig. 1](#fig1)) but substantially less abundantly than cervical tissue ([Fig. 2](#fig2)). By contrast men
+
+Filtered Node 3:
+  header_path: /4 Main Text/
+  content length: 3997 chars
+  first 150 chars:
+## Discussion
+
+The data show that relaxin binds to the VOL in perimenopausal women. Binding was tissue-specific, requiring both ligand and anti–rh-rel
+
+Filtered Node 4:
+  header_path: /4 Main Text/
+  content length: 16546 chars
+  first 150 chars:
+## References
+
+1. [1](#bbib1)
+	A.L. Armstrong, J.B. Hunter, T.R. Davis
+	The prevalence of degenerative arthritis of the base of the thumb in post-meno
+
+
+【3】SentenceSplitter 後: 30 nodes
+--------------------------------------------------------------------------------
+
+Final Node 0:
+  header_path: ## Introduction
+  content length: 464 chars
+  content:
+Osteoarthritis of the basal joint of the thumb is relatively common in postmenopausal women. Armstrong et al[<sup>1</sup>](#bib1) reported a prevalence of 25% based on radiographic findings in 143 women. In a recent review by Newport[<sup>2</sup>](#bib2) postmortem studies showed that 75% of postmenopausal white women evidenced some degree of basal joint destruction. Women are 10 times more likely than men to be affected by this condition.[<sup>2</sup>](#bib2)
+----------------------------------------
+
+Final Node 1:
+  header_path: ## Introduction
+  content length: 958 chars
+  content:
+Joint hypermobility has been implicated strongly as a risk factor.[2](#bib2), [3](#bib3), [4](#bib4), [5](#bib5) One of the primary joint stabilizing structures for the trapeziometacarpal (TMC) joint is the volar oblique ligament (VOL). Evidence supports progressive ligament deterioration as an antecedent to cartilage degeneration.[4](#bib4), [5](#bib5) The cause of this deterioration presently is unknown but the female predilection for TMC osteoarthritis implies a hormonal influence. Prior work by Krushinski et al has shown the presence of estrogen receptors in this tissue (Krushinski E, Naidu SH, Chen Q, et al. Immunohistochemical localization of two estrogen receptor subtypes in the human trapeziometacarpal ligament. Poster P183, American Academy of Orthopaedic Surgeons \[AAOS\] 2002 Annual Meeting, Dallas, TX); however, the polypeptide hormone relaxin is equally likely to induce some degree of ligament laxity and foster joint hypermobility.
+----------------------------------------
+
+Final Node 2:
+  header_path: ## Introduction
+  content length: 1025 chars
+  content:
+Abundant literature,[6](#bib6), [7](#bib7), [8](#bib8), [9](#bib9), [10](#bib10), [11](#bib11) has typified relaxin, a member of the insulin-like growth factor family, as a pleiotropic, systemically distributed hormone with demonstrable collagen remodeling capability. These studies have shown that both dermal and lung fibroblasts respond to relaxin dosing with an increase in collagenase and a decrease in collagen production. Other *in vivo* studies have shown diminishment in foreign body fibrosis and the classic softening of the symphysis pubis ligament in animals. Taken together these data suggest that relaxin influences several populations of fibroblasts and conceivably could effect changes in ligament compliance. Such a process would involve selective binding of the hormone to the ligament, implicating an event mediated by cell receptors. As a first step in determining the potential for a hormonal influence immunohistochemistry was used to assess relaxin’s ability to bind selectively to sections of the VOL.
+----------------------------------------
+
+Final Node 3:
+  header_path: ## Materials and Methods
+  content length: 710 chars
+  content:
+Eight VOL specimens were obtained intraoperatively from basal joint arthroplasty cases. Specimens represented either the intact ligament or, more frequently, the vestige remaining from the degenerative condition. All were derived from perimenopausal women. Cervical tissue obtained from total hysterectomies and human meniscus derived from total knee arthroplasty served as positive and negative staining controls, respectively. The use of these control tissues was based on the literature or determined empirically. To comply with institutional review board exemption requirements labeling indicated only the date of surgery. Specimens were snap-frozen in liquid nitrogen and stored at –80°C until processing.
+----------------------------------------
+
+Final Node 4:
+  header_path: ## Materials and Methods
+  content length: 693 chars
+  content:
+Serial sections (5 μm) of the specimens were cut in a cryostat, mounted on slides (Superfrost-plus; Fisher Scientific, Pittsburgh, PA), and rinsed in Tris(hydroxymethyl)aminomethane–buffered saline (TBS) of pH 7.4. Slides then were flooded with a detergent/chelating buffer (10 mmol/L Tris, 0.2% Tween 20 (Sigma Chemical, St. Louis, MO), 5 mmol/L ethylenediaminetetraacetic acid) for 30 minutes to remove residual, patient-derived hormone. This was followed by a rinse with TBS containing 5.4 mmol/L KCl, 1.3 mmol/L CaCl, and 0.5 mmol/L MgCl to restore physiologic ionic balance. As a procedural control the chelating wash was omitted for randomly selected samples and replaced by a TBS rinse.
+----------------------------------------
+
+Final Node 5:
+  header_path: ## Materials and Methods
+  content length: 1158 chars
+  content:
+An indirect ligand–antibody coupled method was used to visualize sites of hormone binding. Slides were incubated overnight with recombinant human relaxin (Immundiagnostik, Bensheim, Germany) (1 μg/mL in TBS/1% bovine serum albumin \[BSA\]) in a humidified chamber. The next morning they were fixed in 4% formalin/TBS for 30 minutes, rinsed twice in TBS, and then rinsed a final time in TBS containing 1% BSA. Thereafter a commercial blocking solution (Protein Blocking Agent; Immunotech, Marseille, France) was applied to the sections and left to incubate for 2 hours at room temperature. Slides then were incubated for 1 hour with 5 μg/mL of rabbit antirelaxin immunoglobulin G in TBS/1% BSA (Immundiagnostik) followed by triplicate rinses in TBS. All incubation steps were conducted at room temperature. Areas of relaxin binding were visualized using detecting kits (Ultratech HRP Streptavidin Biotin Universal Detection System and Ultratech AEC Chromogen kits; Immunotech) per the manufacturer’s instructions. Hematoxylin was used as a counterstain. Stained slides then were covered with aqueous mounting medium (Crystal Mount; Biomedia, Foster City, CA).
+----------------------------------------
+
+Final Node 6:
+  header_path: ## Materials and Methods
+  content length: 391 chars
+  content:
+In addition to the use of control tissues to verify the tissue specificity of relaxin binding, procedural controls were used to assess nonspecific antibody binding. For the latter TBS/1% BSA was substituted for either relaxin ligand or primary antibody on positive control tissues. Meniscal tissue from the knee was used as a negative control; cervical tissue was used as a positive control.
+----------------------------------------
+
+Final Node 7:
+  header_path: ## Materials and Methods
+  content length: 132 chars
+  content:
+All slides were stored at room temperature until examined microscopically for the presence of reacted (red-stained) areas of tissue.
+----------------------------------------
+
+Final Node 8:
+  header_path: ## Results
+  content length: 503 chars
+  content:
+All 8 VOLs manifested staining ([Fig. 1](#fig1)) but substantially less abundantly than cervical tissue ([Fig. 2](#fig2)). By contrast meniscal sections showed little or no staining ([Fig. 3](#fig3)). Similarly, withholding primary antibody essentially ablated staining in cervical sections ([Fig. 4](#fig4)). In the absence of ligand, low-level background staining was observed in cervical tissue ([Fig. 5](#fig5)) that essentially was eradicated with the use of the chelating buffer ([Fig. 6](#fig6)).
+----------------------------------------
+
+Final Node 9:
+  header_path: ## Results
+  content length: 214 chars
+  content:
+![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr1.jpg)
+1. [Download: Download full-size image](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr1.jpg "Download full-size image")
+----------------------------------------
+
+Final Node 10:
+  header_path: ## Results
+  content length: 133 chars
+  content:
+Figure 1. Aminoethylcarbazole staining (red) of relaxin binding to the VOL and counterstained with hematoxylin (magnification, ×100).
+----------------------------------------
+
+Final Node 11:
+  header_path: ## Results
+  content length: 214 chars
+  content:
+![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr2.jpg)
+1. [Download: Download full-size image](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr2.jpg "Download full-size image")
+----------------------------------------
+
+Final Node 12:
+  header_path: ## Results
+  content length: 67 chars
+  content:
+Figure 2. Relaxin binding to cervical tissue (magnification, ×100).
+----------------------------------------
+
+Final Node 13:
+  header_path: ## Results
+  content length: 214 chars
+  content:
+![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr3.jpg)
+1. [Download: Download full-size image](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr3.jpg "Download full-size image")
+----------------------------------------
+
+Final Node 14:
+  header_path: ## Results
+  content length: 81 chars
+  content:
+Figure 3. Absence of staining in fibrocartilage (meniscus) (magnification, ×100).
+----------------------------------------
+
+... and 15 more final nodes
+
+
+【4】header_path（セクション名を含む）
+--------------------------------------------------------------------------------
+Final Node 0: header_path='## Introduction' | section='Introduction'
+Final Node 1: header_path='## Introduction' | section='Introduction'
+Final Node 2: header_path='## Introduction' | section='Introduction'
+Final Node 3: header_path='## Materials and Methods' | section='Materials and Methods'
+Final Node 4: header_path='## Materials and Methods' | section='Materials and Methods'
+Final Node 5: header_path='## Materials and Methods' | section='Materials and Methods'
+Final Node 6: header_path='## Materials and Methods' | section='Materials and Methods'
+Final Node 7: header_path='## Materials and Methods' | section='Materials and Methods'
+Final Node 8: header_path='## Results' | section='Results'
+Final Node 9: header_path='## Results' | section='Results'
+Final Node 10: header_path='## Results' | section='Results'
+Final Node 11: header_path='## Results' | section='Results'
+Final Node 12: header_path='## Results' | section='Results'
+Final Node 13: header_path='## Results' | section='Results'
+Final Node 14: header_path='## Results' | section='Results'
+
+
+【5】段落分けの分析（セクション内での空行による分割）
+--------------------------------------------------------------------------------
+
+【Introduction】 段落数: 3
+  段落1: Osteoarthritis of the basal joint of the thumb is relatively common in postmenop...
+  段落2: Joint hypermobility has been implicated strongly as a risk factor.[2](#bib2), [3...
+  段落3: Abundant literature,[6](#bib6), [7](#bib7), [8](#bib8), [9](#bib9), [10](#bib10)...
+
+
+【Materials and Methods】 段落数: 5
+  段落1: Eight VOL specimens were obtained intraoperatively from basal joint arthroplasty...
+  段落2: Serial sections (5 μm) of the specimens were cut in a cryostat, mounted on slide...
+  段落3: An indirect ligand–antibody coupled method was used to visualize sites of hormon...
+  段落4: In addition to the use of control tissues to verify the tissue specificity of re...
+  段落5: All slides were stored at room temperature until examined microscopically for th...
+
+
+【Results】 段落数: 13
+  段落1: All 8 VOLs manifested staining ([Fig. 1](#fig1)) but substantially less abundant...
+  段落2: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr1.jpg) 1. [...
+  段落3: Figure 1. Aminoethylcarbazole staining (red) of relaxin binding to the VOL and c...
+  段落4: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr2.jpg) 1. [...
+  段落5: Figure 2. Relaxin binding to cervical tissue (magnification, ×100)....
+  段落6: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr3.jpg) 1. [...
+  段落7: Figure 3. Absence of staining in fibrocartilage (meniscus) (magnification, ×100)...
+  段落8: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr4.jpg) 1. [...
+  段落9: Figure 4. Absence of staining in cervical tissue when the primary antibody was w...
+  段落10: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr5.jpg) 1. [...
+  段落11: Figure 5. Endogenous staining in cervical tissue when ligand and chelating wash ...
+  段落12: ![](https://ars.els-cdn.com/content/image/1-s2.0-S0363502305007410-gr6.jpg) 1. [...
+  段落13: Figure 6. Absence of staining in cervical tissue after chelating wash; ligand om...
+
+
+【Discussion】 段落数: 9
+  段落1: The data show that relaxin binds to the VOL in perimenopausal women. Binding was...
+  段落2: Although direct, antibody-mediated detection would be preferable only recently h...
+  段落3: Another issue concerns the lack of staining data for men. This disparity reflect...
+  段落4: The perimenopausal status of the tissue donors also poses an apparent enigma reg...
+  段落5: The lack of histomorphometry renders comparisons between tissue sources qualitat...
+  段落6: Lending support to our results, Klein[<sup>19</sup>](#bib19) reported increased ...
+  段落7: Finally, the fact that relaxin interacts with ligaments has been shown previousl...
+  段落8: Our results show that relaxin binds selectively to tissue sections of the VOL, s...
+  段落9: The authors wish to thank Diane Voelker for her editorial assistance....
+
+
+【References】 段落数: 1
+  段落1: 1. [1](#bbib1) 	A.L. Armstrong, J.B. Hunter, T.R. Davis 	The prevalence of degen...
+

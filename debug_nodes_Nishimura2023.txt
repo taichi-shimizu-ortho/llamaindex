@@ -1,0 +1,385 @@
+================================================================================
+NODE PARSING DEBUG: Nishimura2023
+================================================================================
+
+【1】全ノード数: 19
+--------------------------------------------------------------------------------
+
+Node 0:
+  header_path: /
+  content length: 576 chars
+  first 100 chars: ---
+title: "Biomechanical Comparison of Proximal Hamstring Reconstruction Using Distal Hamstring Gra
+
+Node 1:
+  header_path: /
+  content length: 8 chars
+  first 100 chars: # 1 AI要約
+
+Node 2:
+  header_path: /
+  content length: 376 chars
+  first 100 chars: # 2 Citation
+Nishimura H, Yamaura K, Stetzelberger VM, Garcia AR, Hollenbeck JFM, Brown JR, et al. B
+
+Node 3:
+  header_path: /
+  content length: 7 chars
+  first 100 chars: # 3 PDF
+
+Node 4:
+  header_path: /3 PDF/
+  content length: 4205 chars
+  first 100 chars: ## PDF![Nishimura2023](Zotero_storage/storage/DRT7SPJ6/Nishimura2023.pdf)
+
+
+
+>[!Info]
+> **FirstAutho
+
+Node 5:
+  header_path: /
+  content length: 13 chars
+  first 100 chars: # 4 Main Text
+
+Node 6:
+  header_path: /4 Main Text/
+  content length: 3477 chars
+  first 100 chars: ## Introduction
+Proximal hamstring injuries are common in athletes and are often sustained during ra
+
+Node 7:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  first 100 chars: ## Methods
+
+Node 8:
+  header_path: /4 Main Text/Methods/
+  content length: 318 chars
+  first 100 chars: ### Power Analysis
+
+A power analysis (G\*Power 3.1; Universität Düsseldorf, Germany) based on the da
+
+Node 9:
+  header_path: /4 Main Text/Methods/
+  content length: 1810 chars
+  first 100 chars: ### Specimen Preparation
+
+Seven pairs of fresh-frozen human cadaveric hemipelvises for a total of 14
+
+Node 10:
+  header_path: /4 Main Text/Methods/
+  content length: 3245 chars
+  first 100 chars: ### Surgical Technique
+
+The surgery of the reconstruction with distal hamstring graft and the recons
+
+Node 11:
+  header_path: /4 Main Text/Methods/
+  content length: 2678 chars
+  first 100 chars: ### Biomechanical Testing
+
+The potted ischial tuberosity was secured within a custom fixture that wa
+
+Node 12:
+  header_path: /4 Main Text/Methods/
+  content length: 726 chars
+  first 100 chars: ### Statistical Analysis
+
+Statistical analyses were performed using commercial software (MATLAB; Mat
+
+Node 13:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  first 100 chars: ## Results
+
+Node 14:
+  header_path: /4 Main Text/Results/
+  content length: 3155 chars
+  first 100 chars: ### Failure Mechanics
+
+Failure load (N) and mode of failure of the repair groups are reported in [Ta
+
+Node 15:
+  header_path: /4 Main Text/Results/
+  content length: 2456 chars
+  first 100 chars: ### Stiffness
+
+Data for native and repair stiffnesses (N/mm) of both groups are reported in [Table 2
+
+Node 16:
+  header_path: /4 Main Text/
+  content length: 13491 chars
+  first 100 chars: ## Discussion
+
+In the present study, our results showed that the proximal hamstring reconstruction u
+
+Node 17:
+  header_path: /4 Main Text/
+  content length: 425 chars
+  first 100 chars: ## Conclusion
+
+The reconstruction with the distal hamstring grafts achieved higher failure load and 
+
+Node 18:
+  header_path: /4 Main Text/
+  content length: 25218 chars
+  first 100 chars: ## Competing Interests
+
+One or more of the authors has declared the following potential conflict of 
+
+
+【2】Main Text フィルタリング後: 13 nodes
+--------------------------------------------------------------------------------
+
+Filtered Node 0:
+  header_path: /4 Main Text/
+  content length: 3477 chars
+  first 150 chars:
+## Introduction
+Proximal hamstring injuries are common in athletes and are often sustained during rapid hip flexion and knee extension movements durin
+
+Filtered Node 1:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  first 150 chars:
+## Methods
+
+Filtered Node 2:
+  header_path: /4 Main Text/Methods/
+  content length: 318 chars
+  first 150 chars:
+### Power Analysis
+
+A power analysis (G\*Power 3.1; Universität Düsseldorf, Germany) based on the data from a previous study (Hamming et al, 2015) was
+
+Filtered Node 3:
+  header_path: /4 Main Text/Methods/
+  content length: 1810 chars
+  first 150 chars:
+### Specimen Preparation
+
+Seven pairs of fresh-frozen human cadaveric hemipelvises for a total of 14 specimens (mean age, 60.4 ± 5.0 years; range, 51-
+
+Filtered Node 4:
+  header_path: /4 Main Text/Methods/
+  content length: 3245 chars
+  first 150 chars:
+### Surgical Technique
+
+The surgery of the reconstruction with distal hamstring graft and the reconstruction with fascia lata graft in the present stu
+
+Filtered Node 5:
+  header_path: /4 Main Text/Methods/
+  content length: 2678 chars
+  first 150 chars:
+### Biomechanical Testing
+
+The potted ischial tuberosity was secured within a custom fixture that was clamped to the base platform of a dynamic tensil
+
+Filtered Node 6:
+  header_path: /4 Main Text/Methods/
+  content length: 726 chars
+  first 150 chars:
+### Statistical Analysis
+
+Statistical analyses were performed using commercial software (MATLAB; MathWorks), and data were expressed as mean ± SD. Fir
+
+Filtered Node 7:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  first 150 chars:
+## Results
+
+Filtered Node 8:
+  header_path: /4 Main Text/Results/
+  content length: 3155 chars
+  first 150 chars:
+### Failure Mechanics
+
+Failure load (N) and mode of failure of the repair groups are reported in [Table 1](#table1-03635465231206464). Measurements of
+
+Filtered Node 9:
+  header_path: /4 Main Text/Results/
+  content length: 2456 chars
+  first 150 chars:
+### Stiffness
+
+Data for native and repair stiffnesses (N/mm) of both groups are reported in [Table 2](#table2-03635465231206464). Stiffness of the dis
+
+... and 3 more filtered nodes
+
+
+【3】SentenceSplitter 後: 53 nodes
+--------------------------------------------------------------------------------
+
+Final Node 0:
+  header_path: /4 Main Text/
+  content length: 2446 chars
+  content:
+## Introduction
+Proximal hamstring injuries are common in athletes and are often sustained during rapid hip flexion and knee extension movements during sports activities.[^1] Anatomically, the proximal hamstring originates from the lateral aspect of the ischial tuberosity and is composed of the semimembranosus, semitendinosus, and long head of the biceps femoris.[^18] The treatment for proximal hamstring injury can be broadly divided into nonoperative therapy and surgical treatment. Surgical repair is required for patients with 2 or 3 tendon avulsions with retraction of ≥2 cm, or when symptoms do not improve after 6 months of nonoperative therapy.[^2] Although treatment of properly diagnosed cases in the acute phase is relatively easy, some patients develop a chronic course due to primary misdiagnosis or failure of initial treatment with nonoperative therapy.
+
+Hamstring injuries in the chronic phase are more challenging to treat surgically because the hamstring tendon is often greatly retracted. A systematic review and meta-analysis performed by Bodendorfer et al [^2] reported that the acute repair group had higher patient satisfaction, less pain, restored muscle strength, and higher functional scores, whereas the chronic repair group had a higher incidence of sciatica and neurological complications. It has also been reported that surgical reconstruction or augmentation with grafts is often required in cases of chronic complete avulsion with retraction >5 cm.[^22] The surgical reconstructions that use the 3 most common graft types, Achilles tendon,[^6] [^9] [^17] [^20] [^22] distal hamstring,[^4] [^19] and fascia lata,[^14] [^24] have been reported to achieve satisfactory postoperative clinical outcomes. However, no previous studies have evaluated these reconstructive procedures from a biomechanical perspective, and in the absence of biomechanical literature supporting a stronger time-zero reconstruction strategy, treatment planning and postoperative rehabilitation have not been optimized to allow for a faster return to sports activity.
+
+By testing the time-zero characteristics of these reconstructive procedures and comparing the results to the native condition, clinicians may gain better insight into graft selection and postrehabilitation management strategies for the surgical treatment of chronic proximal hamstring injuries to accelerate return to sports activity and improve the return-to-sports rate.
+----------------------------------------
+
+Final Node 1:
+  header_path: /4 Main Text/
+  content length: 1030 chars
+  content:
+Reconstruction with Achilles tendon allografts is the most widely used of these reconstructive techniques, and its postoperative clinical outcomes have been reported frequently [^6] [^17] [^20] [^22]; however, this technique can only be performed in regions where allografts are available. On the other hand, distal hamstring grafts and fascia lata grafts are available as autografts and can be used in all regions. Yet, reports of clinical outcomes after reconstructive surgery using these grafts are lacking.[^4] [^14] [^24]
+
+The purpose of this study was to (1) compare the failure load and elongation to failure between the proximal hamstring tendon reconstruction with distal hamstring grafts and the reconstruction with fascia lata grafts and (2) compare the stiffness between these 2 reconstructions and the native state. We hypothesized that reconstruction with a distal hamstring graft would be stronger than reconstruction with a fascia lata graft and biomechanically equivalent to a native tendon in terms of stiffness.
+----------------------------------------
+
+Final Node 2:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  content:
+## Methods
+----------------------------------------
+
+Final Node 3:
+  header_path: /4 Main Text/Methods/
+  content length: 318 chars
+  content:
+### Power Analysis
+
+A power analysis (G\*Power 3.1; Universität Düsseldorf, Germany) based on the data from a previous study (Hamming et al, 2015) was performed and showed that the required sample size was 7 per group to compare 3 groups and 4 per group to compare 2 groups (effect size *f*, 1.99; power, 0.8; α =.05).
+----------------------------------------
+
+Final Node 4:
+  header_path: /4 Main Text/Methods/
+  content length: 1810 chars
+  content:
+### Specimen Preparation
+
+Seven pairs of fresh-frozen human cadaveric hemipelvises for a total of 14 specimens (mean age, 60.4 ± 5.0 years; range, 51-65 years; 6 male, 1 female) with no evidence of previous injury or abnormality were used in this study. Funding for this study was internally provided by our institution. The specimens used were donated to a tissue bank for medical research and then purchased by our institution. The use of cadaveric specimens does not require institutional review board approval at our institution.
+
+Specimens were placed in a prone position, and exposure of the proximal hamstring insertions was achieved using an open approach. After reflection of the gluteus maximus medially and superiorly from its femoral insertion, the semimembranosus, semitendinosus, and long head of the biceps femoris were followed proximally to their respective insertions on the ischial tuberosity. Upon visualization and isolation of the proximal attachments, all other soft tissue was removed from the ischial tuberosity. A bone saw was then used to make cuts at the inferior pubic ramus and ischial body, slightly inferior to the ischial spine at the level of the lesser sciatic notch, to allow for safe removal and full preservation of the hamstring and bony attachment site. Dissected specimens were stored at −20°C until the day before testing. Specimens were thawed 24 hours before biomechanical testing, and the ischial tuberosity was potted in a cylindrical mold using polymethyl methacrylate (Fricke Dental).
+
+Each pair of specimens was randomly assigned to undergo 2 repairs. One specimen of the pair was repaired using a distal hamstring allograft (distal hamstring graft group), and the other specimen of the pair was repaired using a fascia lata allograft (fascia lata graft group).
+----------------------------------------
+
+Final Node 5:
+  header_path: /4 Main Text/Methods/
+  content length: 1974 chars
+  content:
+### Surgical Technique
+
+The surgery of the reconstruction with distal hamstring graft and the reconstruction with fascia lata graft in the present study was performed following the technique of previous studies.[^4] [^14] As the cadavers did not include distal hamstring, distal hamstring grafts were collected from different cadavers, and fascia lata grafts were collected from the same cadavers. All surgeries were performed by 2 fellowship-trained orthopaedic surgeons (H.N. and K.Y.). For the reconstruction with distal hamstring graft, the 2 distal hamstring tendon grafts (10-cm length each) were passed through the proximal tendon mass at 1 and 2 cm distal to its proximal end, with the more proximal one running in a medial-lateral direction and the more distal one running in a ventral-dorsal direction, creating a 90-90 configuration. The proximal ends of grafts were then whipstitched to themselves. Krakow sutures [^12] with No. 2 high-strength suture (FiberWire; Arthrex) were then used to oppose the individual graft bundles, creating a quadruple hamstring neo tendon. Two 5.5-mm fully threaded suture anchors (Bio-Corkscrew; Arthrex) were placed 1 cm apart on the lateral ischial footprint. Four strands of sutures from the anchors were passed through the proximal end of the neotendon. Then, 2 of those strands were passed through each of the two 5.5-mm fully threaded, knotless suture anchors (SwiveLock; Arthrex). The knotless suture anchors were introduced to the posterior ischium just medial to the repaired tendon mass, and then a suture bridge repair was performed.
+
+For the reconstruction with fascia lata graft, a 5 × 15–cm graft was used. Three 2.8-mm double-loaded all-suture anchors (Q-fix; Smith & Nephew) were placed 1 cm apart on the lateral ischial footprint, and 1 thread for each anchor was removed. All 3 strands of suture from the anchor were passed through the fascia lata graft at half the length of the graft and tied to fix the graft.
+----------------------------------------
+
+Final Node 6:
+  header_path: /4 Main Text/Methods/
+  content length: 1411 chars
+  content:
+All 3 strands of suture from the anchor were passed through the fascia lata graft at half the length of the graft and tied to fix the graft. A muscle-tendon component approximately 1.5 cm wide × 3 cm long was flipped 1 cm away from the proximal end of the hamstring to create a muscle-tendon bridge. The gap in the proximal end of the hamstring caused by the creation of the bridge was closed and reinforced using absorbable sutures (0-Vicryl; Ethicon). Then, the muscle-tendon bridge was fixed to the ischial tuberosity with the middle of the suture anchor. The sleeves of the graft were folded on the ventral and dorsal sides of the tendon, and nonabsorbable sutures were used to fix the graft sleeves from the medial and lateral sides of the suture anchors. The fixation was further reinforced using additional 0-Vicryl sutures passing through both sleeves of the graft, the muscle-tendon bridge, and the tendon stump. The images of each surgery are shown in [Figure 1](#fig1-03635465231206464).
+
+![](https://journals.sagepub.com/cms/10.1177/03635465231206464/asset/6b80c588-b665-415b-8b4a-bbbbeb863abe/assets/images/large/10.1177_03635465231206464-fig1.jpg)
+
+Figure 1. Surgical proximal hamstring reconstruction using (left) distal hamstring graft and (right) fascia lata graft with left hips. The white star, triangle, and cross indicate the graft, ischial tuberosity, and proximal hamstring, respectively.
+----------------------------------------
+
+Final Node 7:
+  header_path: /4 Main Text/Methods/
+  content length: 1874 chars
+  content:
+### Biomechanical Testing
+
+The potted ischial tuberosity was secured within a custom fixture that was clamped to the base platform of a dynamic tensile testing system (Instron ElectroPuls E10000; Instron Systems) with the musculotendinous portion of the hamstring fixed within a custom clamp fixed to the end effector ([Figure 2](#fig2-03635465231206464)). The dynamic tensile testing machine can reach a maximum load of 10,000 N with a resolution of 0.1 N, and the displacement gauge can move up to 60 mm with a resolution of 0.0001 mm. Pilot testing confirmed that there was no noticeable slipping at the clamps when the applied load exceeded 300 N. Specimens were consistently clamped between 5 and 10 cm distal to the ischial enthesis. Applied loads were representative of in vivo loads, with the applied loading direction resulting in a shear force between the hamstring entheses and the ischial tuberosity.
+
+![](https://journals.sagepub.com/cms/10.1177/03635465231206464/asset/aa4739c2-925d-4676-b37f-4ad6f6e67d21/assets/images/large/10.1177_03635465231206464-fig2.jpg)
+
+Figure 2. (Left) Side view and (right) front view of the biomechanical testing setup. Potted ischial tuberosity secured to the base of the dynamic tensile testing system, and hamstring fixed within a clamp that is secured to the end effector of the dynamic tensile testing system.
+
+All specimens were initially tested in the native state. Specimens were preconditioned using a series of cyclic loads representative of a progressive postoperative rehabilitation protocol. Schache et al [^25] reported that the maximum normalized net force on the hamstring during walking reaches 1600 N for an 80-kg individual. Recognizing the time-zero nature of the study, we applied a 1-Hz cyclic loading protocol to the specimen with loads cycling from 25 N to a maximum load in 75-N increments every 50 cycles.
+----------------------------------------
+
+Final Node 8:
+  header_path: /4 Main Text/Methods/
+  content length: 991 chars
+  content:
+Recognizing the time-zero nature of the study, we applied a 1-Hz cyclic loading protocol to the specimen with loads cycling from 25 N to a maximum load in 75-N increments every 50 cycles. The specimen was then pulled at 1 mm/s for 20 mm, and then the applied load was returned to 25 N. In this way, native stiffness could be calculated, and specimen damage could be avoided. Stiffness was calculated as the slope of the linear region of the load-elongation curve. After performing the repairs, we applied the same cyclic loading protocol. If the specimen did not fail after reaching 375 N when testing the repair state, then the specimen was pulled at 1 mm/s to failure. To account for reduced time-zero loading, 325 N, 65% of the 500-N in vivo rectus femoris load [^25] was selected. The failure load, elongation at failure, stiffness, and mode of failure were recorded for each specimen. Stiffness as a percentage of the stiffness of the native state was calculated for both repair groups.
+----------------------------------------
+
+Final Node 9:
+  header_path: /4 Main Text/Methods/
+  content length: 726 chars
+  content:
+### Statistical Analysis
+
+Statistical analyses were performed using commercial software (MATLAB; MathWorks), and data were expressed as mean ± SD. First, Shapiro-Wilk tests were used to verify normal distribution of ultimate failure load, elongation at failure, and stiffness data. Failure load and elongation at failure were compared between repair groups using Wilcoxon signed-rank test, as these data were not normally distributed and distributed symmetrically about the median value. Paired *t* test was used to compare stiffness data between repair groups and between the repair state and the native state within each repair group as these data were normally distributed. Statistical significance was defined as *P* ≤.05.
+----------------------------------------
+
+Final Node 10:
+  header_path: /4 Main Text/
+  content length: 10 chars
+  content:
+## Results
+----------------------------------------
+
+Final Node 11:
+  header_path: /4 Main Text/Results/
+  content length: 1396 chars
+  content:
+### Failure Mechanics
+
+Failure load (N) and mode of failure of the repair groups are reported in [Table 1](#table1-03635465231206464). Measurements of native failure load and elongation at failure were not performed to preserve tendon integrity for testing of the repair states. The distal hamstring graft group exhibited significantly greater failure load than the fascia lata graft group ([Figure 3](#fig3-03635465231206464)). Elongation at failure of the distal hamstring graft group was not significantly different from that of the fascia lata graft group ([Figure 3](#fig3-03635465231206464)).
+
+Table 1 Failure Load and Mode of Failure Data for 7 Pairs of Specimens and the Group Mean
+
+<table><thead><tr><th>Specimen</th><th>Mechanism of Failure</th><th>Failure Load, N</th></tr></thead><tbody><tr><td colspan="3">Distal hamstring graft</td></tr><tr><td> No. 1</td><td>Anchor pullout</td><td>535</td></tr><tr><td> No. 2</td><td>At muscle</td><td>290</td></tr><tr><td> No. 3</td><td>At graft-muscle interface</td><td>212</td></tr><tr><td> No. 4</td><td>At repair site</td><td>236</td></tr><tr><td> No. 5</td><td>At graft-muscle interface</td><td>374</td></tr><tr><td> No. 6</td><td>At muscle</td><td>317</td></tr><tr><td> No. 7</td><td>At repair site</td><td>372</td></tr><tr><td> Mean ± SD</td><td></td><td>334 ± 108</td></tr><tr><td>Fascia lata graft</td><td></td><td></td></tr><tr><td> No.
+----------------------------------------
+
+Final Node 12:
+  header_path: /4 Main Text/Results/
+  content length: 1333 chars
+  content:
+1</td><td>At tendon-graft interface</td><td>250</td></tr><tr><td> No. 2</td><td>At tendon-graft interface</td><td>180</td></tr><tr><td> No. 3</td><td>Anchor pullout</td><td>222</td></tr><tr><td> No. 4</td><td>At distal section of muscle</td><td>69</td></tr><tr><td> No. 5</td><td>At tendon-graft interface</td><td>87</td></tr><tr><td> No. 6</td><td>Suture pullout from anchor</td><td>168</td></tr><tr><td> No. 7</td><td>At graft-muscle interface</td><td>274</td></tr><tr><td> Mean ± SD</td><td></td><td>179 ± 78</td></tr></tbody></table>
+
+![](https://journals.sagepub.com/cms/10.1177/03635465231206464/asset/6ce2b796-8383-4db5-8d43-0fb0a31b007d/assets/images/large/10.1177_03635465231206464-fig3.jpg)
+
+Figure 3. Failure load (left) and elongation at failure (right) for the distal hamstring graft group and the fascia lata graft group. Data are presented as mean ± standard deviation. Statistical significance was defined as P ≤.05.
+
+The modes of failure in the distal hamstring graft group were at the repair site in 2 specimens (29%), at the graft-muscle interface in 2 specimens (29%), at the muscle in 2 specimens (29%), and via anchor pullout in 1 specimen (14%). The most common modes of failure in the fascia lata graft group were at the tendon-graft interface in 3 specimens (43%) and via anchor failure in 2 specimens (29%).
+----------------------------------------
+
+Final Node 13:
+  header_path: /4 Main Text/Results/
+  content length: 589 chars
+  content:
+The most common modes of failure in the fascia lata graft group were at the tendon-graft interface in 3 specimens (43%) and via anchor failure in 2 specimens (29%). Failures at the graft-muscle interface, at the muscle, and via anchor pullout occurred in 1 specimen each (14%) ([Figure 4](#fig4-03635465231206464)).
+
+![](https://journals.sagepub.com/cms/10.1177/03635465231206464/asset/043deb41-7411-408f-8126-6e907f3392c3/assets/images/large/10.1177_03635465231206464-fig4.jpg)
+
+Figure 4. Frequency of modes of failure for the distal hamstring graft group and the fascia lata graft group.
+----------------------------------------
+
+Final Node 14:
+  header_path: /4 Main Text/Results/
+  content length: 1282 chars
+  content:
+### Stiffness
+
+Data for native and repair stiffnesses (N/mm) of both groups are reported in [Table 2](#table2-03635465231206464). Stiffness of the distal hamstring graft group was significantly higher than that of the fascia lata graft group. Stiffness of the native state of the distal hamstring graft group was not significantly different from that of the fascia lata graft group. For the distal hamstring graft group, the native state was not significantly different from the repair state. For the fascia lata graft group, the native state was significantly stiffer than the repair state ([Figure 5](#fig5-03635465231206464)).
+
+Table 2 Stiffness Values of Native and Repair States for All 7 Pairs of Specimens and the Group Mean
+
+<table><thead><tr><td></td><th colspan="2">Stiffness, N/mm</th><td></td></tr><tr><th>Specimen</th><th>Native</th><th>Repair</th><th>From Native, %</th></tr></thead><tbody><tr><td colspan="4">Distal hamstring graft</td></tr><tr><td> No. 1</td><td>58.1</td><td>83.0</td><td>143</td></tr><tr><td> No. 2</td><td>80.3</td><td>37.8</td><td>47.1</td></tr><tr><td> No. 3</td><td>55.5</td><td>40.6</td><td>73.1</td></tr><tr><td> No. 4</td><td>72.1</td><td>46.0</td><td>63.8</td></tr><tr><td> No. 5</td><td>39.1</td><td>37.6</td><td>96.2</td></tr><tr><td> No.
+----------------------------------------
+
+... and 38 more final nodes
+
+
+【4】## セクション名の抽出テスト
+--------------------------------------------------------------------------------
+Final Node 0: section='Introduction'
+Final Node 1: section='Main Text'
+Final Node 2: section='Methods'
+Final Node 3: section='Main Text'
+Final Node 4: section='Main Text'
