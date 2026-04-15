@@ -1,7 +1,3 @@
-"""
-130_md_single_rag.py のnode分けをデバッグするスクリプト
-node分けの各段階をファイルに出力して、Lubahn2006とNishimura2023の差を調査
-"""
 import os
 import sys
 import re
@@ -39,6 +35,22 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
 
     doc = Document(text=content, metadata={"file_name": os.path.basename(file_path)})
 
+    # デバッグ: doc の内容をファイルに出力
+    output_doc_file = Path.cwd() / f"debug_doc_{paper_name}.txt"
+    with open(output_doc_file, 'w', encoding='utf-8') as f:
+        f.write(f"=== DOC オブジェクト内容 ===\n")
+        f.write(f"ファイル名: {paper_name}\n")
+        f.write(f"メタデータ: {doc.metadata}\n")
+        f.write(f"コンテンツ長: {len(doc.get_content())} 文字\n")
+        f.write(f"\n{'='*80}\n")
+        f.write(f"フルコンテンツ:\n")
+        f.write(f"{'='*80}\n\n")
+        f.write(doc.get_content())
+
+    print(f"[OK] doc内容をファイルに出力: {output_doc_file}")
+    print(f"  メタデータ: {doc.metadata}")
+    print(f"  コンテンツ長: {len(doc.get_content())} 文字\n")
+
     # 「# 4 Main Text」以降のみを抽出して新しいdocを作成
     content_full = doc.get_content()
     main_text_match = re.search(r'^#\s+4\s+Main\s+Text', content_full, re.MULTILINE)
@@ -49,12 +61,30 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
             text=main_text_content,
             metadata={"file_name": os.path.basename(file_path), "section": "Main Text"}
         )
+
+        # Main Text docをファイルに出力
+        output_main_text_file = Path.cwd() / f"debug_doc_main_text_{paper_name}.txt"
+        with open(output_main_text_file, 'w', encoding='utf-8') as f:
+            f.write(f"=== Main Text セクションのみ ===\n")
+            f.write(f"ファイル名: {paper_name}\n")
+            f.write(f"メタデータ: {doc_main_text.metadata}\n")
+            f.write(f"コンテンツ長: {len(doc_main_text.get_content())} 文字\n")
+            f.write(f"\n{'='*80}\n")
+            f.write(f"Main Text コンテンツ:\n")
+            f.write(f"{'='*80}\n\n")
+            f.write(doc_main_text.get_content())
+
+        print(f"[OK] Main Text docをファイルに出力: {output_main_text_file}")
+        print(f"  コンテンツ長: {len(doc_main_text.get_content())} 文字\n")
     else:
-        print(f"警告: '# 4 Main Text' が見つかりませんでした")
+        print("警告: '# 4 Main Text' が見つかりませんでした\n")
         doc_main_text = None
-        return
 
     # MarkdownNodeParser で第1段階のノード化（doc_main_text を使用）
+    if doc_main_text is None:
+        print("エラー: Main Text docが作成されていません")
+        return
+
     md_parser = MarkdownNodeParser()
     nodes = md_parser.get_nodes_from_documents([doc_main_text])
 
@@ -159,6 +189,28 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
             final_nodes.extend(split_by_paragraphs(node))
     else:
         final_nodes = []
+
+    # メタデータの詳細確認（デバッグ用）
+    metadata_file = Path.cwd() / f"debug_metadata_{paper_name}.txt"
+    with open(metadata_file, 'w', encoding='utf-8') as f:
+        f.write(f"=== メタデータ詳細確認 ===\n")
+        f.write(f"論文: {paper_name}\n")
+        f.write(f"総ノード数: {len(final_nodes)}\n\n")
+        f.write("=" * 80 + "\n\n")
+
+        for i, node in enumerate(final_nodes[:15]):  # 最初の15個を詳細表示
+            f.write(f"【Node {i}】\n")
+            f.write(f"  section_name: {node.metadata.get('section_name', 'N/A')}\n")
+            f.write(f"  header_path: {node.metadata.get('header_path', 'N/A')}\n")
+            f.write(f"  paragraph_number: {node.metadata.get('paragraph_number', 'N/A')}\n")
+            f.write(f"  content length: {len(node.get_content())} chars\n")
+            f.write(f"  content preview: {node.get_content()[:100].replace(chr(10), ' ')}...\n")
+            f.write("\n")
+
+        if len(final_nodes) > 15:
+            f.write(f"... and {len(final_nodes) - 15} more nodes\n")
+
+    print(f"[OK] メタデータ確認ファイル: {metadata_file}")
 
     # デバッグ出力をファイルに保存
     output_file = Path.cwd() / f"debug_nodes_{paper_name}.txt"

@@ -96,36 +96,59 @@ def main(paper_name: str = "Nishimura2023"):
                 # ### 中段落で分割
                 subsubsections = re.split(r'(?=^###)', content_without_header, flags=re.MULTILINE)
 
-                for subsubsection in subsubsections:
-                    if not subsubsection.strip():
-                        continue
+                # パターン判定：### があるかどうか
+                has_subsubsec = any(re.search(r'^###', s, re.MULTILINE) for s in subsubsections)
 
-                    # ### ヘッダーを抽出（存在する場合）
-                    subsubsec_match = re.search(r'^###\s+(.+?)(?:\n|$)', subsubsection, re.MULTILINE)
-                    if subsubsec_match:
+                if not has_subsubsec:
+                    # パターン1：## 直下に内容がある（### がない）
+                    text = content_without_header.strip()
+                    if text:
+                        # 二重改行で小段落に分割
+                        paragraphs = re.split(r'\n\n+', text)
+                        paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+                        # 各段落を Document に
+                        for i, para in enumerate(paragraphs, 1):
+                            doc = Document(
+                                text=para,
+                                metadata={
+                                    "section_name": subsec_name,
+                                    "header_path": f"## {subsec_name}",
+                                    "paragraph_number": i
+                                }
+                            )
+                            docs.append(doc)
+                else:
+                    # パターン2：## の下が ### で分割される
+                    for subsubsection in subsubsections:
+                        if not subsubsection.strip():
+                            continue
+
+                        # ### ヘッダーを抽出
+                        subsubsec_match = re.search(r'^###\s+(.+?)(?:\n|$)', subsubsection, re.MULTILINE)
+                        if not subsubsec_match:
+                            # ### ヘッダーがない場合はスキップ
+                            continue
+
                         subsubsec_name = subsubsec_match.group(1).strip()
-                        # ### ヘッダー行を削除（改行まで）
+                        # ### ヘッダー行を削除
                         text = re.sub(r'^###[^\n]*\n', '', subsubsection, count=1, flags=re.MULTILINE)
-                    else:
-                        subsubsec_name = subsec_name
-                        text = subsubsection
 
-                    # 二重改行で小段落に分割
-                    paragraphs = re.split(r'\n\n+', text.strip())
-                    # 空白段落を除去
-                    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+                        # 二重改行で小段落に分割
+                        paragraphs = re.split(r'\n\n+', text.strip())
+                        paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
-                    # 各段落を Document に
-                    for i, para in enumerate(paragraphs, 1):
-                        doc = Document(
-                            text=para,
-                            metadata={
-                                "section_name": subsubsec_name,
-                                "header_path": f"## {subsec_name}",
-                                "paragraph_number": i
-                            }
-                        )
-                        docs.append(doc)
+                        # 各段落を Document に
+                        for i, para in enumerate(paragraphs, 1):
+                            doc = Document(
+                                text=para,
+                                metadata={
+                                    "section_name": subsubsec_name,
+                                    "header_path": f"## {subsec_name}",
+                                    "paragraph_number": i
+                                }
+                            )
+                            docs.append(doc)
 
             return docs
 
