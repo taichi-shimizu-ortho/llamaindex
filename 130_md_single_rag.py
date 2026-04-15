@@ -1,3 +1,4 @@
+# mac 0415
 import os
 import sys
 import re
@@ -11,8 +12,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 load_dotenv()
 
 def find_paper(paper_name: str) -> str:
-    from pathlib import Path
-    base_path = Path.home() / "Dropbox/obsidian/10_article"
+    base_path = "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/10_article"
     for root, _, files in os.walk(base_path):
         for file in files:
             if file.startswith(paper_name) and file.endswith(".md"):
@@ -83,13 +83,12 @@ def main(paper_name: str = "Nishimura2023"):
     )
 
     # (以下、対話ログ保存ロジックは維持)
-    # 保存ファイル名の生成（1回の起動ごとに1ファイル）
-    from pathlib import Path
-    output_dir = Path.home() / "Dropbox/obsidian/50_coding/llamaindex"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_dir = str(output_dir)
+    # 保存ファイル名の生成（1回の起動ごとに1ファイル、デバイス名を含める）
+    output_dir = "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex"
+    os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = os.path.join(output_dir, f"dialogue_{paper_name}_{timestamp}.md")
+    device_name = "mac"
+    output_file = os.path.join(output_dir, f"dialogue_{device_name}_{paper_name}_{timestamp}.md")
 
     print(f"\n--- 論文 RAG 起動: {paper_name} ---")
 
