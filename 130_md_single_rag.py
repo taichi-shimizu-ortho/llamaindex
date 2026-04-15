@@ -64,32 +64,69 @@ def main(paper_name: str = "Nishimura2023"):
             return match.group(1).strip() if match else "Main Text"
 
         def split_by_paragraphs(node):
-            """ノードを段落ごとに分割（空行x2で区切る）"""
+            """ノードを段落ごとに分割
+            ## セクション → ### 中段落 → 二重改行で小段落
+            """
             section = extract_section_name(node.get_content())
             # References だけは除外
             if section.lower() == "references":
                 return []
 
             content = node.get_content()
-            # ## ヘッダー行を削除
-            content_without_header = re.sub(r'^##.*?\n', '', content, count=1)
-            # 空行（改行x2）で段落分割
-            paragraphs = re.split(r'\n\n+', content_without_header.strip())
-            # 空白段落を除去
-            paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
-            # 各段落を Document に
+            # ## セクションで分割
+            subsections = re.split(r'(?=^##)', content, flags=re.MULTILINE)
+
             docs = []
-            for i, para in enumerate(paragraphs, 1):
-                doc = Document(
-                    text=para,
-                    metadata={
-                        "section_name": section,
-                        "header_path": f"## {section}",
-                        "paragraph_number": i
-                    }
-                )
-                docs.append(doc)
+            for subsection in subsections:
+                if not subsection.strip():
+                    continue
+
+                # ## ヘッダーを抽出
+                subsec_match = re.search(r'^##\s+(.+?)(?:\n|$)', subsection, re.MULTILINE)
+                if not subsec_match:
+                    # ## ヘッダーがない場合はスキップ（最初の空きテキストなど）
+                    continue
+
+                subsec_name = subsec_match.group(1).strip()
+
+                # ## ヘッダー行を削除（改行まで）
+                content_without_header = re.sub(r'^##[^\n]*\n', '', subsection, count=1, flags=re.MULTILINE)
+
+                # ### 中段落で分割
+                subsubsections = re.split(r'(?=^###)', content_without_header, flags=re.MULTILINE)
+
+                for subsubsection in subsubsections:
+                    if not subsubsection.strip():
+                        continue
+
+                    # ### ヘッダーを抽出（存在する場合）
+                    subsubsec_match = re.search(r'^###\s+(.+?)(?:\n|$)', subsubsection, re.MULTILINE)
+                    if subsubsec_match:
+                        subsubsec_name = subsubsec_match.group(1).strip()
+                        # ### ヘッダー行を削除（改行まで）
+                        text = re.sub(r'^###[^\n]*\n', '', subsubsection, count=1, flags=re.MULTILINE)
+                    else:
+                        subsubsec_name = subsec_name
+                        text = subsubsection
+
+                    # 二重改行で小段落に分割
+                    paragraphs = re.split(r'\n\n+', text.strip())
+                    # 空白段落を除去
+                    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
+                    # 各段落を Document に
+                    for i, para in enumerate(paragraphs, 1):
+                        doc = Document(
+                            text=para,
+                            metadata={
+                                "section_name": subsubsec_name,
+                                "header_path": f"## {subsec_name}",
+                                "paragraph_number": i
+                            }
+                        )
+                        docs.append(doc)
+
             return docs
 
         # 各ノードを段落ごとに分割

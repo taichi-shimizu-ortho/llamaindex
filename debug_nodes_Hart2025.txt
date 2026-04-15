@@ -1,0 +1,436 @@
+================================================================================
+NODE PARSING DEBUG: Hart2025
+================================================================================
+
+【0】クリーニング前後の比較
+--------------------------------------------------------------------------------
+Original content length: 89041 chars
+Cleaned content length: 88971 chars
+
+Original sections found: ['PDF![[Zotero_storage/storage/DL7DN4E5/Hart2025.pdf]]', '1\\. Purpose of the Review', '2\\. Introduction', '3\\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates', '4\\. Post-Birth Growth and Maturation', '5\\. Onset of Puberty', '6\\. Following Skeletal Maturity', '7\\. Aging and Senescence of Joint Tissues, Joint Functioning, and Joint Laxity', '8\\. Joint Laxity and Response to Injury', '9\\. Characteristics of Joint Hypermobility Syndromes', '10\\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models of Joint Hypermobility Regarding Joint Function Across the Life Span', '11\\. Summary, Conclusions and Speculations']
+Cleaned sections found: ['PDF![[Zotero_storage/storage/DL7DN4E5/Hart2025.pdf]]', '1\\. Purpose of the Review', '2\\. Introduction', '3\\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates', '4\\. Post-Birth Growth and Maturation', '5\\. Onset of Puberty', '6\\. Following Skeletal Maturity', '7\\. Aging and Senescence of Joint Tissues, Joint Functioning, and Joint Laxity', '8\\. Joint Laxity and Response to Injury', '9\\. Characteristics of Joint Hypermobility Syndromes', '10\\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models of Joint Hypermobility Regarding Joint Function Across the Life Span', '11\\. Summary, Conclusions and Speculations']
+
+【1】全ノード数: 25
+--------------------------------------------------------------------------------
+
+Node 0:
+  header_path: /
+  content length: 556 chars
+  first 100 chars: ---
+title: "Regulation of Joint Tissues and Joint Function: Is There Potential for Lessons to Be Lea
+
+Node 1:
+  header_path: /
+  content length: 8 chars
+  first 100 chars: # 1 AI要約
+
+Node 2:
+  header_path: /
+  content length: 294 chars
+  first 100 chars: # 2 Citation
+**Hart DA**. Regulation of Joint Tissues and Joint Function: Is There Potential for Les
+
+Node 3:
+  header_path: /
+  content length: 7 chars
+  first 100 chars: # 3 PDF
+
+Node 4:
+  header_path: /3 PDF/
+  content length: 2172 chars
+  first 100 chars: ## PDF![[Zotero_storage/storage/DL7DN4E5/Hart2025.pdf]]
+
+
+
+>[!Info]
+> **FirstAuthor**:: Hart, David 
+
+Node 5:
+  header_path: /
+  content length: 13 chars
+  first 100 chars: # 4 Main Text
+
+Node 6:
+  header_path: /4 Main Text/
+  content length: 3896 chars
+  first 100 chars: ## 1\. Purpose of the Review
+
+During fetal development, joints such as the knee, ankle, and shoulder
+
+Node 7:
+  header_path: /4 Main Text/
+  content length: 1898 chars
+  first 100 chars: ## 2\. Introduction
+
+Development of mobility and the ability to navigate through the environment req
+
+Node 8:
+  header_path: /4 Main Text/
+  content length: 1762 chars
+  first 100 chars: ## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates
+
+Following j
+
+Node 9:
+  header_path: /4 Main Text/
+  content length: 9937 chars
+  first 100 chars: ## 4\. Post-Birth Growth and Maturation
+
+After birth, humans are dependent on their mothers for milk
+
+Node 10:
+  header_path: /4 Main Text/
+  content length: 6628 chars
+  first 100 chars: ## 5\. Onset of Puberty
+
+With the onset of puberty, many changes in connective tissues of the joints
+
+Node 11:
+  header_path: /4 Main Text/
+  content length: 7646 chars
+  first 100 chars: ## 6\. Following Skeletal Maturity
+
+Skeletal maturity, defined as the cessation of growth, leads to 
+
+Node 12:
+  header_path: /4 Main Text/
+  content length: 1283 chars
+  first 100 chars: ## 7\. Aging and Senescence of Joint Tissues, Joint Functioning, and Joint Laxity
+
+Joint laxity or l
+
+Node 13:
+  header_path: /4 Main Text/
+  content length: 5805 chars
+  first 100 chars: ## 8\. Joint Laxity and Response to Injury
+
+Injury to joint tissues in otherwise healthy adult indiv
+
+Node 14:
+  header_path: /4 Main Text/
+  content length: 55 chars
+  first 100 chars: ## 9\. Characteristics of Joint Hypermobility Syndromes
+
+Node 15:
+  header_path: /4 Main Text/9\. Characteristics of Joint Hypermobility Syndromes/
+  content length: 2267 chars
+  first 100 chars: ### 9.1. Mutations and Phenotypes
+
+The joint hypermobility syndromes include a number of syndromes t
+
+Node 16:
+  header_path: /4 Main Text/9\. Characteristics of Joint Hypermobility Syndromes/
+  content length: 3334 chars
+  first 100 chars: ### 9.2. Challenges and Limitations in Knowledge
+
+It is challenging to diagnose JH in most young ind
+
+Node 17:
+  header_path: /4 Main Text/
+  content length: 1649 chars
+  first 100 chars: ## 10\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models 
+
+Node 18:
+  header_path: /4 Main Text/10\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models of Joint Hypermobility Regarding Joint Function Across the Life Span/
+  content length: 4767 chars
+  first 100 chars: ### 10.1. Development
+
+Despite the myriad number and type of known molecular alterations that can co
+
+Node 19:
+  header_path: /4 Main Text/10\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models of Joint Hypermobility Regarding Joint Function Across the Life Span/
+  content length: 4675 chars
+  first 100 chars: ### 10.2. Growth and Maturation
+
+In the face of a spectrum of known mutations, as well as phenotypes
+
+... and 5 more nodes
+
+
+【2】Main Text フィルタリング後: 19 nodes
+--------------------------------------------------------------------------------
+
+Filtered Node 0:
+  header_path: /4 Main Text/
+  content length: 3896 chars
+  first 150 chars:
+## 1\. Purpose of the Review
+
+During fetal development, joints such as the knee, ankle, and shoulder form by cavitation, and the tissues of the joint 
+
+Filtered Node 1:
+  header_path: /4 Main Text/
+  content length: 1898 chars
+  first 150 chars:
+## 2\. Introduction
+
+Development of mobility and the ability to navigate through the environment requires the successful integration of the functionin
+
+Filtered Node 2:
+  header_path: /4 Main Text/
+  content length: 1762 chars
+  first 150 chars:
+## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates
+
+Following joint cavitation, the individual joint tissues of a
+
+Filtered Node 3:
+  header_path: /4 Main Text/
+  content length: 9937 chars
+  first 150 chars:
+## 4\. Post-Birth Growth and Maturation
+
+After birth, humans are dependent on their mothers for milk and support. While they continue to grow, joints 
+
+Filtered Node 4:
+  header_path: /4 Main Text/
+  content length: 6628 chars
+  first 150 chars:
+## 5\. Onset of Puberty
+
+With the onset of puberty, many changes in connective tissues of the joints start to occur. As all of these tissues contain s
+
+Filtered Node 5:
+  header_path: /4 Main Text/
+  content length: 7646 chars
+  first 150 chars:
+## 6\. Following Skeletal Maturity
+
+Skeletal maturity, defined as the cessation of growth, leads to closing of growth plates in bone and the establish
+
+Filtered Node 6:
+  header_path: /4 Main Text/
+  content length: 1283 chars
+  first 150 chars:
+## 7\. Aging and Senescence of Joint Tissues, Joint Functioning, and Joint Laxity
+
+Joint laxity or looseness is known to decrease during aging, but it
+
+Filtered Node 7:
+  header_path: /4 Main Text/
+  content length: 5805 chars
+  first 150 chars:
+## 8\. Joint Laxity and Response to Injury
+
+Injury to joint tissues in otherwise healthy adult individuals leads to development of a healing response 
+
+Filtered Node 8:
+  header_path: /4 Main Text/
+  content length: 55 chars
+  first 150 chars:
+## 9\. Characteristics of Joint Hypermobility Syndromes
+
+Filtered Node 9:
+  header_path: /4 Main Text/9\. Characteristics of Joint Hypermobility Syndromes/
+  content length: 2267 chars
+  first 150 chars:
+### 9.1. Mutations and Phenotypes
+
+The joint hypermobility syndromes include a number of syndromes that are defined by genetic mutations, such as most
+
+... and 9 more filtered nodes
+
+
+【3】SentenceSplitter 後: 52 nodes
+--------------------------------------------------------------------------------
+
+Final Node 0:
+  header_path: ## 1\. Purpose of the Review
+  content length: 1111 chars
+  content:
+During fetal development, joints such as the knee, ankle, and shoulder form by cavitation, and the tissues of the joint differentiate and lay down a template of cells and extracellular matrix (ECM) that subsequent growth and maturation will be dependent on to yield a functional joint in the adult. In humans, there can be variation in how a joint such as the knee functions in the context of mobility and navigation. At the macro level, the knee joint, for example, operates as a multi-tissue organ system \[[1](#B1-ijms-26-01256),[2](#B2-ijms-26-01256),[3](#B3-ijms-26-01256),[4](#B4-ijms-26-01256)\] where each tissue contributes to normal function in an integrated fashion. This whole process is regulated by a combination of biological signals and biomechanical cues, leading to a joint that operates within a physiological “window” around a set point \[[5](#B5-ijms-26-01256)\]. While many steps in the process leading to a functional joint, for example the knee, in an adult have been investigated over the past several decades, details of how several aspects are regulated still remain to be elucidated.
+----------------------------------------
+
+Final Node 1:
+  header_path: ## 1\. Purpose of the Review
+  content length: 1762 chars
+  content:
+In contrast to the above scenario, individuals with various forms of joint hypermobility (JH) have joints such as the knee that exhibit excessive laxity or looseness, a condition that can result in pain, increased risk for injury, avoidance of the beneficial benefits of exercise, and increased risk for development of conditions such as osteoarthritis. Many of these individuals have mutations in a variety of ECM molecules, as well as molecules relevant to ECM molecules, while others do not have a defined genotype alteration (reviewed in \[[6](#B6-ijms-26-01256)\]). These include the multiple forms of Ehlers–Danlos syndrome (EDS) \[[6](#B6-ijms-26-01256),[7](#B7-ijms-26-01256),[8](#B8-ijms-26-01256),[9](#B9-ijms-26-01256)\], Marfan’s syndrome \[[10](#B10-ijms-26-01256)\], and Loey–Dietz syndrome (LDS) \[[11](#B11-ijms-26-01256)\]. In some individuals, some joints are affected more than others for unknown reasons. For many of these individuals, joint hypermobility is just one aspect of altered connective tissue functioning, and other tissues such as skin and elements of the cardiovascular system can be affected to varying degrees, but the latter can have risk for lethal complications such as aortic dissections \[[12](#B12-ijms-26-01256),[13](#B13-ijms-26-01256),[14](#B14-ijms-26-01256),[15](#B15-ijms-26-01256)\]. The focus of much investigation regarding this population have been on clinical management of pain and rehabilitation \[[16](#B16-ijms-26-01256),[17](#B17-ijms-26-01256),[18](#B18-ijms-26-01256)\] and defining the pathology, as well as the genotyping. However, details of how the various known mutations are modifying joint function, which tissues are affected, and how they are affected at the molecular level remains incomplete.
+----------------------------------------
+
+Final Node 2:
+  header_path: ## 1\. Purpose of the Review
+  content length: 989 chars
+  content:
+Given the prevalence of individuals with joint hypermobility (~1 in < 1000) and the breadth of mutations that have been identified (i.e., collagens, proteoglycans, glycoproteins, enzymes, growth factors, and receptors), further investigations providing more detail in JH could also lead to enhanced understanding of how organ systems such as the knee are regulated in the absence of JH during development, growth, and maturation, in response to injury, and during aging and senescence. This perspective/review will attempt to detail some of the information available regarding joints with and without JH, as well as pose questions that could be addressed and how their answers may provide new insights into the regulation of joint tissues that contribute to functioning as an effective organ system across the life span. A focus of the review will be on the knee as an example of a multi-tissue organ that is critical not only for mobility, but also for navigation through the environment.
+----------------------------------------
+
+Final Node 3:
+  header_path: ## 2\. Introduction
+  content length: 1877 chars
+  content:
+Development of mobility and the ability to navigate through the environment requires the successful integration of the functioning of a group of tissues that form a joint. Such abilities are essential for the survival of both predator and prey species. Interestingly, species vary greatly in their ability to perform the tasks needed at the time of birth, with some prey species such as zebra (11–13 months gestation) and wildebeest (~8.5 months gestation) able to be up and running within hours of birth, while humans are unable to initiate walking upright until several months of age or even > 1 year in some cases. Why and how such variation is imposed on humans is not well-defined, but it is clear that bipedal mobility and navigation occurs long after the development of joints and are functional at the level of joint motion and crawling on all four limbs. However, the gestation time in the baboon (6 months), chimpanzee (6.5 months), and ape (8–9 months) are similar to humans (~9 months), and like humans, the offspring are born very dependent on their mothers for ~1 year after birth. Therefore, it is the humanoid line not Homo sapiens and bipedalism that is unique. Why humans, particularly Homo sapiens, are born nearly helpless after 9 months of gestation and can require a year before becoming partially self-reliant regarding mobility and navigation (with straight-line mobility occurring first and then navigation secondly) (discussed in \[[19](#B19-ijms-26-01256)\]), remains an evolutionary conundrum. However, it is very relevant to understanding subsequent growth and maturation as it pertains to joint functioning. Likely, in part, the timing and sequence of events relate to the integration of joint tissues as an organ system with muscle control via neuro-regulation of the component parts for this species compared to the prey species discussed above.
+----------------------------------------
+
+Final Node 4:
+  header_path: ## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates
+  content length: 1114 chars
+  content:
+Following joint cavitation, the individual joint tissues of an organ such as the knee continue to evolve with specific cells and a rudimentary ECM. This likely happens in the absence of much mechanical loading initially. Thus, the formation of the composite tissue comprised of cells and a template for the subsequent biological and biomechanical growth is mainly dependent on genetics and genetic programming of the associated cells. Thus, at this stage of development, with the organization and composition becoming established, genetic variation due to mutations, splice variants, and variants in promoter regions that may affect rates of expression influence further development. This ECM template likely then serves as a basic form for subsequent addition of matrix molecules during the latter part of gestation and during early growth and maturation following birth. Interestingly, lysyl oxidase, one of the molecules mutated in some forms of JH, is important in collagen assembly and fibril cross-linking in tissues such as tendons \[[20](#B20-ijms-26-01256)\], and likely others as well as tissues develop.
+----------------------------------------
+
+Final Node 5:
+  header_path: ## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates
+  content length: 557 chars
+  content:
+As joint motion is initiated in utero, with significant growth of the fetus during the third trimester in the human, one has the integration of mechanical loading of joints with the anabolic biologic signals of growth and maturation. This in utero growth prepares the joints for limited function after birth, but the integration of the functioning of the various tissues of a joint, such as the knee, also prepares it to function as a multi-tissue organ system \[[1](#B1-ijms-26-01256),[2](#B2-ijms-26-01256),[3](#B3-ijms-26-01256),[4](#B4-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 6:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 727 chars
+  content:
+After birth, humans are dependent on their mothers for milk and support. While they continue to grow, joints such as the knee are mechanically loaded by motion but not by direct bipedal loading since they do not usually walk upright until 7–13 months of age. Growth of tissues such as ligaments require this motion as immobilization of the knee leads to a failure of the tissue to grow and effectively leads to an arrest of growth at the point of immobilization \[[21](#B21-ijms-26-01256),[22](#B22-ijms-26-01256)\]. While it remains to be proven, the immobilization may lead to the cells in such tissues becoming refractory to anabolic growth mediators and factors, possibly by loss of functional receptors for such mediators.
+----------------------------------------
+
+Final Node 7:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 637 chars
+  content:
+The cells in tissues such as ligaments are arranged in intricate cell networks with the cells connected by connexons \[[23](#B23-ijms-26-01256),[24](#B24-ijms-26-01256),[25](#B25-ijms-26-01256)\]. Early after birth the tissues are cell-rich and ECM-poor, and as they grow, they become ECM-rich and cell poor \[[26](#B26-ijms-26-01256)\], but the cells form a connected network via the connexins and gap junctions. Thus, prior to birth the template for the ECM and the cell network form for each tissue of the knee, with the added input of the small amount of essential innervation in preparation for the post-birth growth and maturation.
+----------------------------------------
+
+Final Node 8:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 482 chars
+  content:
+In other tissues such as synovium, the tissue contains a number of collagen types that can form fibrils of different sizes \[[27](#B27-ijms-26-01256)\]. These collagens include types I, III, V, and VI. As the synovium serves functions other than primarily load dissipation or joint stability, the organization and composition are different from ligaments and tendons. The synovium of the knee is also rich in glycosaminoglycans in addition to collagens \[[28](#B28-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 9:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 313 chars
+  content:
+Joint capsules are complex tissues that are highly innervated (discussed in \[[29](#B29-ijms-26-01256)\]). The tissues are complex with regard to composition and are dynamic in that they change with age \[[29](#B29-ijms-26-01256)\], and some aspects of the tissues are joint specific \[[30](#B30-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 10:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 797 chars
+  content:
+The tissue of an organ system such as the knee appears to grow in a coordinated manner in response to growth of bone as the driver \[[22](#B22-ijms-26-01256),[31](#B31-ijms-26-01256)\]. Thus, the multitude of tissues in the functioning knee (i.e., ligaments, menisci, articular cartilage, synovium, fat pads, capsule, muscles, tendons) must respond to the stresses imposed by the growing tibia and femur with coordinated growth to retain function. This is accomplished by the responses of endogenous cells in each tissue to mechanical loading, anabolic mediators, and neural input (all tissues are innervated except the articular cartilage and parts of the menisci). The integration of the responses leads to a strengthening of the various tissues using the templates laid down during development.
+----------------------------------------
+
+Final Node 11:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 1850 chars
+  content:
+During this period of growth, mechanically active soft tissues such as ligaments and tendons of the knee not only grow stronger, building on the template formed previously, but also structurally adapt to increasing loading demands by altering the size of their collagen fibrils \[[32](#B32-ijms-26-01256)\]. This is shown in [Figure 1](#fig_body_display_ijms-26-01256-f001) for the rabbit MCL and patellar tendon (PT), and it has also been shown for other tissues of various joints in a variety of species. Interestingly, as the tissues grow and meet the increasing demand of the mechanical environment, one sees a shift from a unimodal distribution of small-diameter collagen fibrils to a bimodal distribution of large- and small-diameter collagen fibrils. Furthermore, as the MCL is a stabilizing ligament of the knee and one that operates in a lower load environment than does the PT, which operates in a high load environment, the large collagen fibrils in the PT are somewhat larger than those in the MCL, likely indicating that both the size and distribution of fibril diameters is tissue dependent, and one cannot extrapolate or generalize from what is found in one tissue. Therefore, ligaments and tendons may appear to be similar in some regards, they are regulated differently regarding the structure of the ECM \[[33](#B33-ijms-26-01256)\]. Thus, while building on a template for each tissue laid down during development, tissues of the knee and others have the flexibility to adapt to the mechanical environment. This likely also relates to gene expression patterns for specific molecules (i.e., collagen subtypes, small and large proteoglycans, enzymes affecting collagen cross-linking such as lysyl oxidases, and others). For example, lysyl oxidase is required for collagen fibrillogeneisis by tendon cells \[[34](#B34-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 12:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 491 chars
+  content:
+![Ijms 26 01256 g001](/ijms/ijms-26-01256/article_deploy/html/images/ijms-26-01256-g001-550.jpg "Ijms 26 01256 g001")**Figure 1.** Maturation of the matrix of ligament and tendon with age. Collagen fibril diameters in the rabbit medial collateral ligament (**A**,**C**,**E**,**G**,**I**) and patellar tendon (**B**,**D**,**F**,**H**,**J**) with increasing age from 3, 6, 9, 14 and 52 weeks (top to bottom, respectively). Reprinted with permission from Lo et al. \[[32](#B32-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 13:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 1145 chars
+  content:
+There are a large number of collagens \[[35](#B35-ijms-26-01256)\], with some of them readily forming fibrils and others serving unique roles in the musculoskeletal (MSK) system. Some types of collagens can bind to fibrils, as do proteoglycans \[[36](#B36-ijms-26-01256),[37](#B37-ijms-26-01256),[38](#B38-ijms-26-01256)\]. When assembled, fibrillar collagens are long molecules with crimp in their structure \[[39](#B39-ijms-26-01256)\]. This crimp in the collagen serves a purpose as when a tissue is loaded \[[40](#B40-ijms-26-01256),[41](#B41-ijms-26-01256)\], the initial response is to straighten the molecules with the crimp taking up the initial load. In ligaments and tendons, the organization is hierarchical with assembly of the collagen into fibrils of varying diameters. When loaded, the fibrils and fascicles appear to be able to slide, facilitated by the boundary lubricant PRG4 around them \[[42](#B42-ijms-26-01256),[43](#B43-ijms-26-01256),[44](#B44-ijms-26-01256),[45](#B45-ijms-26-01256)\], and expression of PRG4 appears to be affected by age \[[46](#B46-ijms-26-01256)\] and surgical menopause \[[47](#B47-ijms-26-01256)\].
+----------------------------------------
+
+Final Node 14:
+  header_path: ## 4\. Post-Birth Growth and Maturation
+  content length: 1464 chars
+  content:
+How the transition from small collagen fibrils to large fibrils and with a bimodal distribution is formed and regulated into adulthood is not well understood. Interestingly, in knockout mice for small leucine-rich proteoglycans (SLRPs) one can get alterations collagen fibril diameters with lumican, biglycan, decorin, or fibromodulin knockouts \[[48](#B48-ijms-26-01256),[49](#B49-ijms-26-01256),[50](#B50-ijms-26-01256),[51](#B51-ijms-26-01256)\]. In an analogous set of studies using decorin anti-sense approaches \[[52](#B52-ijms-26-01256)\], collagen fibril diameters in healing rabbit MCLs were greater in the treated tissues than in those treated with the control antisense reagents \[[53](#B53-ijms-26-01256)\]. As these SLRP bind to collagen type I in the molecular groove of the assembled collagen molecule \[[54](#B54-ijms-26-01256),[55](#B55-ijms-26-01256)\], they may affect the assembly of collagen via this route, but it remains to be determined how such a process is regulated by mechanical loading. In addition, it is challenging to assign “cause and effect” using this approach due to the complexity of the in vivo environment \[[56](#B56-ijms-26-01256)\]. “Naturally” occurring variation in proteoglycans, including the SLRPs in cranial cruciate ligaments of different dog breeds, has been associated with risk for knee injury \[[57](#B57-ijms-26-01256)\], but whether the differences translated into mechanical characteristics was not reported.
+----------------------------------------
+
+... and 37 more final nodes
+
+
+【4】header_path（セクション名を含む）
+--------------------------------------------------------------------------------
+Final Node 0: header_path='## 1\. Purpose of the Review' | section='1\. Purpose of the Review'
+Final Node 1: header_path='## 1\. Purpose of the Review' | section='1\. Purpose of the Review'
+Final Node 2: header_path='## 1\. Purpose of the Review' | section='1\. Purpose of the Review'
+Final Node 3: header_path='## 2\. Introduction' | section='2\. Introduction'
+Final Node 4: header_path='## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates' | section='3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates'
+Final Node 5: header_path='## 3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates' | section='3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates'
+Final Node 6: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 7: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 8: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 9: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 10: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 11: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 12: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 13: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+Final Node 14: header_path='## 4\. Post-Birth Growth and Maturation' | section='4\. Post-Birth Growth and Maturation'
+
+
+【5】段落分けの分析（セクション内での空行による分割）
+--------------------------------------------------------------------------------
+
+【10\. Possible Lessons Learned and to Be Learned from Individuals and Relevant Preclinical Models of Joint Hypermobility Regarding Joint Function Across the Life Span】 段落数: 1
+  段落1: While it is important to understand the basis for the functional alterations or ...
+
+
+【11\. Summary, Conclusions and Speculations】 段落数: 14
+  段落1: From the above discussions regarding the regulation of joint function in those w...
+  段落2: (1). Joints can develop, grow, and mature in the presence of many different muta...
+  段落3: (2). The impact of known genetic mutations is heterogeneous even within families...
+  段落4: (3). In young individuals/children, many joints exhibit more laxity than as adul...
+  段落5: In addition, in both those with and without a joint hypermobility disorder, musc...
+  ... and 9 more
+
+
+【1\. Purpose of the Review】 段落数: 3
+  段落1: During fetal development, joints such as the knee, ankle, and shoulder form by c...
+  段落2: In contrast to the above scenario, individuals with various forms of joint hyper...
+  段落3: Given the prevalence of individuals with joint hypermobility (~1 in < 1000) and ...
+
+
+【2\. Introduction】 段落数: 1
+  段落1: Development of mobility and the ability to navigate through the environment requ...
+
+
+【3\. Fetal Development of Joint Tissue Organization and Formation of Tissue Templates】 段落数: 2
+  段落1: Following joint cavitation, the individual joint tissues of an organ such as the...
+  段落2: As joint motion is initiated in utero, with significant growth of the fetus duri...
+
+
+【4\. Post-Birth Growth and Maturation】 段落数: 12
+  段落1: After birth, humans are dependent on their mothers for milk and support. While t...
+  段落2: The cells in tissues such as ligaments are arranged in intricate cell networks w...
+  段落3: In other tissues such as synovium, the tissue contains a number of collagen type...
+  段落4: Joint capsules are complex tissues that are highly innervated (discussed in \[[2...
+  段落5: The tissue of an organ system such as the knee appears to grow in a coordinated ...
+  ... and 7 more
+
+
+【5\. Onset of Puberty】 段落数: 6
+  段落1: With the onset of puberty, many changes in connective tissues of the joints star...
+  段落2: With the onset of puberty for females, there is also higher risk for development...
+  段落3: There are also reports that adolescent females, and females in general, are at h...
+  段落4: A second possibility for the increased risk for knee injuries relates to changes...
+  段落5: Serum relaxin levels have also been implicated in ACL injuries (reviewed in \[[7...
+  ... and 1 more
+
+
+【6\. Following Skeletal Maturity】 段落数: 5
+  段落1: Skeletal maturity, defined as the cessation of growth, leads to closing of growt...
+  段落2: In contrast to males, females will have sex-dependent influences on joint functi...
+  段落3: In an attempt to better understand the impact of pregnancy on cells and tissues ...
+  段落4: Thus, the cells in joint tissues are affected at the level of the transcriptome ...
+  段落5: Studies in a rabbit model have reported that there are alterations to vasoregula...
+
+
+【7\. Aging and Senescence of Joint Tissues, Joint Functioning, and Joint Laxity】 段落数: 1
+  段落1: Joint laxity or looseness is known to decrease during aging, but it may be joint...
+
+
+【8\. Joint Laxity and Response to Injury】 段落数: 6
+  段落1: Injury to joint tissues in otherwise healthy adult individuals leads to developm...
+  段落2: ![Ijms 26 01256 g002](/ijms/ijms-26-01256/article_deploy/html/images/ijms-26-012...
+  段落3: Therefore, injury to joint tissues leads to a healing process that does not reca...
+  段落4: The injury site for joint tissues such as ligaments is also dependent somewhat o...
+  段落5: In summary, development, growth, and maturation of connective tissues of a joint...
+  ... and 1 more
+
+
+【9\. Characteristics of Joint Hypermobility Syndromes】 段落数: 1
+  段落1: ## 9\. Characteristics of Joint Hypermobility Syndromes...
+
