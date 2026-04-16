@@ -16,7 +16,7 @@ def find_paper(paper_name: str) -> str:
     base_path = Path.home() / "Dropbox/obsidian/10_article"
     for root, _, files in os.walk(base_path):
         for file in files:
-            if file.startswith(paper_name) and file.endswith(".md"):
+            if file.lower().startswith(paper_name.lower()) and file.endswith(".md"):
                 return os.path.join(root, file)
     raise FileNotFoundError(f"論文 '{paper_name}' が見つかりません")
 
@@ -68,12 +68,31 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
         """ノードを段落ごとに分割
         ## セクション → ### 中段落 → 二重改行で小段落
         """
-        section = extract_section_name(node.get_content())
+        content = node.get_content()
+
+        # ## ヘッダーがなく ### のみのノード（例：9.1. のようなサブセクション）
+        if not re.search(r'^##(?!#)', content, re.MULTILINE):
+            h3_match = re.search(r'^###\s+(.+?)(?:\n|$)', content, re.MULTILINE)
+            if not h3_match:
+                return []
+            subsec_name = h3_match.group(1).strip()
+            if subsec_name.lower() == "references":
+                return []
+            content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
+            paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+            return [
+                Document(text=para, metadata={
+                    "section_name": subsec_name,
+                    "header_path": f"### {subsec_name}",
+                    "paragraph_number": i
+                })
+                for i, para in enumerate(paragraphs, 1)
+            ]
+
+        section = extract_section_name(content)
         # References だけは除外
         if section.lower() == "references":
             return []
-
-        content = node.get_content()
 
         # ## セクションで分割
         subsections = re.split(r'(?=^##)', content, flags=re.MULTILINE)
@@ -91,8 +110,8 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
 
             subsec_name = subsec_match.group(1).strip()
 
-            # ## ヘッダー行を削除（改行まで）
-            content_without_header = re.sub(r'^##[^\n]*\n', '', subsection, count=1, flags=re.MULTILINE)
+            # ## ヘッダー行を削除（末尾改行なしにも対応）
+            content_without_header = re.sub(r'^##[^\n]*\n?', '', subsection, count=1, flags=re.MULTILINE)
 
             # ### 中段落で分割
             subsubsections = re.split(r'(?=^###)', content_without_header, flags=re.MULTILINE)
@@ -132,8 +151,8 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                         continue
 
                     subsubsec_name = subsubsec_match.group(1).strip()
-                    # ### ヘッダー行を削除
-                    text = re.sub(r'^###[^\n]*\n', '', subsubsection, count=1, flags=re.MULTILINE)
+                    # ### ヘッダー行を削除（末尾改行なしにも対応）
+                    text = re.sub(r'^###[^\n]*\n?', '', subsubsection, count=1, flags=re.MULTILINE)
 
                     # 二重改行で小段落に分割
                     paragraphs = re.split(r'\n\n+', text.strip())
