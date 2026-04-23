@@ -84,6 +84,7 @@ def main(paper_name: str = "Nishimura2023"):
             ## セクション → ### 中段落 → 二重改行で小段落
             """
             content = node.get_content()
+            original_header_path = node.metadata.get("header_path", "")
 
             # ## ヘッダーがなく ### のみのノード（例：9.1. のようなサブセクション）
             if not re.search(r'^##(?!#)', content, re.MULTILINE):
@@ -95,10 +96,18 @@ def main(paper_name: str = "Nishimura2023"):
                     return []
                 content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
                 paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+
+                # 元々のheader_pathから## レベルを抽出
+                original_header_path = node.metadata.get("header_path", "")
+                # パスの最後の部分を取得 ('/4 Main Text/Methods/' → 'Methods')
+                parts = original_header_path.strip('/').split('/')
+                h2_name = parts[-1] if parts and len(parts) > 1 else ""
+                header_prefix = f"## {h2_name}" if h2_name else ""
+
                 return [
                     Document(text=para, metadata={
                         "section_name": subsec_name,
-                        "header_path": f"### {subsec_name}",
+                        "header_path": f"{header_prefix} > ### {subsec_name}" if header_prefix else f"### {subsec_name}",
                         "paragraph_number": i
                     })
                     for i, para in enumerate(paragraphs, 1)
@@ -179,7 +188,7 @@ def main(paper_name: str = "Nishimura2023"):
                                 text=para,
                                 metadata={
                                     "section_name": subsubsec_name,
-                                    "header_path": f"## {subsec_name}",
+                                    "header_path": f"## {subsec_name} > ### {subsubsec_name}",
                                     "paragraph_number": i
                                 }
                             )
@@ -241,18 +250,14 @@ def main(paper_name: str = "Nishimura2023"):
         print("\n")
 
         # 【改善】参照元を個別に score とともに記録（ファイル出力用）
-        # header_path から セクション名を抽出（形式: "## Introduction"）
         source_details = []
         for i, node in enumerate(response.source_nodes, 1):
             path = node.node.metadata.get("header_path", "不明")
-            # "## Results" のような形式から "Results" を抽出
-            match = re.search(r'##\s+(.+?)$', path)
-            section = match.group(1).strip() if match else path
             para_num = node.node.metadata.get("paragraph_number", "?")
             score = node.score if hasattr(node, 'score') else 0.0
             content = node.get_content()
 
-            source_str = f"{section} 第{para_num}段落 (score: {score:.4f})"
+            source_str = f"{path} 第{para_num}段落 (score: {score:.4f})"
             source_details.append(f"【参照元 {i}】{source_str}\n{content}\n")
 
         # 3. ファイルへの書き込み（turn変数がここで活きる）
@@ -273,4 +278,8 @@ def main(paper_name: str = "Nishimura2023"):
         turn += 1
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "Nishimura2023")
+    if len(sys.argv) > 1:
+        paper_name = sys.argv[1]
+    else:
+        paper_name = input("文献名を入力してください: ")
+    main(paper_name)
