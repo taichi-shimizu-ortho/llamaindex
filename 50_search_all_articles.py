@@ -36,7 +36,7 @@ def load_index():
     if not STORAGE_DIR.exists():
         raise FileNotFoundError(
             f"インデックスが見つかりません: {STORAGE_DIR}\n"
-            "先に 05_build_all_articles_index.py を実行してください"
+            "先に 40_build_all_articles_index.py を実行してください"
         )
 
     print(f"[*] インデックスを読み込み中: {STORAGE_DIR.name}/")

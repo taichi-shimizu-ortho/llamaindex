@@ -284,23 +284,20 @@ def build_and_save_index(json_file: Path, storage_dir: Path) -> VectorStoreIndex
     # Document作成
     print(f"\n[*] セクション単位でDocumentを作成中...")
     print(f"    除外セクション: {', '.join(EXCLUDE_SECTION_TYPES)}")
+    review_articles = [a for a in articles if is_review(a)]
+    regular_articles = [a for a in articles if not is_review(a)]
+    print(f"    regular: {len(regular_articles)}件 / review: {len(review_articles)}件")
+
     documents = create_section_documents(articles)
-    print(f"[OK] {len(documents)}個のDocumentを作成")
+    print(f"[OK] {len(documents)}個のDocumentを作成（段落単位）")
 
     # 統計表示
     section_types = {}
-    article_types = {}
     for doc in documents:
         st = doc.metadata.get('section_type', 'unknown')
         section_types[st] = section_types.get(st, 0) + 1
-        at = doc.metadata.get('article_type', 'unknown')
-        article_types[at] = article_types.get(at, 0) + 1
 
-    print("\n論文タイプ分布:")
-    for at, count in sorted(article_types.items(), key=lambda x: -x[1]):
-        print(f"  {at}: {count}件")
-
-    print("\nセクションタイプ分布:")
+    print("\nセクションタイプ分布（Document数）:")
     for st, count in sorted(section_types.items(), key=lambda x: -x[1]):
         print(f"  {st}: {count}件")
 
