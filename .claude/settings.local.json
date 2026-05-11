@@ -3,5 +3,9 @@
     "allow": [
       "Read(//c/Users/a2189/dropbox/obsidian/10_article/general/**)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "pubmed"
+  ],
+  "enableAllProjectMcpServers": true
 }
