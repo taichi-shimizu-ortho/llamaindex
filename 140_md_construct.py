@@ -88,6 +88,18 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
     md_parser = MarkdownNodeParser()
     nodes = md_parser.get_nodes_from_documents([doc_main_text])
 
+    # MarkdownNodeParser後のノード情報をデバッグ出力
+    parser_debug_file = Path.cwd() / f"debug_parser_nodes_{paper_name}.txt"
+    with open(parser_debug_file, 'w', encoding='utf-8') as f:
+        f.write(f"=== MarkdownNodeParser 出力ノード情報 ===\n")
+        f.write(f"総ノード数: {len(nodes)}\n\n")
+        for i, node in enumerate(nodes):
+            f.write(f"【Node {i}】\n")
+            f.write(f"  header_path: {node.metadata.get('header_path', 'N/A')}\n")
+            f.write(f"  content length: {len(node.get_content())} chars\n")
+            f.write(f"  content preview: {node.get_content()[:150].replace(chr(10), ' ')}...\n\n")
+    print(f"[OK] parser_nodes debug: {parser_debug_file}")
+
     # 【重要】各ノードから ## セクション名を抽出してメタデータに追加
     def extract_section_name(text: str) -> str:
         """ノードテキストから ## セクション名を抽出"""
@@ -98,12 +110,56 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
         """ノードを段落ごとに分割
         ## セクション → ### 中段落 → 二重改行で小段落
         """
-        section = extract_section_name(node.get_content())
-        # References だけは除外
-        if section.lower() == "references":
+        content = node.get_content()
+        section = extract_section_name(content)
+
+        # References と Abbreviations は除外
+        if section.lower() in ["references", "abbreviations"]:
             return []
 
-        content = node.get_content()
+        # ##レベルも###レベルもないノード（#レベルなど）はスキップ
+        has_h2 = re.search(r'^##(?!#)', content, re.MULTILINE)
+        has_h3 = re.search(r'^###', content, re.MULTILINE)
+        if not has_h2 and not has_h3:
+            return []
+
+        # header_path から ## レベルを抽出（###ノードの場合に必要）
+        header_path = node.metadata.get("header_path", "")
+        h2_section = None
+        if header_path:
+            # 末尾の'/'を除いて分割
+            parts = [p for p in header_path.strip('/').split('/') if p]
+            # ###ノード（##がない）の場合、parts[-1]が##レベル
+            # ##ノードの場合も、parts[-1]が##レベル
+            if len(parts) >= 1:
+                h2_section = parts[-1]
+
+        # ###ノード（##がない場合）の処理
+        if not has_h2:
+            h3_match = re.search(r'^###\s+(.+?)(?:\n|$)', content, re.MULTILINE)
+            if h3_match:
+                # ###ノードの場合は、##レベルはheader_pathから、###レベルはcontent から取得
+                h2_name = h2_section if h2_section else section
+                h3_name = h3_match.group(1).strip()
+
+                # ### ヘッダー行を削除
+                content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
+                paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+
+                docs = []
+                for i, para in enumerate(paragraphs, 1):
+                    doc = Document(
+                        text=para,
+                        metadata={
+                            "section_name": h2_name,
+                            "header_path": f"## {h2_name} > ### {h3_name}",
+                            "paragraph_number": i
+                        }
+                    )
+                    docs.append(doc)
+                return docs
+            else:
+                return []
 
         # ## セクションで分割
         subsections = re.split(r'(?=^##)', content, flags=re.MULTILINE)
@@ -151,14 +207,29 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                         docs.append(doc)
             else:
                 # パターン2：## の下が ### で分割される
-                for subsubsection in subsubsections:
+                for idx, subsubsection in enumerate(subsubsections):
                     if not subsubsection.strip():
                         continue
 
                     # ### ヘッダーを抽出
                     subsubsec_match = re.search(r'^###\s+(.+?)(?:\n|$)', subsubsection, re.MULTILINE)
                     if not subsubsec_match:
-                        # ### ヘッダーがない場合はスキップ
+                        # ### ヘッダーがない場合（##直下の最初のテキスト）
+                        if idx == 0:
+                            text = subsubsection.strip()
+                            if text:
+                                paragraphs = re.split(r'\n\n+', text)
+                                paragraphs = [p.strip() for p in paragraphs if p.strip()]
+                                for i, para in enumerate(paragraphs, 1):
+                                    doc = Document(
+                                        text=para,
+                                        metadata={
+                                            "section_name": subsec_name,
+                                            "header_path": f"## {subsec_name}",
+                                            "paragraph_number": i
+                                        }
+                                    )
+                                    docs.append(doc)
                         continue
 
                     subsubsec_name = subsubsec_match.group(1).strip()
@@ -174,8 +245,8 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                         doc = Document(
                             text=para,
                             metadata={
-                                "section_name": subsubsec_name,
-                                "header_path": f"## {subsec_name}",
+                                "section_name": subsec_name,
+                                "header_path": f"## {subsec_name} > ### {subsubsec_name}",
                                 "paragraph_number": i
                             }
                         )

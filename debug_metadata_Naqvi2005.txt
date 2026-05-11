@@ -1,0 +1,112 @@
+=== メタデータ詳細確認 ===
+論文: Naqvi2005
+総ノード数: 40
+
+================================================================================
+
+【Node 0】
+  section_name: Introduction
+  header_path: ## Introduction
+  paragraph_number: 1
+  content length: 1157 chars
+  content preview: In certain sites in and around joints, ligaments and tendons subjected to complex tensile and compre...
+
+【Node 1】
+  section_name: Introduction
+  header_path: ## Introduction
+  paragraph_number: 2
+  content length: 884 chars
+  content preview: To understand the potential basis for relaxin and estrogen's modulation of the composition of fibroc...
+
+【Node 2】
+  section_name: Introduction
+  header_path: ## Introduction
+  paragraph_number: 3
+  content length: 1080 chars
+  content preview: One such disease is TMJ disorders, which affect some 11 million adults in the USA \[[^13], [^14]\], ...
+
+【Node 3】
+  section_name: Introduction
+  header_path: ## Introduction
+  paragraph_number: 4
+  content length: 485 chars
+  content preview: In this study we determined the effects of relaxin with or without β-estradiol on the modulation of ...
+
+【Node 4】
+  section_name: Materials and methods
+  header_path: ## Materials and methods
+  paragraph_number: 1
+  content length: 24 chars
+  content preview: ## Materials and methods...
+
+【Node 5】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Materials
+  paragraph_number: 1
+  content length: 997 chars
+  content preview: Twenty-week-old female New Zealand white rabbits were obtained from Nita Bell Laboratories (Hayward,...
+
+【Node 6】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Materials
+  paragraph_number: 2
+  content length: 856 chars
+  content preview: Rabbit anti-human collagenase-1 polyclonal antibody and rabbit anti-mouse stromelysin-1 monoclonal a...
+
+【Node 7】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Retrieval and culturing of TMJ discs, pubic symphysis, and articular cartilage
+  paragraph_number: 1
+  content length: 1135 chars
+  content preview: All procedures on rabbits were approved by the Committee on Animal Research of the University of Cal...
+
+【Node 8】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Retrieval and culturing of TMJ discs, pubic symphysis, and articular cartilage
+  paragraph_number: 2
+  content length: 946 chars
+  content preview: For determination of MMPs and GAG staining, 32 hemisections from eight rabbits were exposed to mediu...
+
+【Node 9】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Retrieval and culturing of TMJ discs, pubic symphysis, and articular cartilage
+  paragraph_number: 3
+  content length: 851 chars
+  content preview: To determine whether the observed induction of collagenase by relaxin is specific to fibrocartilage,...
+
+【Node 10】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Western blotting
+  paragraph_number: 1
+  content length: 1107 chars
+  content preview: Hormone-induced changes in collagenase-1, stromelysin-1, and TIMP-1 were determined by western blott...
+
+【Node 11】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Substrate zymography
+  paragraph_number: 1
+  content length: 1546 chars
+  content preview: Enzyme activities were quantified by substrate zymography of conditioned media from 32 hemisections ...
+
+【Node 12】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Histochemical staining and quantification of GAGs
+  paragraph_number: 1
+  content length: 1004 chars
+  content preview: To assess changes in GAG levels, the discs were washed three times in PBS, frozen in OCT compound, a...
+
+【Node 13】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Determination of GAG synthesis by 35S radiolabeling
+  paragraph_number: 1
+  content length: 919 chars
+  content preview: To quantify GAG biosynthesis, 32 disc hemisections (mean weight 14 ± 4 mg) were incubated at 37°C fo...
+
+【Node 14】
+  section_name: Materials and methods
+  header_path: ## Materials and methods > ### Quantification of GAGs and collagen
+  paragraph_number: 1
+  content length: 726 chars
+  content preview: Each disc hemisection was digested in 600 μl of 3 mg/ml pepsin in 0.05 M acetic acid and incubated a...
+
+... and 25 more nodes
