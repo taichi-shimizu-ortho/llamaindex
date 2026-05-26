@@ -24,7 +24,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
 # パス設定
 SCRIPT_DIR = Path(__file__).resolve().parent
-STORAGE_DIR = SCRIPT_DIR / "storage_all"
+STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
 
 # デフォルト検索対象セクション（intro と materials_methods を除外）
 # 'other' はレビュー論文の全セクションに相当するため含める
@@ -181,7 +181,7 @@ def main():
 
     # 出力ファイル名
     search_date = datetime.now().strftime('%m%d_%H%M')
-    output_path = SCRIPT_DIR / f"search_{search_date}.md"
+    output_path = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / f"search_{search_date}.md"
 
     run_searches(index, queries, output_path, section_types=DEFAULT_SECTION_TYPES)
 
