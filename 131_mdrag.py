@@ -98,8 +98,8 @@ def main(paper_name: str = "Nishimura2023"):
                 subsec_name = h3_match.group(1).strip()
                 if subsec_name.lower() in ["references", "abbreviations"]:
                     return []
-                content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
-                paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+                # ### タイトル行を保持（削除しない）
+                paragraphs = [p.strip() for p in re.split(r'\n\n+', content.strip()) if p.strip()]
 
                 # 元々のheader_pathから## レベルを抽出
                 original_header_path = node.metadata.get("header_path", "")
@@ -179,11 +179,11 @@ def main(paper_name: str = "Nishimura2023"):
                             continue
 
                         subsubsec_name = subsubsec_match.group(1).strip()
-                        # ### ヘッダー行を削除（末尾改行なしにも対応）
-                        text = re.sub(r'^###[^\n]*\n?', '', subsubsection, count=1, flags=re.MULTILINE)
+                        # ### ヘッダー行を保持（削除しない）
+                        text = subsubsection.strip()
 
                         # 二重改行で小段落に分割
-                        paragraphs = re.split(r'\n\n+', text.strip())
+                        paragraphs = re.split(r'\n\n+', text)
                         paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
                         # 各段落を Document に

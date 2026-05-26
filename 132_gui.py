@@ -206,8 +206,8 @@ class PaperRAGGUI:
                 h2_name = h2_section if h2_section else section
                 h3_name = h3_match.group(1).strip()
 
-                content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
-                paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+                # ### タイトル行を保持（削除しない）
+                paragraphs = [p.strip() for p in re.split(r'\n\n+', content.strip()) if p.strip()]
 
                 docs = []
                 for i, para in enumerate(paragraphs, 1):
@@ -282,9 +282,10 @@ class PaperRAGGUI:
                         continue
 
                     subsubsec_name = subsubsec_match.group(1).strip()
-                    text = re.sub(r'^###[^\n]*\n', '', subsubsection, count=1, flags=re.MULTILINE)
+                    # ### ヘッダー行を保持（削除しない）
+                    text = subsubsection.strip()
 
-                    paragraphs = re.split(r'\n\n+', text.strip())
+                    paragraphs = re.split(r'\n\n+', text)
                     paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
                     for i, para in enumerate(paragraphs, 1):
