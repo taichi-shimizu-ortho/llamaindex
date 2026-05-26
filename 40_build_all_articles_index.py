@@ -336,7 +336,7 @@ def main():
 
     if not JSON_FILE.exists():
         print(f"[!] エラー: {JSON_FILE} が見つかりません")
-        print("    先に 04_batch_convert_articles.py を実行してください")
+        print("    先に 30_batch_convert_articles.py を実行してください")
         return
 
     if STORAGE_DIR.exists():
