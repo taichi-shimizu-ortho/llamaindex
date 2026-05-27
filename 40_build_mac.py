@@ -276,7 +276,7 @@ def main():
 
     print("\n" + "=" * 80)
     print("完了！次のコマンドで検索を実行できます:")
-    print("  python 50_search_all_mac.py")
+    print("uv run 50_search_all_mac.py")
     print("=" * 80)
 
 

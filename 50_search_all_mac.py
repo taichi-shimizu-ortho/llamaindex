@@ -27,8 +27,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 JSON_FILE = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/articles_all3.json"
 STORAGE_DIR = SCRIPT_DIR / "storage_all"
 
-# デフォルト検索対象セクション（intro と materials_methods を除外）
-DEFAULT_SECTION_TYPES = ['results', 'discussion', 'conclusion', 'abstract', 'other']
+# デフォルト検索対象セクション（本論文コンテンツのみ）
+DEFAULT_SECTION_TYPES = ['intro', 'materials|methods', 'results', 'discussion', 'conclusion', 'review']
 
 
 def load_index():
@@ -187,7 +187,8 @@ def main():
 
     # 出力ファイル名
     search_date = datetime.now().strftime('%m%d_%H%M')
-    output_path = SCRIPT_DIR / f"search_{search_date}.md"
+    output_dir = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex"
+    output_path = output_dir / f"search_{search_date}.md"
 
     run_searches(index, queries, output_path, section_types=DEFAULT_SECTION_TYPES)
 
