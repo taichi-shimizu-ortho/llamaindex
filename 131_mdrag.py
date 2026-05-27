@@ -1,4 +1,4 @@
-# mac 0415
+# mac 0415 - text-only version without metadata
 import os
 import sys
 import re
@@ -23,7 +23,7 @@ def find_paper(paper_name: str) -> str:
 
 def is_japanese(text: str) -> bool:
     """テキストが日本語を含むかどうかを判定"""
-    japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]')
+    japanese_pattern = re.compile(r'[぀-ゟ゠-ヿ一-鿿]')
     return bool(japanese_pattern.search(text))
 
 def translate_to_english(text: str) -> str:
@@ -36,6 +36,10 @@ def translate_to_english(text: str) -> str:
     )
     response = llm.complete(translation_prompt)
     return str(response).strip()
+
+def remove_image_links(text: str) -> str:
+    """Markdownの画像リンク ![alt](url) を削除"""
+    return re.sub(r'!\[([^\]]*)\]\(([^)]*)\)', '', text)
 
 def main(paper_name: str = "Nishimura2023"):
     Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1)
@@ -92,10 +96,10 @@ def main(paper_name: str = "Nishimura2023"):
                 if not h3_match:
                     return []
                 subsec_name = h3_match.group(1).strip()
-                if subsec_name.lower() == "references":
+                if subsec_name.lower() in ["references", "abbreviations"]:
                     return []
-                content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
-                paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
+                # ### タイトル行を保持（削除しない）
+                paragraphs = [p.strip() for p in re.split(r'\n\n+', content.strip()) if p.strip()]
 
                 # 元々のheader_pathから## レベルを抽出
                 original_header_path = node.metadata.get("header_path", "")
@@ -105,8 +109,8 @@ def main(paper_name: str = "Nishimura2023"):
                 header_prefix = f"## {h2_name}" if h2_name else ""
 
                 return [
-                    Document(text=para, metadata={
-                        "section_name": subsec_name,
+                    Document(text=remove_image_links(para), metadata={
+                        "section_name": h2_name if h2_name else "Unknown",
                         "header_path": f"{header_prefix} > ### {subsec_name}" if header_prefix else f"### {subsec_name}",
                         "paragraph_number": i
                     })
@@ -114,8 +118,8 @@ def main(paper_name: str = "Nishimura2023"):
                 ]
 
             section = extract_section_name(content)
-            # References だけは除外
-            if section.lower() == "references":
+            # References と Abbreviations は除外
+            if section.lower() in ["references", "abbreviations"]:
                 return []
 
             # ## セクションで分割
@@ -154,7 +158,7 @@ def main(paper_name: str = "Nishimura2023"):
                         # 各段落を Document に
                         for i, para in enumerate(paragraphs, 1):
                             doc = Document(
-                                text=para,
+                                text=remove_image_links(para),
                                 metadata={
                                     "section_name": subsec_name,
                                     "header_path": f"## {subsec_name}",
@@ -175,19 +179,19 @@ def main(paper_name: str = "Nishimura2023"):
                             continue
 
                         subsubsec_name = subsubsec_match.group(1).strip()
-                        # ### ヘッダー行を削除（末尾改行なしにも対応）
-                        text = re.sub(r'^###[^\n]*\n?', '', subsubsection, count=1, flags=re.MULTILINE)
+                        # ### ヘッダー行を保持（削除しない）
+                        text = subsubsection.strip()
 
                         # 二重改行で小段落に分割
-                        paragraphs = re.split(r'\n\n+', text.strip())
+                        paragraphs = re.split(r'\n\n+', text)
                         paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
                         # 各段落を Document に
                         for i, para in enumerate(paragraphs, 1):
                             doc = Document(
-                                text=para,
+                                text=remove_image_links(para),
                                 metadata={
-                                    "section_name": subsubsec_name,
+                                    "section_name": subsec_name,
                                     "header_path": f"## {subsec_name} > ### {subsubsec_name}",
                                     "paragraph_number": i
                                 }
@@ -204,9 +208,39 @@ def main(paper_name: str = "Nishimura2023"):
         print("Warning: Main text nodes not found.")
         final_nodes = []
 
+    # 【重要】メタデータをベクトル化から除外（テキストのみで検索）
+    for node in final_nodes:
+        node.excluded_embed_metadata_keys = ["section_name", "header_path", "paragraph_number"]
+        node.excluded_llm_metadata_keys = ["section_name", "header_path", "paragraph_number"]
+
     # 3. インデックス構築
     print(f"Building index with {len(final_nodes)} nodes...")
+    print("Note: Metadata excluded from embedding - text-based search only")
     index = VectorStoreIndex(final_nodes)
+
+    # セクション名をMDでの出現順で取得（重複なし）
+    seen = set()
+    unique_sections = []
+    for node in final_nodes:
+        section = node.metadata.get("section_name", "Unknown")
+        if section and section not in seen:
+            unique_sections.append(section)
+            seen.add(section)
+
+    section_flag_map = {}
+    flag_to_section = {}
+    for section in unique_sections:
+        # セクション名の先頭文字をフラグとする（例：Results → r）
+        flag = section[0].lower()
+        section_flag_map[section] = flag
+        flag_to_section[flag] = section
+
+    # 利用可能なセクションを表示
+    print("\n【利用可能なセクション】")
+    for section in unique_sections:
+        flag = section_flag_map[section]
+        print(f"  -{flag}: {section}")
+    print("（クエリに -r -m のように付加して複数指定可能）\n")
 
     # 5. クエリエンジン（以下、対話ログ保存ロジックは同じ）
     query_engine = index.as_query_engine(
@@ -223,25 +257,63 @@ def main(paper_name: str = "Nishimura2023"):
     device_name = socket.gethostname()
     output_file = output_dir / f"{timestamp}_dialogue_{paper_name}_{device_name}.md"
 
-    print(f"\n--- 論文 RAG 起動: {paper_name} ---")
+    print(f"--- 論文 RAG 起動: {paper_name} (テキストのみモード) ---\n")
 
-    turn = 1 
+    turn = 1
+
+    def parse_query_and_sections(query: str) -> tuple[str, list[str]]:
+        """クエリからセクション指定フラグを抽出
+        Returns: (クエリテキスト, セクション指定リスト)
+        """
+        flags = re.findall(r'-([a-z]+)', query)
+        clean_query = re.sub(r'-[a-z]+', '', query).strip()
+
+        sections = []
+        for flag in flags:
+            if flag in flag_to_section:
+                sections.append(flag_to_section[flag])
+
+        return clean_query, sections
 
     while True:
         query = input(f"\n[{turn}] Q: ") # turnを表示
         if query.lower() in ["exit", "q"]: break
 
+        # クエリとセクション指定を分離
+        clean_query, target_sections = parse_query_and_sections(query)
+
         # 日本語判定と英訳
-        search_query = query
-        is_japanese_query = is_japanese(query)
+        search_query = clean_query
+        is_japanese_query = is_japanese(clean_query)
 
         if is_japanese_query:
             print(f"  日本語クエリを検出、英訳中...")
-            search_query = translate_to_english(query)
+            search_query = translate_to_english(clean_query)
             print(f"  英訳クエリ: {search_query}")
 
-        response = query_engine.query(search_query)
-        
+        if target_sections:
+            print(f"  検索対象セクション: {', '.join(target_sections)}")
+
+        # セクション指定がある場合はノードをフィルタリング
+        if target_sections:
+            filtered_nodes = [
+                node for node in final_nodes
+                if node.metadata.get("section_name") in target_sections
+            ]
+            if filtered_nodes:
+                filtered_index = VectorStoreIndex(filtered_nodes)
+                filtered_query_engine = filtered_index.as_query_engine(
+                    similarity_top_k=3,
+                    response_mode="compact",
+                    streaming=True
+                )
+                response = filtered_query_engine.query(search_query)
+            else:
+                print(f"  警告: 指定されたセクションにノードが見つかりません")
+                response = query_engine.query(search_query)
+        else:
+            response = query_engine.query(search_query)
+
         # 回答表示（ストリーミング）
         full_response = ""
         for text in response.response_gen:
@@ -263,11 +335,13 @@ def main(paper_name: str = "Nishimura2023"):
         # 3. ファイルへの書き込み（turn変数がここで活きる）
         with open(output_file, "a", encoding="utf-8") as f:
             if turn == 1:
-                f.write(f"# Dialogue with {paper_name}\nDate: {timestamp}\n\n")
+                f.write(f"# Dialogue with {paper_name} (Text-only mode)\nDate: {timestamp}\n\n")
 
             f.write(f"## Q{turn}: {query}\n")
             if is_japanese_query:
                 f.write(f"*(英訳: {search_query})*\n")
+            if target_sections:
+                f.write(f"*(対象セクション: {', '.join(target_sections)})*\n")
             f.write("\n")
             f.write(f"**Answer**:\n{full_response}\n\n")
             f.write(f"**Source Details**:\n\n")

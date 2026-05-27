@@ -23,7 +23,7 @@ Settings.text_splitter = SentenceSplitter(chunk_size=8192, chunk_overlap=0)
 # パス設定
 SCRIPT_DIR = Path(__file__).resolve().parent
 JSON_FILE = SCRIPT_DIR / "articles_all.json"
-STORAGE_DIR = SCRIPT_DIR / "storage_all"
+STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
 
 # 検索対象から除外するセクションタイプ
 # 注: 'other' は含めない (レビュー論文など独自構造を持つ記事の内容を保持)
@@ -333,7 +333,7 @@ def main():
 
     if not JSON_FILE.exists():
         print(f"[!] エラー: {JSON_FILE} が見つかりません")
-        print("    先に 04_batch_convert_articles.py を実行してください")
+        print("    先に 30_batch_convert_articles.py を実行してください")
         return
 
     if STORAGE_DIR.exists():

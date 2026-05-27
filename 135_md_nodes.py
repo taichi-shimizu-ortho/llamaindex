@@ -20,7 +20,7 @@ def find_paper(paper_name: str) -> str:
                 return os.path.join(root, file)
     raise FileNotFoundError(f"論文 '{paper_name}' が見つかりません")
 
-def debug_nodes(paper_name: str = "Nishimura2023"):
+def debug_nodes(paper_name: str = "Konopka2016"):
     """node分けのデバッグ出力"""
 
     # ファイル読み込み
@@ -65,34 +65,47 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
         return match.group(1).strip() if match else "Main Text"
 
     def split_by_paragraphs(node):
-        """ノードを段落ごとに分割
+        """ノードを段落ごとに分割、セクション情報も記録
         ## セクション → ### 中段落 → 二重改行で小段落
+        戻り値：(docs, sections_dict)
         """
         content = node.get_content()
+        sections_dict = {}
 
         # ## ヘッダーがなく ### のみのノード（例：9.1. のようなサブセクション）
         if not re.search(r'^##(?!#)', content, re.MULTILINE):
             h3_match = re.search(r'^###\s+(.+?)(?:\n|$)', content, re.MULTILINE)
             if not h3_match:
-                return []
+                return [], {}
             subsec_name = h3_match.group(1).strip()
             if subsec_name.lower() == "references":
-                return []
+                return [], {}
             content_body = re.sub(r'^###[^\n]*\n?', '', content, count=1, flags=re.MULTILINE)
             paragraphs = [p.strip() for p in re.split(r'\n\n+', content_body.strip()) if p.strip()]
-            return [
+
+            # 元々のheader_pathから## レベルを抽出
+            original_header_path = node.metadata.get("header_path", "")
+            # パスの最後の部分を取得 ('/4 Main Text/Methods/' → 'Methods')
+            parts = original_header_path.strip('/').split('/')
+            h2_name = parts[-1] if parts and len(parts) > 1 else ""
+            header_prefix = f"## {h2_name}" if h2_name else ""
+
+            docs = [
                 Document(text=para, metadata={
                     "section_name": subsec_name,
-                    "header_path": f"### {subsec_name}",
+                    "header_path": f"{header_prefix} > ### {subsec_name}" if header_prefix else f"### {subsec_name}",
                     "paragraph_number": i
                 })
                 for i, para in enumerate(paragraphs, 1)
             ]
+            section_key = f"{header_prefix} > ### {subsec_name}" if header_prefix else f"### {subsec_name}"
+            sections_dict[section_key] = len(paragraphs)
+            return docs, sections_dict
 
         section = extract_section_name(content)
         # References だけは除外
         if section.lower() == "references":
-            return []
+            return [], {}
 
         # ## セクションで分割
         subsections = re.split(r'(?=^##)', content, flags=re.MULTILINE)
@@ -109,6 +122,7 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                 continue
 
             subsec_name = subsec_match.group(1).strip()
+            header_prefix = f"## {subsec_name}"
 
             # ## ヘッダー行を削除（末尾改行なしにも対応）
             content_without_header = re.sub(r'^##[^\n]*\n?', '', subsection, count=1, flags=re.MULTILINE)
@@ -133,13 +147,18 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                             text=para,
                             metadata={
                                 "section_name": subsec_name,
-                                "header_path": f"## {subsec_name}",
+                                "header_path": header_prefix,
                                 "paragraph_number": i
                             }
                         )
                         docs.append(doc)
+                    sections_dict[header_prefix] = len(paragraphs)
+                else:
+                    # コンテンツがない場合も記録
+                    sections_dict[header_prefix] = 0
             else:
                 # パターン2：## の下が ### で分割される
+                subsec_paragraph_count = 0
                 for subsubsection in subsubsections:
                     if not subsubsection.strip():
                         continue
@@ -151,6 +170,7 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                         continue
 
                     subsubsec_name = subsubsec_match.group(1).strip()
+                    header_full = f"{header_prefix} > ### {subsubsec_name}"
                     # ### ヘッダー行を削除（末尾改行なしにも対応）
                     text = re.sub(r'^###[^\n]*\n?', '', subsubsection, count=1, flags=re.MULTILINE)
 
@@ -164,20 +184,53 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
                             text=para,
                             metadata={
                                 "section_name": subsubsec_name,
-                                "header_path": f"## {subsec_name}",
+                                "header_path": header_full,
                                 "paragraph_number": i
                             }
                         )
                         docs.append(doc)
+                    sections_dict[header_full] = len(paragraphs)
+                    subsec_paragraph_count += len(paragraphs)
 
-        return docs
+                # ## セクション自体も記録（### サブセクションの段落合計）
+                sections_dict[header_prefix] = subsec_paragraph_count
+
+        return docs, sections_dict
 
     if nodes:
         final_nodes = []
+        all_sections = {}
         for node in nodes:
-            final_nodes.extend(split_by_paragraphs(node))
+            docs, sections = split_by_paragraphs(node)
+            final_nodes.extend(docs)
+            all_sections.update(sections)
     else:
         final_nodes = []
+        all_sections = {}
+
+    # ## セクションの段落数を、配下の ### セクションの合計から再計算
+    final_all_sections = {}
+    for section, count in all_sections.items():
+        if section.startswith("## ") and " > " not in section:
+            # ## セクションの場合
+            # 配下に > を含むセクションがあるかチェック
+            has_children = any(
+                s.startswith(f"{section} > ")
+                for s in all_sections.keys()
+            )
+            if has_children:
+                # 子セクションがある場合、合計を計算
+                child_count = sum(
+                    c for s, c in all_sections.items()
+                    if s.startswith(f"{section} > ")
+                )
+                final_all_sections[section] = child_count
+            else:
+                # 子セクションがない場合、元々の値を保持
+                final_all_sections[section] = count
+        else:
+            final_all_sections[section] = count
+    all_sections = final_all_sections
 
     # デバッグ出力をファイルに保存
     output_file = Path.cwd() / f"debug_nodes_{paper_name}.txt"
@@ -190,23 +243,22 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
         # セクションごとにノードをカウント
         section_nodes = {}
         for node in final_nodes:
-            section = node.metadata.get("section_name", "不明")
+            section = node.metadata.get("header_path", "不明")
             if section not in section_nodes:
                 section_nodes[section] = []
             section_nodes[section].append(node)
 
-        # 結果を出力（自然ソート）
-        def natural_sort_key(text):
-            return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', text)]
-
-        for section in sorted(section_nodes.keys(), key=natural_sort_key):
-            node_list = section_nodes[section]
-            f.write(f"\n【{section}】 段落数: {len(node_list)}\n")
-            for i, node in enumerate(node_list[:5], 1):
-                content = node.get_content()[:80].replace('\n', ' ')
-                f.write(f"  段落{i}: {content}...\n")
-            if len(node_list) > 5:
-                f.write(f"  ... and {len(node_list) - 5} more\n")
+        # 結果を出力（本文の順、内容のないセクションも含む）
+        for section in all_sections.keys():
+            count = all_sections[section]
+            f.write(f"\n【{section}】 段落数: {count}\n")
+            if section in section_nodes:
+                node_list = section_nodes[section]
+                for i, node in enumerate(node_list[:5], 1):
+                    content = node.get_content()[:80].replace('\n', ' ')
+                    f.write(f"  段落{i}: {content}...\n")
+                if len(node_list) > 5:
+                    f.write(f"  ... and {len(node_list) - 5} more\n")
             f.write("\n")
 
     print(f"[OK] デバッグ出力ファイル: {output_file}")
@@ -216,21 +268,25 @@ def debug_nodes(paper_name: str = "Nishimura2023"):
     # コンソールにも段落数サマリーを表示
     section_paragraphs = {}
     for node in final_nodes:
-        section = node.metadata.get("section_name", "不明")
+        section = node.metadata.get("header_path", "不明")
         if section not in section_paragraphs:
             section_paragraphs[section] = 0
         section_paragraphs[section] += 1
 
     print("\n【段落分けのサマリー】")
-    # 自然ソート（数字を数値として扱う）
-    import re as regex_module
-    def natural_sort_key(text):
-        return [int(c) if c.isdigit() else c.lower() for c in regex_module.split(r'(\d+)', text)]
-
-    for section in sorted(section_paragraphs.keys(), key=natural_sort_key):
-        count = section_paragraphs[section]
-        print(f"  {section}: {count} 段落")
+    for section in all_sections.keys():
+        count = all_sections[section]
+        # ### セクションはインデント表示（> を含むセクション）
+        if " > ### " in section:
+            # ## > ### 形式は、通常のインデント
+            print(f"    {section}: {count} 段落")
+        elif section.startswith("### "):
+            # ### のみのセクション
+            print(f"    {section}: {count} 段落")
+        else:
+            # ## セクション
+            print(f"  {section}: {count} 段落")
 
 if __name__ == "__main__":
-    paper_name = sys.argv[1] if len(sys.argv) > 1 else "Nishimura2023"
+    paper_name = sys.argv[1] if len(sys.argv) > 1 else "Konopka2016"
     debug_nodes(paper_name)
