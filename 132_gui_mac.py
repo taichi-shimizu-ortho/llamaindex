@@ -1,4 +1,4 @@
-# GUI for 131_mdrag.py - Paper RAG Interactive Tool
+# GUI for 131_mdrag.py - Paper RAG Interactive Tool (macOS version)
 import os
 import re
 import sys
@@ -17,10 +17,10 @@ from openai import OpenAI as OpenAIClient
 
 load_dotenv()
 
-# フォントサイズ設定
+# フォントサイズ設定（macOS用）
 FONT_SIZE = 12
-DEFAULT_FONT = ("Segoe UI", FONT_SIZE)
-MONO_FONT = ("Consolas", FONT_SIZE)
+DEFAULT_FONT = ("San Francisco", FONT_SIZE)
+MONO_FONT = ("Menlo", FONT_SIZE)
 
 class PaperRAGGUI:
     def __init__(self, root):

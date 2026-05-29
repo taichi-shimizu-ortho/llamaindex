@@ -24,6 +24,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
 # パス設定
 SCRIPT_DIR = Path(__file__).resolve().parent
+JSON_FILE = SCRIPT_DIR / "articles_all.json"
 STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
 
 # デフォルト検索対象セクション（intro と materials_methods を除外）
@@ -149,6 +150,7 @@ def run_searches(index, queries: list[str], output_path: Path,
         f.write("# 全論文横断RAG検索結果\n\n")
         f.write(f"**検索日時**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write(f"**検索クエリ数**: {len(queries)}件\n\n")
+        f.write(f"**JSONソース**: {JSON_FILE.name}\n\n")
         f.write(f"**インデックス**: {STORAGE_DIR.name}/\n\n")
         if section_types:
             f.write(f"**対象セクション**: {', '.join(section_types)}\n\n")
