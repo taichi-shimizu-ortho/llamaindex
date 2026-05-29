@@ -117,13 +117,6 @@ class RxfpAbstractRAGGUI:
             messagebox.showerror("エラー", f"初期化に失敗:\n{e}")
             self.status_label.config(text="エラー", foreground="red")
 
-    def _is_japanese(self, text: str) -> bool:
-        for char in text:
-            code = ord(char)
-            if (0x3040 <= code <= 0x309F) or (0x30A0 <= code <= 0x30FF) or (0x4E00 <= code <= 0x9FFF):
-                return True
-        return False
-
     def _translate_to_english(self, text: str) -> str:
         client = OpenAIClient()
         response = client.chat.completions.create(
@@ -151,14 +144,11 @@ class RxfpAbstractRAGGUI:
         self.root.update()
 
         try:
-            # 日本語なら翻訳
-            if self._is_japanese(original_query):
-                self.append_output(f"[翻訳中...]\n")
-                self.root.update()
-                query = self._translate_to_english(original_query)
-                self.append_output(f"→ {query}\n\n")
-            else:
-                query = original_query
+            # 常に英語に翻訳
+            self.append_output(f"[翻訳中...]\n")
+            self.root.update()
+            query = self._translate_to_english(original_query)
+            self.append_output(f"→ {query}\n\n")
 
             top_k = self.topk_var.get()
             query_engine = self.index.as_query_engine(
@@ -169,8 +159,7 @@ class RxfpAbstractRAGGUI:
 
             # 出力
             output = f"[Turn {self.turn}] Q: {original_query}\n"
-            if self._is_japanese(original_query):
-                output += f"(EN: {query})\n"
+            output += f"(EN: {query})\n"
             output += f"\nA: {response.response}\n\n"
 
             output += "【引用元】\n"
@@ -216,8 +205,7 @@ class RxfpAbstractRAGGUI:
                 f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
             f.write(f"## Q{self.turn}: {original_query}\n")
-            if original_query != en_query:
-                f.write(f"*(EN: {en_query})*\n")
+            f.write(f"*(EN: {en_query})*\n")
             f.write(f"\n**Answer**: {response.response}\n\n")
 
             f.write("**Sources**:\n\n")
