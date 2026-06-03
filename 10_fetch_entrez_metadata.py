@@ -1,7 +1,7 @@
 """
 Entrez (PubMed) API を使って各論文の MeSH, Keywords, ArticleType を取得する。
 
-入力: MD ファイルディレクトリ（frontmatter の doi / citekey / tags を使用）
+入力: MD ファイルディレクトリ（frontmatter の doi / citekey を使用）
 出力: entrez_metadata.json
 
 実行例:
@@ -34,7 +34,8 @@ TOOL = "llamaindex-rag"
 
 def parse_frontmatter(content: str) -> dict:
     """YAML frontmatter をパースして dict を返す。"""
-    match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    # \r? を追加して、CRLF と LF の両方に対応
+    match = re.match(r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n', content, re.DOTALL)
     if match:
         try:
             return yaml.safe_load(match.group(1)) or {}
@@ -60,15 +61,9 @@ def load_articles_from_md(md_dir: Path) -> list[dict]:
             citekey = raw[0].upper() + raw[1:] if raw else raw
             # doi: frontmatter 優先 → >[!Info] ブロックにフォールバック
             doi = str(fm.get("doi", "") or extract_doi_from_info_block(content) or "").strip()
-            tags = fm.get("tags", [])
-            if isinstance(tags, str):
-                tags = [tags]
-            elif not isinstance(tags, list):
-                tags = []
             articles.append({
                 "citekey": citekey,
                 "doi": doi,
-                "tags": tags,
                 "filename": md_file.name,
             })
         except Exception as e:
@@ -99,32 +94,6 @@ def doi_to_pmid(doi: str) -> str:
     except Exception as e:
         print(f"    [esearch エラー] {e}")
         return ""
-
-
-def pmid_to_pmcid(pmid: str) -> str:
-    """PMID から PMCID を取得する。PMCに登録がなければ空文字を返す。"""
-    # 新しい公式エンドポイントURLに変更
-    url = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
-    params = {
-        "ids": pmid,
-        "idtype": "pmid",
-        "format": "json",
-        "tool": TOOL,
-        "email": MAILTO,
-    }
-    # 403エラー（Forbidden）を回避するため、User-Agentを明示的に設定
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    try:
-        r = requests.get(url, params=params, headers=headers, timeout=15)
-        r.raise_for_status()
-        records = r.json().get("records", [])
-        if records and "pmcid" in records[0]:
-            return records[0]["pmcid"]  # 例: "PMC11179965"
-    except Exception as e:
-        print(f"    [idconv エラー] {e}")
-    return ""
 
 
 
@@ -161,7 +130,7 @@ def fetch_pubmed_record(pmid: str) -> dict:
         t in ["Review", "Systematic Review", "Meta-Analysis"] for t in article_types
     )
 
-    # MeSH Heading（主語のみ、サブヘディングは除外）
+    # MeSH Heading
     mesh_terms = [
         dname.text
         for dname in root.findall(".//MeshHeading/DescriptorName")
@@ -211,7 +180,6 @@ def main():
     articles = load_articles_from_md(md_dir)
     total = len(articles)
     results = []
-    discrepancies = []
 
     existing = load_existing_results()
     skip_count = 0
@@ -225,37 +193,23 @@ def main():
     for i, article in enumerate(articles, 1):
         citekey = article["citekey"]
         doi = article["doi"]
-        current_tags = article["tags"]
-        current_is_review = "review" in current_tags
 
         print(f"[{i:3}/{total}] {citekey}", end=" ")
 
         # 取得済みかつ DOI が変わっていなければスキップ
         if citekey in existing and existing[citekey].get("doi", "") == doi:
             rec = existing[citekey]
-            rec["current_tags"] = current_tags
-            rec["current_is_review"] = current_is_review
             results.append(rec)
             skip_count += 1
             print("→ スキップ（取得済み）")
-            if rec.get("entrez_is_review") is not None and current_is_review != rec["entrez_is_review"]:
-                discrepancies.append({
-                    "citekey": citekey,
-                    "current_is_review": current_is_review,
-                    "entrez_is_review": rec["entrez_is_review"],
-                    "entrez_article_types": rec.get("entrez_article_types", []),
-                })
             continue
 
         record = {
             "citekey": citekey,
             "doi": doi,
             "pmid": "",
-            "pmcid": "",
-            "current_tags": current_tags,
-            "current_is_review": current_is_review,
             "entrez_article_types": [],
-            "entrez_is_review": None,
+            "entrez_is_review": False,  # デフォルトは False
             "entrez_mesh_terms": [],
             "entrez_keywords": [],
             "pubmed_found": False,
@@ -268,7 +222,7 @@ def main():
 
         # Step1: DOI → PMID
         pmid = doi_to_pmid(doi)
-        time.sleep(0.4)  # NCBI レート制限対策
+        time.sleep(0.4)
 
         if not pmid:
             print("→ PubMedに未登録（書籍章など）")
@@ -278,10 +232,7 @@ def main():
         record["pmid"] = pmid
         record["pubmed_found"] = True
 
-        # Step2: PMID → PMCID
-        pmcid = pmid_to_pmcid(pmid)
-        record["pmcid"] = pmcid
-        time.sleep(0.4)
+
 
         # Step3: PMID → メタデータ取得
         meta = fetch_pubmed_record(pmid)
@@ -299,44 +250,38 @@ def main():
             "entrez_keywords": meta.get("keywords", []),
         })
 
-        entrez_is_review = record["entrez_is_review"]
-        pmcid_str = f" | PMCID: {pmcid}" if pmcid else ""
-        print(f"→ PMID {pmid}{pmcid_str} | 種別: {meta.get('article_types', [])} | MeSH: {len(meta.get('mesh_terms', []))}件")
-
-        if current_is_review != entrez_is_review:
-            discrepancies.append({
-                "citekey": citekey,
-                "current_is_review": current_is_review,
-                "entrez_is_review": entrez_is_review,
-                "entrez_article_types": meta.get("article_types", []),
-            })
+        review_label = "Review" if record["entrez_is_review"] else "Original"
+        print(f"→ PMID {pmid} | 判定: {review_label} | MeSH: {len(meta.get('mesh_terms', []))}件")
 
         results.append(record)
 
     # 結果を保存
     output = {
-        "total": total,
-        "pubmed_found": sum(1 for r in results if r["pubmed_found"]),
-        "discrepancies_count": len(discrepancies),
-        "discrepancies": discrepancies,
-        "articles": results,
-    }
+            "total": total,
+            "pubmed_found": sum(1 for r in results if r["pubmed_found"]),
+            "review_count": sum(1 for r in results if r["entrez_is_review"]),
+            "articles": results,
+        }
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
+
+    # PubMed未登録（データなし）の論文を抽出
+    unregistered_articles = [r for r in results if not r["pubmed_found"]]
 
     # サマリー表示
     print("\n" + "=" * 70)
     print(f"スキップ（取得済み）: {skip_count}件 / 新規取得: {total - skip_count}件")
     print(f"PubMed登録済み: {output['pubmed_found']}/{total}件")
-    print(f"review判定の差異: {len(discrepancies)}件")
-    if discrepancies:
-        print("\n【差異のある記事】")
-        for d in discrepancies:
-            cur = "review" if d["current_is_review"] else "original"
-            ent = "review" if d["entrez_is_review"] else "original"
-            print(f"  {d['citekey']}: 現在={cur} → Entrez={ent} {d['entrez_article_types']}")
+    print(f"Review論文数 (Entrez判定): {output['review_count']}/{total}件")
+    
+    if unregistered_articles:
+        print(f"\n【⚠️ PubMed未登録・データなしの論文: {len(unregistered_articles)}件】")
+        for r in unregistered_articles:
+            reason = "DOIなし" if not r["doi"] else "PubMedにID未登録"
+            print(f"  - {r['citekey']} ({reason})")
+            
     print(f"\n結果保存: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
-    main()
+   main()
