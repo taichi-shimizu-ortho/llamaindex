@@ -236,8 +236,18 @@ def main():
             fm["pmcid"]      = rec.get("pmcid", "") or fm.get("pmcid", "")
             fm["mesh_terms"] = rec.get("entrez_mesh_terms", [])
             fm["keywords"]   = rec.get("entrez_keywords", [])
+            # --- 追加：review 判定を boolean (True/False) でヘッダーに書き込む ---
+            # JSON 内の "entrez_is_review" (True/False/None) をそのまま反映
+            # データがない場合は、既存の tags に "review" があるかでフォールバック
+            entrez_is_review = rec.get("entrez_is_review")
+            if entrez_is_review is not None:
+                fm["review"] = entrez_is_review
+            else:
+                fm["review"] = "review" in fm.get("tags", [])
+            # -----------------------------------------------------------------
 
             new_fm_str = to_yaml_str(fm)
+            
             content = f"---\n{new_fm_str}---\n{body}"
             file_modified = True
             updated += 1

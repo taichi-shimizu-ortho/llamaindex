@@ -19,8 +19,8 @@ import requests
 import yaml
 
 # デフォルトの MD ディレクトリ（スクリプトから見た相対パス）
-DEFAULT_MD_DIR = Path(__file__).parent.parent.parent / "10_article" / "RXFP1"
-OUTPUT_PATH = Path(__file__).parent / "entrez_metadata.json"
+DEFAULT_MD_DIR = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" /"10_article" / "RXFP1"
+OUTPUT_PATH = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
 
 ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 # NCBI の利用規約: 毎秒3リクエスト以下。メールを設定すると10リクエスト/秒に緩和
