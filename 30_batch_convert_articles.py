@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-SCRIPT_DIR = Path(__file__).parent
-ENTREZ_PATH = SCRIPT_DIR / "entrez_metadata.json"
+
+ENTREZ_PATH = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
 
 # JSON出力時に除外するセクションタイプ
 # 注: 'other' は含めない（レビュー論文など独自構造を持つ記事の内容を保持）

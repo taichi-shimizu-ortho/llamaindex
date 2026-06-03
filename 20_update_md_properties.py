@@ -16,9 +16,8 @@ from pathlib import Path
 
 import yaml
 
-SCRIPT_DIR   = Path(__file__).parent
-ENTREZ_PATH  = SCRIPT_DIR / "entrez_metadata.json"
-RXFP1_DIR    = Path.home() / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
+ENTREZ_PATH  = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
+RXFP1_DIR    = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" /"10_article" / "RXFP1"
 
 # frontmatter を分割する正規表現
 FM_PATTERN = re.compile(r'^---\s*\n(.*?)\n---\s*\n(.*)', re.DOTALL)
@@ -243,11 +242,17 @@ def main():
             if entrez_is_review is not None:
                 fm["review"] = entrez_is_review
             else:
-                fm["review"] = "review" in fm.get("tags", [])
+                # tags が None や文字列の場合を考慮して安全に取得
+                current_tags = fm.get("tags") or []
+                if isinstance(current_tags, str):
+                    current_tags = [current_tags]
+                elif not isinstance(current_tags, list):
+                    current_tags = []
+                fm["review"] = "review" in current_tags
             # -----------------------------------------------------------------
 
             new_fm_str = to_yaml_str(fm)
-            
+
             content = f"---\n{new_fm_str}---\n{body}"
             file_modified = True
             updated += 1
@@ -275,7 +280,7 @@ def main():
     print("\n" + "=" * 60)
     print(f"frontmatter更新: {updated}件 / ## Introduction付与: {intro_added}件")
     print(f"frontmatterなし: {skipped_no_fm}件 / entrezデータなし: {skipped_no_entrez}件")
-    print("\n次のステップ: python 04_batch_convert_articles.py")
+    print("\n次のステップ: uv run 30_batch_convert_articles.py")
 
 
 if __name__ == "__main__":

@@ -103,7 +103,8 @@ def doi_to_pmid(doi: str) -> str:
 
 def pmid_to_pmcid(pmid: str) -> str:
     """PMID から PMCID を取得する。PMCに登録がなければ空文字を返す。"""
-    url = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
+    # 新しい公式エンドポイントURLに変更
+    url = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
     params = {
         "ids": pmid,
         "idtype": "pmid",
@@ -111,8 +112,12 @@ def pmid_to_pmcid(pmid: str) -> str:
         "tool": TOOL,
         "email": MAILTO,
     }
+    # 403エラー（Forbidden）を回避するため、User-Agentを明示的に設定
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
-        r = requests.get(url, params=params, timeout=15)
+        r = requests.get(url, params=params, headers=headers, timeout=15)
         r.raise_for_status()
         records = r.json().get("records", [])
         if records and "pmcid" in records[0]:
@@ -120,6 +125,7 @@ def pmid_to_pmcid(pmid: str) -> str:
     except Exception as e:
         print(f"    [idconv エラー] {e}")
     return ""
+
 
 
 def fetch_pubmed_record(pmid: str) -> dict:
