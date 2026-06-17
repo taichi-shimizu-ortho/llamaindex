@@ -3,7 +3,7 @@
 
 処理内容:
   1. # 4 Main Text 内の最初の ## ヘッダーより前に本文があれば ## Introduction を自動付与
-  2. YAML frontmatter に doi, pmid, mesh_terms, keywords, review を追加
+  2. YAML frontmatter に doi, pmid, publisher, mesh_terms, keywords, review を追加
 
 前提: 10_fetch_entrez_metadata.py を先に実行して entrez_metadata.json を生成しておくこと
 
@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 
 ENTREZ_PATH  = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
-RXFP1_DIR    = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" /"10_article" / "RXFP1"
+RXFP1_DIR    = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
 
 # frontmatter を分割する正規表現（WindowsのCRLF、Mac/LinuxのLFの両方に対応）
 FM_PATTERN = re.compile(r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)', re.DOTALL)
@@ -225,6 +225,8 @@ def main():
         if rec:
             fm["doi"]        = rec.get("doi", "") or fm.get("doi", "")
             fm["pmid"]       = rec.get("pmid", "") or fm.get("pmid", "")
+            # publisher 情報をフロントマターに追記
+            fm["publisher"]  = rec.get("publisher", "") or fm.get("publisher", "")
             fm["mesh_terms"] = rec.get("entrez_mesh_terms", [])
             fm["keywords"]   = rec.get("entrez_keywords", [])
             
@@ -244,8 +246,9 @@ def main():
                 alerts.append(f"## Keywords 挿入（{len(entrez_kw)}件）")
 
             review_str = "review" if fm["review"] else "original"
+            pub_info = f" | Publisher: {fm['publisher']}" if fm["publisher"] else ""
             alert_str = f" | {'、'.join(alerts)}" if alerts else ""
-            print(f"  [OK] {md_file.name} ({review_str}) | MeSH:{len(fm['mesh_terms'])}件{alert_str}")
+            print(f"  [OK] {md_file.name} ({review_str}){pub_info} | MeSH:{len(fm['mesh_terms'])}件{alert_str}")
         else:
             # Entrezデータがない場合は、安全のため review: false を明示的にセット
             fm["review"] = False

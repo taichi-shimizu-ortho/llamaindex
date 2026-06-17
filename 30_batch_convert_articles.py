@@ -3,10 +3,10 @@
 LlamaIndex用の構造化JSONに一括変換して articles_all.json を生成する。
 
 実行順: 10 → 20 → 30 → 40 → 50
-前提: 20_update_md_properties.py を実行済みであること（MD frontmatter に entrez データが書き込まれている）
+前提: 20_update_md_properties.py を実行済みであること（MD frontmatter に entrez データや review 判定が書き込まれている）
 
-review判定: entrez_metadata.json の entrez_is_review を優先。
-            PubMed未登録論文は frontmatter の tags にフォールバック。
+review判定: MDファイルのフロントマターにある `review` プロパティを最優先。
+            なければ frontmatter の tags にフォールバック。
 """
 import json
 import re
@@ -15,9 +15,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
-
-
-ENTREZ_PATH = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
 
 # JSON出力時に除外するセクションタイプ
 # 注: 'other' は含めない（レビュー論文など独自構造を持つ記事の内容を保持）
@@ -30,7 +27,8 @@ EXCLUDE_SECTION_TYPES = ['references', 'acknowledgements', 'abstract', 'cited_by
 
 def parse_frontmatter(content: str) -> tuple[Dict[str, Any], str]:
     """YAML frontmatter をパースして (dict, 残りコンテンツ) を返す。"""
-    pattern = r'^---\s*\n(.*?)\n---\s*\n(.*)$'
+    # Windows(CRLF) と Mac/Linux(LF) の両方の改行コードに対応
+    pattern = r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)$'
     match = re.match(pattern, content, re.DOTALL)
     if match:
         try:
@@ -44,7 +42,7 @@ def parse_frontmatter(content: str) -> tuple[Dict[str, Any], str]:
 
 def extract_main_text_section(content: str) -> Optional[str]:
     """# 4 Main Text セクションを抽出する。"""
-    pattern = r'# 4 Main Text\s*\n(.*?)(?=\n#(?![#\s])|$)'
+    pattern = r'# 4 Main Text\s*\r?\n(.*?)(?=\n#(?![#\s])|$)'
     match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
     if match:
         return match.group(1).strip()
@@ -53,12 +51,12 @@ def extract_main_text_section(content: str) -> Optional[str]:
 
 def parse_main_text_frontmatter(main_text: str) -> tuple[Dict[str, Any], str]:
     """Main Text セクション内の YAML frontmatter をパースする。"""
-    pattern = r'^---\s*\n(.*?)\n---\s*\n(.*)$'
+    pattern = r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)$'
     match = re.match(pattern, main_text, re.DOTALL)
     if match:
         try:
             metadata = yaml.safe_load(match.group(1))
-            return metadata or {}, match.group(2)
+            return metadata or {}, main_text
         except yaml.YAMLError as e:
             print(f"Error parsing main text frontmatter: {e}")
             return {}, main_text
@@ -150,7 +148,7 @@ def extract_info_block_metadata(content: str) -> Dict[str, Any]:
         'first_author': '', 'authors': [], 'title': '', 'year': '',
         'journal': '', 'volume': '', 'issue': '', 'doi': '', 'citekey': ''
     }
-    info_match = re.search(r'>\[!Info\](.*?)(?=\n(?!>)|$)', content, re.DOTALL)
+    info_match = re.search(r'>\s*\[!Info\](.*?)(?=\n(?!>)|$)', content, re.DOTALL)
     if not info_match:
         return metadata
 
@@ -181,7 +179,7 @@ def md_to_structured_json(
 
     Args:
         md_file_path: MD ファイルパス
-        is_review: review判定の上書き。None の場合は frontmatter の tags から判定。
+        is_review: review判定の上書き。None の場合は frontmatter の review プロパティから判定。
     """
     with open(md_file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -201,8 +199,14 @@ def md_to_structured_json(
     elif not isinstance(tags, list):
         tags = []
 
+    # 1. 引数の is_review 優先
+    # 2. なければフロントマターの 'review' プロパティを最優先
+    # 3. なければ tags の 'review' から判定
     if is_review is None:
-        is_review = 'review' in tags
+        if 'review' in frontmatter:
+            is_review = bool(frontmatter['review'])
+        else:
+            is_review = 'review' in tags
 
     sections = extract_sections_from_main_text(main_text_body, is_review=is_review)
 
@@ -221,24 +225,13 @@ def md_to_structured_json(
         'doi':       info_metadata.get('doi', '') or frontmatter.get('doi', ''),
         'tags':      tags,
         'sections':  sections,
+        'is_review': is_review,
     }
 
 
 # ---------------------------------------------------------------------------
 # 変換処理
 # ---------------------------------------------------------------------------
-
-def load_entrez_review_lookup() -> dict[str, bool | None]:
-    """entrez_metadata.json から citekey → entrez_is_review の辞書を返す。"""
-    if not ENTREZ_PATH.exists():
-        return {}
-    try:
-        with open(ENTREZ_PATH, encoding="utf-8") as f:
-            data = json.load(f)
-        return {r["citekey"]: r.get("entrez_is_review") for r in data.get("articles", [])}
-    except Exception:
-        return {}
-
 
 def remove_url_references(text: str) -> str:
     """(https://...) 形式の URL 参照と HTML タグを削除する。"""
@@ -276,12 +269,6 @@ def batch_convert_articles(
     if not md_files:
         raise FileNotFoundError(f"マークダウンファイルが見つかりません: {input_dir}")
 
-    entrez_lookup = load_entrez_review_lookup()
-    if entrez_lookup:
-        print(f"[*] entrez_metadata.json から {len(entrez_lookup)} 件のreview判定を読み込みました")
-    else:
-        print("[!] entrez_metadata.json が見つかりません。tags によるreview判定にフォールバックします")
-
     print(f"[*] {len(md_files)} 個のファイルを処理します...")
     print("-" * 80)
 
@@ -292,22 +279,20 @@ def batch_convert_articles(
         try:
             print(f"[{i}/{len(md_files)}] 処理中: {md_file.name}")
 
-            # frontmatter から citekey を取得して entrez の review 判定を決定
             raw_content = md_file.read_text(encoding="utf-8")
             fm, _ = parse_frontmatter(raw_content)
-            citekey = fm.get("citekey", md_file.stem)
-            entrez_is_review = entrez_lookup.get(citekey)  # bool or None
+            
+            # MDファイルのフロントマターに書き込まれている 'review' プロパティを直接取得
+            # 20_update_md_properties.py で書き込み済み
+            md_is_review = fm.get('review')  # bool or None
 
-            # 構造化変換（entrez の review 判定を優先）
-            structured_data = md_to_structured_json(str(md_file), is_review=entrez_is_review)
+            # 構造化変換（フロントマターの review 判定を優先）
+            structured_data = md_to_structured_json(str(md_file), is_review=md_is_review)
             structured_data['filename'] = md_file.name
-            structured_data['is_review'] = (
-                entrez_is_review if entrez_is_review is not None
-                else ('review' in structured_data.get('tags', []))
-            )
 
             # 20_update_md_properties.py が frontmatter に書き込んだメタデータを付与
             structured_data['pmid']              = str(fm.get('pmid', '') or '')
+            structured_data['publisher']         = str(fm.get('publisher', '') or '')  # publisher を追加
             structured_data['entrez_mesh_terms'] = fm.get('mesh_terms', []) or []
             structured_data['entrez_keywords']   = fm.get('keywords', []) or []
 
@@ -316,7 +301,7 @@ def batch_convert_articles(
 
             section_count = len(structured_data.get('sections', []))
             review_label = "review" if structured_data['is_review'] else "original"
-            src_label = "entrez" if citekey in entrez_lookup and entrez_lookup[citekey] is not None else "tags"
+            src_label = "frontmatter" if md_is_review is not None else "tags"
             print(f"    [OK] {section_count} セクション | {review_label}（{src_label}判定）")
 
         except Exception as e:
@@ -394,8 +379,13 @@ def print_statistics(result: Dict[str, Any]):
 def main():
     import sys
 
-    input_dir  = sys.argv[1] if len(sys.argv) > 1 else "../../10_article/RXFP1"
-    output_file = sys.argv[2] if len(sys.argv) > 2 else "articles_all3.json"
+    # Pathオブジェクトとして定義
+    default_input = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
+    default_output = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "articles_all3.json"
+
+    # str() を使って確実に文字列に変換する
+    input_dir  = sys.argv[1] if len(sys.argv) > 1 else str(default_input)
+    output_file = sys.argv[2] if len(sys.argv) > 2 else str(default_output)
 
     print("=" * 80)
     print("一括変換ツール: MD ファイル → LlamaIndex 用 JSON")
@@ -407,10 +397,11 @@ def main():
     try:
         result = batch_convert_articles(input_dir, output_file)
         print_statistics(result)
-        print("\n次のステップ: python 40_build_all_articles_index.py")
+        print("\n次のステップ: uv run 40_build_all_articles_index.py")
     except Exception as e:
         print(f"\n[!] 致命的エラー: {e}")
         sys.exit(1)
+
 
 
 if __name__ == "__main__":
