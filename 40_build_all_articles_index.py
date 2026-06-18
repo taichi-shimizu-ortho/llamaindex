@@ -21,13 +21,18 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 Settings.text_splitter = SentenceSplitter(chunk_size=8192, chunk_overlap=0)
 
 # パス設定
-SCRIPT_DIR = Path(__file__).resolve().parent
-JSON_FILE = SCRIPT_DIR / "articles_all.json"
+JSON_FILE = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "articles_all3.json"
 STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
 
 # 検索対象から除外するセクションタイプ
 # 注: 'other' は含めない (レビュー論文など独自構造を持つ記事の内容を保持)
-EXCLUDE_SECTION_TYPES = ['references', 'acknowledgements']
+EXCLUDE_SECTION_TYPES = [
+    'references', 
+    'acknowledgements', 
+    'abbreviations', 
+    'keywords', 
+    'other'
+]
 
 
 def is_review(article: dict) -> bool:

@@ -3,7 +3,7 @@
 
 処理内容:
   1. # 4 Main Text 内の最初の ## ヘッダーより前に本文があれば ## Introduction を自動付与
-  2. YAML frontmatter に doi, pmid, mesh_terms, keywords を追加
+  2. YAML frontmatter に doi, pmid, publisher, mesh_terms, keywords, review を追加
 
 前提: 10_fetch_entrez_metadata.py を先に実行して entrez_metadata.json を生成しておくこと
 
@@ -16,12 +16,11 @@ from pathlib import Path
 
 import yaml
 
-SCRIPT_DIR   = Path(__file__).parent
-ENTREZ_PATH  = SCRIPT_DIR / "entrez_metadata.json"
-RXFP1_DIR    = Path.home() / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
+ENTREZ_PATH  = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
+RXFP1_DIR    = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
 
-# frontmatter を分割する正規表現
-FM_PATTERN = re.compile(r'^---\s*\n(.*?)\n---\s*\n(.*)', re.DOTALL)
+# frontmatter を分割する正規表現（WindowsのCRLF、Mac/LinuxのLFの両方に対応）
+FM_PATTERN = re.compile(r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)', re.DOTALL)
 
 
 def split_frontmatter(content: str) -> tuple[dict, str] | tuple[None, str]:
@@ -62,7 +61,7 @@ def insert_intro_header_if_missing(content: str) -> tuple[str, bool]:
     # # 4 Main Text 以降の内容（次の h1 または末尾まで）
     rest = content[section_start:]
 
-    # ## Introduction または ## Background が既に存在する場合はスキップ（重複防止・Background はIntro相当として扱う）
+    # ## Introduction または ## Background が既に存在する場合はスキップ
     if re.search(r'^##\s+(Introduction|Background)\b', rest, re.MULTILINE | re.IGNORECASE):
         return content, False
 
@@ -107,14 +106,13 @@ def handle_background_section(content: str) -> tuple[str, list[str]]:
     if has_background and has_introduction:
         return content, ["⚠ Background と Introduction が両方存在します"]
 
-    # ## Background は Introduction 相当として扱うが、ヘッダー名は変更しない
     return content, []
 
 
 def insert_keywords_section(content: str, keywords: list[str]) -> tuple[str, bool]:
     """
     entrez keywords が存在し、## Keywords セクションが未存在の場合、
-    References/Acknowledgements より前（なければ Main Text 末尾）に挿入する。
+    References/Acknowledgements より前に挿入する。
 
     Returns: (new_content, was_inserted)
     """
@@ -128,7 +126,6 @@ def insert_keywords_section(content: str, keywords: list[str]) -> tuple[str, boo
     section_start = main_text_match.end()
     rest = content[section_start:]
 
-    # 既に ## Keywords セクションがあればスキップ
     if re.search(r'^##\s+Keywords?\b', rest, re.MULTILINE | re.IGNORECASE):
         return content, False
 
@@ -143,7 +140,6 @@ def insert_keywords_section(content: str, keywords: list[str]) -> tuple[str, boo
         insert_pos = section_start + ref_match.start()
         new_content = content[:insert_pos] + kw_section + "\n" + content[insert_pos:]
     else:
-        # 次の h1 の直前、なければ末尾
         next_h1 = re.search(r'^#(?!#)\s+', rest, re.MULTILINE)
         if next_h1:
             insert_pos = section_start + next_h1.start()
@@ -170,7 +166,6 @@ def main():
 
     entrez_lookup = build_entrez_lookup(ENTREZ_PATH)
 
-    # 引数でファイル名を指定した場合はそのファイルのみ対象
     if len(sys.argv) > 1:
         target = sys.argv[1]
         if not target.endswith(".md"):
@@ -189,6 +184,7 @@ def main():
     intro_added = 0
     skipped_no_fm = 0
     skipped_no_entrez = 0
+    no_entrez_list = []  # データがなかった論文を記録するリスト
 
     for md_file in md_files:
         content = md_file.read_text(encoding="utf-8")
@@ -214,16 +210,12 @@ def main():
         content, bg_alerts = handle_background_section(content)
         if bg_alerts:
             alerts.extend(bg_alerts)
-            if any("改名" in a for a in bg_alerts):
-                file_modified = True
-                _, body = split_frontmatter(content)
 
         # 3. entrez メタデータ更新
         citekey = fm.get("citekey", "")
         rec = entrez_lookup.get(citekey)
 
         if not rec:
-            # citekey が大文字小文字違いの可能性があるので case-insensitive で再検索
             ck_lower = citekey.lower()
             rec = next(
                 (r for r in entrez_lookup.values() if r["citekey"].lower() == ck_lower),
@@ -233,9 +225,13 @@ def main():
         if rec:
             fm["doi"]        = rec.get("doi", "") or fm.get("doi", "")
             fm["pmid"]       = rec.get("pmid", "") or fm.get("pmid", "")
-            fm["pmcid"]      = rec.get("pmcid", "") or fm.get("pmcid", "")
+            # publisher 情報をフロントマターに追記
+            fm["publisher"]  = rec.get("publisher", "") or fm.get("publisher", "")
             fm["mesh_terms"] = rec.get("entrez_mesh_terms", [])
             fm["keywords"]   = rec.get("entrez_keywords", [])
+            
+            # --- Entrezの判定結果をそのまま review プロパティに書き込む ---
+            fm["review"]     = bool(rec.get("entrez_is_review", False))
 
             new_fm_str = to_yaml_str(fm)
             content = f"---\n{new_fm_str}---\n{body}"
@@ -249,14 +245,23 @@ def main():
                 file_modified = True
                 alerts.append(f"## Keywords 挿入（{len(entrez_kw)}件）")
 
-            review_str = "review" if rec.get("entrez_is_review") else "original"
+            review_str = "review" if fm["review"] else "original"
+            pub_info = f" | Publisher: {fm['publisher']}" if fm["publisher"] else ""
             alert_str = f" | {'、'.join(alerts)}" if alerts else ""
-            print(f"  [OK] {md_file.name} ({review_str}) | MeSH:{len(fm['mesh_terms'])}件{alert_str}")
+            print(f"  [OK] {md_file.name} ({review_str}){pub_info} | MeSH:{len(fm['mesh_terms'])}件{alert_str}")
         else:
+            # Entrezデータがない場合は、安全のため review: false を明示的にセット
+            fm["review"] = False
+            new_fm_str = to_yaml_str(fm)
+            content = f"---\n{new_fm_str}---\n{body}"
+            file_modified = True
+            
+            no_entrez_list.append(citekey)  # リストに追加
+            
             if alerts:
-                print(f"  [追加] {md_file.name} | {'、'.join(alerts)}（entrez データなし）")
+                print(f"  [追加] {md_file.name} | {'、'.join(alerts)}（entrez データなし、review: false）")
             else:
-                print(f"  [スキップ] {md_file.name}（entrez データなし: {citekey}）")
+                print(f"  [更新] {md_file.name}（entrez データなし、review: false に設定: {citekey}）")
             skipped_no_entrez += 1
 
         if file_modified:
@@ -265,7 +270,13 @@ def main():
     print("\n" + "=" * 60)
     print(f"frontmatter更新: {updated}件 / ## Introduction付与: {intro_added}件")
     print(f"frontmatterなし: {skipped_no_fm}件 / entrezデータなし: {skipped_no_entrez}件")
-    print("\n次のステップ: python 04_batch_convert_articles.py")
+    
+    if no_entrez_list:
+        print(f"\n【⚠️ Entrezメタデータが適用されなかった論文（review: false に設定）】")
+        for ck in no_entrez_list:
+            print(f"  - {ck}")
+            
+    print("\n次のステップ: uv run 30_batch_convert_articles.py")
 
 
 if __name__ == "__main__":

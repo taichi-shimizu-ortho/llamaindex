@@ -1,7 +1,33 @@
-"""
-Entrez (PubMed) API を使って各論文の MeSH, Keywords, ArticleType を取得する。
+エラーが発生した原因は、**「すでにキャッシュ（`entrez_metadata.json`）に保存されていた古いデータ（`publisher`キーが存在しないレコード）」**を読み込んでスキップした際に、その古いレコードに対して `r['publisher']` を参照しようとしたためです。
 
-入力: MD ファイルディレクトリ（frontmatter の doi / citekey / tags を使用）
+キャッシュから読み込んだ古いデータに `publisher` キーが存在しない場合でもエラーにならないよう、`.get("publisher", "")` を使って安全に取得するように修正します。
+
+修正したサマリー表示部分のコード（295行目付近）は以下の通りです。
+
+### 🛠️ 修正箇所
+
+```python
+    if unregistered_articles:
+        print(f"\n【⚠️ PubMed未登録・データなしの論文: {len(unregistered_articles)}件】")
+        for r in unregistered_articles:
+            reason = "DOIなし" if not r["doi"] else "PubMedにID未登録"
+            # r['publisher'] ではなく r.get('publisher', '') に変更して KeyError を防止
+            publisher_name = r.get('publisher', '')
+            publisher_info = f" (出版社: {publisher_name})" if publisher_name else ""
+            print(f"  - {r['citekey']} ({reason}){publisher_info}")
+```
+
+---
+
+### 10_fetch_entrez_metadata.py（完全版）
+
+この修正を反映し、古いキャッシュデータが存在しても安全に動作する完全なコードです。
+
+```python
+"""
+Entrez (PubMed) API および Crossref API を使って各論文の MeSH, Keywords, ArticleType, Publisher を取得する。
+
+入力: MD ファイルディレクトリ（frontmatter の doi / citekey を使用）
 出力: entrez_metadata.json
 
 実行例:
@@ -19,8 +45,8 @@ import requests
 import yaml
 
 # デフォルトの MD ディレクトリ（スクリプトから見た相対パス）
-DEFAULT_MD_DIR = Path(__file__).parent.parent.parent / "10_article" / "RXFP1"
-OUTPUT_PATH = Path(__file__).parent / "entrez_metadata.json"
+DEFAULT_MD_DIR = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "10_article" / "RXFP1"
+OUTPUT_PATH = Path(__file__).parent.parent.parent / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "entrez_metadata.json"
 
 ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 # NCBI の利用規約: 毎秒3リクエスト以下。メールを設定すると10リクエスト/秒に緩和
@@ -34,7 +60,8 @@ TOOL = "llamaindex-rag"
 
 def parse_frontmatter(content: str) -> dict:
     """YAML frontmatter をパースして dict を返す。"""
-    match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    # Windows(CRLF) と Mac/Linux(LF) の両方の改行コードに対応
+    match = re.match(r'^---\s*\r?\n(.*?)\r?\n---\s*\r?\n', content, re.DOTALL)
     if match:
         try:
             return yaml.safe_load(match.group(1)) or {}
@@ -45,7 +72,7 @@ def parse_frontmatter(content: str) -> dict:
 
 def extract_doi_from_info_block(content: str) -> str:
     """>[!Info] ブロックから DOI を抽出する（frontmatter にない場合のフォールバック）。"""
-    m = re.search(r'>\s*\*\*DOI\*\*:\s*([^\n]+)', content)
+    m = re.search(r'>\s*\*\*DOI\*\*:\s*([^\n\r]+)', content)
     return m.group(1).strip() if m else ""
 
 
@@ -60,15 +87,9 @@ def load_articles_from_md(md_dir: Path) -> list[dict]:
             citekey = raw[0].upper() + raw[1:] if raw else raw
             # doi: frontmatter 優先 → >[!Info] ブロックにフォールバック
             doi = str(fm.get("doi", "") or extract_doi_from_info_block(content) or "").strip()
-            tags = fm.get("tags", [])
-            if isinstance(tags, str):
-                tags = [tags]
-            elif not isinstance(tags, list):
-                tags = []
             articles.append({
                 "citekey": citekey,
                 "doi": doi,
-                "tags": tags,
                 "filename": md_file.name,
             })
         except Exception as e:
@@ -77,7 +98,7 @@ def load_articles_from_md(md_dir: Path) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Entrez API
+# 外部 API (Entrez & Crossref)
 # ---------------------------------------------------------------------------
 
 def doi_to_pmid(doi: str) -> str:
@@ -99,27 +120,6 @@ def doi_to_pmid(doi: str) -> str:
     except Exception as e:
         print(f"    [esearch エラー] {e}")
         return ""
-
-
-def pmid_to_pmcid(pmid: str) -> str:
-    """PMID から PMCID を取得する。PMCに登録がなければ空文字を返す。"""
-    url = "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/"
-    params = {
-        "ids": pmid,
-        "idtype": "pmid",
-        "format": "json",
-        "tool": TOOL,
-        "email": MAILTO,
-    }
-    try:
-        r = requests.get(url, params=params, timeout=15)
-        r.raise_for_status()
-        records = r.json().get("records", [])
-        if records and "pmcid" in records[0]:
-            return records[0]["pmcid"]  # 例: "PMC11179965"
-    except Exception as e:
-        print(f"    [idconv エラー] {e}")
-    return ""
 
 
 def fetch_pubmed_record(pmid: str) -> dict:
@@ -152,10 +152,11 @@ def fetch_pubmed_record(pmid: str) -> dict:
         pt.text for pt in root.findall(".//PublicationType") if pt.text
     ]
     is_review = any(
-        t in ["Review", "Systematic Review", "Meta-Analysis"] for t in article_types
+        "review" in t.lower() or "meta-analysis" in t.lower() 
+        for t in article_types
     )
 
-    # MeSH Heading（主語のみ、サブヘディングは除外）
+    # MeSH Heading
     mesh_terms = [
         dname.text
         for dname in root.findall(".//MeshHeading/DescriptorName")
@@ -173,6 +174,22 @@ def fetch_pubmed_record(pmid: str) -> dict:
         "mesh_terms": mesh_terms,
         "keywords": keywords,
     }
+
+
+def get_publisher_by_doi(doi: str) -> str:
+    """Crossref API を使って DOI から出版社名（publisher）を取得する。"""
+    url = f"https://api.crossref.org/works/{doi}"
+    headers = {
+        "User-Agent": f"llamaindex-rag/1.0 (mailto:{MAILTO})"
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("message", {}).get("publisher") or ""
+    except Exception as e:
+        print(f"    [Crossref エラー] {e}")
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -205,7 +222,6 @@ def main():
     articles = load_articles_from_md(md_dir)
     total = len(articles)
     results = []
-    discrepancies = []
 
     existing = load_existing_results()
     skip_count = 0
@@ -219,37 +235,24 @@ def main():
     for i, article in enumerate(articles, 1):
         citekey = article["citekey"]
         doi = article["doi"]
-        current_tags = article["tags"]
-        current_is_review = "review" in current_tags
 
         print(f"[{i:3}/{total}] {citekey}", end=" ")
 
         # 取得済みかつ DOI が変わっていなければスキップ
         if citekey in existing and existing[citekey].get("doi", "") == doi:
             rec = existing[citekey]
-            rec["current_tags"] = current_tags
-            rec["current_is_review"] = current_is_review
             results.append(rec)
             skip_count += 1
             print("→ スキップ（取得済み）")
-            if rec.get("entrez_is_review") is not None and current_is_review != rec["entrez_is_review"]:
-                discrepancies.append({
-                    "citekey": citekey,
-                    "current_is_review": current_is_review,
-                    "entrez_is_review": rec["entrez_is_review"],
-                    "entrez_article_types": rec.get("entrez_article_types", []),
-                })
             continue
 
         record = {
             "citekey": citekey,
             "doi": doi,
             "pmid": "",
-            "pmcid": "",
-            "current_tags": current_tags,
-            "current_is_review": current_is_review,
+            "publisher": "",  # 出版社情報を追加
             "entrez_article_types": [],
-            "entrez_is_review": None,
+            "entrez_is_review": False,  # デフォルトは False
             "entrez_mesh_terms": [],
             "entrez_keywords": [],
             "pubmed_found": False,
@@ -262,20 +265,20 @@ def main():
 
         # Step1: DOI → PMID
         pmid = doi_to_pmid(doi)
-        time.sleep(0.4)  # NCBI レート制限対策
+        time.sleep(0.4)
+
+        # Step2: Crossref から出版社（publisher）を取得
+        publisher = get_publisher_by_doi(doi)
+        record["publisher"] = publisher
+        time.sleep(0.2)
 
         if not pmid:
-            print("→ PubMedに未登録（書籍章など）")
+            print(f"→ PubMedに未登録（書籍章など） | 出版社: {publisher or '取得失敗'}")
             results.append(record)
             continue
 
         record["pmid"] = pmid
         record["pubmed_found"] = True
-
-        # Step2: PMID → PMCID
-        pmcid = pmid_to_pmcid(pmid)
-        record["pmcid"] = pmcid
-        time.sleep(0.4)
 
         # Step3: PMID → メタデータ取得
         meta = fetch_pubmed_record(pmid)
@@ -293,17 +296,9 @@ def main():
             "entrez_keywords": meta.get("keywords", []),
         })
 
-        entrez_is_review = record["entrez_is_review"]
-        pmcid_str = f" | PMCID: {pmcid}" if pmcid else ""
-        print(f"→ PMID {pmid}{pmcid_str} | 種別: {meta.get('article_types', [])} | MeSH: {len(meta.get('mesh_terms', []))}件")
-
-        if current_is_review != entrez_is_review:
-            discrepancies.append({
-                "citekey": citekey,
-                "current_is_review": current_is_review,
-                "entrez_is_review": entrez_is_review,
-                "entrez_article_types": meta.get("article_types", []),
-            })
+        review_label = "Review" if record["entrez_is_review"] else "Original"
+        publisher_str = f" | 出版社: {publisher}" if publisher else ""
+        print(f"→ PMID {pmid}{publisher_str} | 判定: {review_label} | MeSH: {len(meta.get('mesh_terms', []))}件")
 
         results.append(record)
 
@@ -311,26 +306,32 @@ def main():
     output = {
         "total": total,
         "pubmed_found": sum(1 for r in results if r["pubmed_found"]),
-        "discrepancies_count": len(discrepancies),
-        "discrepancies": discrepancies,
+        "review_count": sum(1 for r in results if r["entrez_is_review"]),
         "articles": results,
     }
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
+    # PubMed未登録（データなし）の論文を抽出
+    unregistered_articles = [r for r in results if not r["pubmed_found"]]
+
     # サマリー表示
     print("\n" + "=" * 70)
     print(f"スキップ（取得済み）: {skip_count}件 / 新規取得: {total - skip_count}件")
     print(f"PubMed登録済み: {output['pubmed_found']}/{total}件")
-    print(f"review判定の差異: {len(discrepancies)}件")
-    if discrepancies:
-        print("\n【差異のある記事】")
-        for d in discrepancies:
-            cur = "review" if d["current_is_review"] else "original"
-            ent = "review" if d["entrez_is_review"] else "original"
-            print(f"  {d['citekey']}: 現在={cur} → Entrez={ent} {d['entrez_article_types']}")
+    print(f"Review論文数 (Entrez判定): {output['review_count']}/{total}件")
+    
+    if unregistered_articles:
+        print(f"\n【⚠️ PubMed未登録・データなし of 論文: {len(unregistered_articles)}件】")
+        for r in unregistered_articles:
+            reason = "DOIなし" if not r["doi"] else "PubMedにID未登録"
+            publisher_name = r.get('publisher', '')
+            publisher_info = f" (出版社: {publisher_name})" if publisher_name else ""
+            print(f"  - {r['citekey']} ({reason}){publisher_info}")
+            
     print(f"\n結果保存: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
     main()
+```

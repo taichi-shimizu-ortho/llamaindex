@@ -1,0 +1,486 @@
+Markdown Link [The single-chain relaxin mimetic, B7-33, maintains the cardioprotective effects of relaxin and more rapidly reduces left ventricular fibrosis compared to perindopril in an experimental model of cardiomyopathy]: https://www.sciencedirect.com/science/article/pii/S0753332223001580
+Markdown Link [Fig. 1]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0005
+Markdown Link [Fig. 1]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0005
+Markdown Link [Fig. 1]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr1.jpg
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0010
+Markdown Link [Fig. 2]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr2.jpg
+Markdown Link [Fig. 3]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0015
+Markdown Link [Fig. 3]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0015
+Markdown Link [Fig. 3]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0015
+Markdown Link [Fig. 3]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0015
+Markdown Link [Fig. 3]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr3.jpg
+Markdown Link [Fig. 4]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0020
+Markdown Link [Fig. 4]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0020
+Markdown Link [Fig. 4]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0020
+Markdown Link [Fig. 4]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0020
+Markdown Link [Fig. 4]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr4.jpg
+Markdown Link [Fig. 5]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0025
+Markdown Link [Fig. 5]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0025
+Markdown Link [Fig. 5]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0025
+Markdown Link [Fig. 5]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0025
+Markdown Link [Fig. 5]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr5.jpg
+Markdown Link [Table 1]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#tbl0005
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Table 1]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#tbl0005
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Table 1]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#tbl0005
+Markdown Link [Fig. 6]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#fig0030
+Markdown Link [Fig. 6]: https://ars.els-cdn.com/content/image/1-s2.0-S0753332223001580-gr6.jpg
+Markdown Link [GNT2001278]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#gs1
+Markdown Link [GNT1135837]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#gs1
+Markdown Link [〈https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)〉]: https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-\(cvds\
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar?q=World%20Health%20Organisation%20%2C%20\(2021\
+Markdown Link [Crossref]: https://doi.org/10.1111/bph.13523
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84978269177&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=The%20actions%20of%20relaxin%20on%20the%20human%20cardiovascular%20system&publication_year=2017&author=M.%20Sarwar&author=X.J.%20Du&author=T.B.%20Dschietzig&author=R.J.%20Summers
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0303720718303770/pdfft?md5=506481db587eb59768180bb5ae979808&pid=1-s2.0-S0303720718303770-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0303720718303770
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85060298144&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Cardioprotective%20actions%20of%20relaxin&publication_year=2019&author=B.%20Martin&author=G.%20Romero&author=G.%20Salama
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S1359644620301628/pdfft?md5=cdd6ad8f600c8a19cf7199deb5201290&pid=1-s2.0-S1359644620301628-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S1359644620301628
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85084224246&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Recombinant%20human%20H2%20relaxin%20%20as%20a%20cardiovascular%20drug%3A%20aiming%20at%20the%20right%20target&publication_year=2020&author=D.%20Bani
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0006295221005104/pdfft?md5=fdad5ae90eb785bc29cab3e8c83b2bf4&pid=1-s2.0-S0006295221005104-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0006295221005104
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85121972599&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20as%20an%20anti-fibrotic%20treatment%3A%20perspectives%2C%20challenges%20and%20future%20directions&publication_year=2022&author=C.S.%20Samuel&author=R.G.%20Bennett
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0034810896&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=The%20pregnancy%20hormone%20relaxin%20is%20a%20player%20in%20human%20heart%20failure&publication_year=2001&author=T.%20Dschietzig&author=C.%20Richter&author=C.%20Bartsch&author=M.%20Laule&author=F.P.%20Armbruster&author=G.%20Baumann&author=K.%20Stangl
+Markdown Link [Crossref]: https://doi.org/10.1007/s11906-011-0231-x
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-81255152083&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Effects%20of%20relaxin%20on%20arterial%20dilation%2C%20remodeling%2C%20and%20mechanical%20properties&publication_year=2011&author=K.P.%20Conrad&author=S.G.%20Shroff
+Markdown Link [Crossref]: https://doi.org/10.1152/physrev.00001.2012
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84872314588&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20family%20peptides%20and%20their%20receptors&publication_year=2013&author=R.A.%20Bathgate&author=M.L.%20Halls&author=E.T.%20van%20der%20Westhuizen&author=G.E.%20Callander&author=M.%20Kocan&author=R.J.%20Summers
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0889540611010882/pdfft?md5=ed38934ff5aee10bdba002a52fb703c2&pid=1-s2.0-S0889540611010882-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0889540611010882
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84856264568&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=A%20randomized%2C%20placebo-controlled%20clinical%20trial%20on%20the%20effects%20of%20recombinant%20human%20relaxin%20on%20tooth%20movement%20and%20short-term%20stability&publication_year=2012&author=S.P.%20McGorray&author=C.%20Dolce&author=S.%20Kramer&author=D.%20Stewart&author=T.T.%20Wheeler
+Markdown Link [Crossref]: https://doi.org/10.1002/art.24380
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-65249109216&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Recombinant%20human%20relaxin%20in%20the%20treatment%20of%20systemic%20sclerosis%20with%20diffuse%20cutaneous%20involvement%3A%20a%20randomized%2C%20double-blind%2C%20placebo-controlled%20trial&publication_year=2009&author=D.%20Khanna&author=P.J.%20Clements&author=D.E.%20Furst&author=J.H.%20Korn&author=M.%20Ellman&author=N.%20Rothfield&author=F.M.%20Wigley&author=L.W.%20Moreland&author=R.%20Silver&author=Y.H.%20Kim&author=V.D.%20Steen&author=G.S.%20Firestein&author=A.F.%20Kavanaugh&author=M.%20Weisman&author=M.D.%20Mayes&author=D.%20Collier&author=M.E.%20Csuka&author=R.%20Simms&author=P.A.%20Merkel&author=T.A.%20Medsger%20Jr.&author=M.E.%20Sanders&author=P.%20Maranian&author=J.R.%20Seibold
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0140673612618558/pdfft?md5=b08769524f98f0b924eb8f1b816bdd6b&pid=1-s2.0-S0140673612618558-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0140673612618558
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84871986523&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Serelaxin%2C%20recombinant%20human%20relaxin-2%2C%20for%20treatment%20of%20acute%20heart%20failure%20%3A%20a%20randomised%2C%20placebo-controlled%20trial&publication_year=2013&author=J.R.%20Teerlink&author=G.%20Cotter&author=B.A.%20Davison&author=G.M.%20Felker&author=G.%20Filippatos&author=B.H.%20Greenberg&author=P.%20Ponikowski&author=E.%20Unemori&author=A.A.%20Voors&author=K.F.%20Adams%20Jr.&author=M.I.%20Dorobantu&author=L.R.%20Grinfeld&author=G.%20Jondeau&author=A.%20Marmor&author=J.%20Masip&author=P.S.%20Pang&author=K.%20Werdan&author=S.L.%20Teichman&author=A.%20Trapani&author=C.A.%20Bush&author=R.%20Saini&author=C.%20Schumacher&author=T.M.%20Severin&author=M.%20Metra
+Markdown Link [Crossref]: https://doi.org/10.1056/nejmoa1801291
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85071309086&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar?q=M.%20Metra%2C%20J.R.%20Teerlink%2C%20G.%20Cotter%2C%20B.A.%20Davison%2C%20G.M.%20Felker%2C%20G.%20Filippatos%2C%20B.H.%20Greenberg%2C%20P.S.%20Pang%2C%20P.%20Ponikowski%2C%20A.A.%20Voors%2C%20K.F.%20Adams%2C%20S.D.%20Anker%2C%20A.%20Arias-Mendoza%2C%20P.%20Avenda%C3%B1o%2C%20F.%20Bacal%2C%20M.%20B%C3%B6hm%2C%20G.%20Bortman%2C%20J.G.F.%20Cleland%2C%20A.%20Cohen-Solal%2C%20M.G.%20Crespo-Leiro%2C%20M.%20Dorobantu%2C%20L.E.%20Echeverr%C3%ADa%2C%20R.%20Ferrari%2C%20S.%20Goland%2C%20E.%20Goncalvesov%C3%A1%2C%20A.%20Goudev%2C%20L.%20K%C3%B8ber%2C%20J.%20Lema-Osores%2C%20P.D.%20Levy%2C%20K.%20McDonald%2C%20P.%20Manga%2C%20B.%20Merkely%2C%20C.%20Mueller%2C%20B.%20Pieske%2C%20J.%20Silva-Cardoso%2C%20J.%20%C5%A0pinar%2C%20I.%20Squire%2C%20J.%20St%C4%99pi%C5%84ska%2C%20W.%20Van%20Mieghem%2C%20D.%20von%20Lewinski%2C%20G.%20Wikstr%C3%B6m%2C%20M.B.%20Yilmaz%2C%20N.%20Hagner%20T.%20Holbro%2C%20T.A.%20Hua%2C%20S.V.%20Sabarwal%2C%20T.%20Severin%2C%20P.%20Szecs%C3%B6dy%2C%20C.%20Gimpelewicz%3B%20RELAX-AHF-2%20Committees%20Investigators.%20N.%20Eng.%20J.%20Med.%20381%20\(2019\
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0735109712054794/pdfft?md5=e4b48128e669d485c7c803dcb77ce6b4&pid=1-s2.0-S0735109712054794-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0735109712054794
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84871927704&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Effect%20of%20serelaxin%20on%20cardiac%2C%20renal%2C%20and%20hepatic%20biomarkers%20in%20the%20Relaxin%20in%20Acute%20Heart%20Failure%20%20development%20program%3A%20correlation%20with%20outcomes&publication_year=2013&author=M.%20Metra&author=G.%20Cotter&author=B.A.%20Davison&author=G.M.%20Felker&author=G.%20Filippatos&author=B.H.%20Greenberg&author=P.%20Ponikowski&author=E.%20Unemori&author=A.A.%20Voors&author=K.F.%20Adams%20Jr.&author=M.I.%20Dorobantu&author=L.%20Grinfeld&author=G.%20Jondeau&author=A.%20Marmor&author=J.%20Masip&author=P.S.%20Pang&author=K.%20Werdan&author=M.F.%20Prescott&author=C.%20Edwards&author=S.L.%20Teichman&author=A.%20Trapani&author=C.A.%20Bush&author=R.%20Saini&author=C.%20Schumacher&author=T.%20Severin&author=J.R.%20Teerlink
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S1367593114001252/pdfft?md5=ba59714508e26a2ce3cffce58a883f2f&pid=1-s2.0-S1367593114001252-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S1367593114001252
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Synthetic%20relaxins&publication_year=2014&author=M.A.%20Hossain&author=J.D.%20Wade
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0021925820507801/pdfft?md5=3dcf4dd825a0da9dd611dc18ebc9d8a7&pid=1-s2.0-S0021925820507801-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0021925820507801
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-80054824082&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=The%20minimal%20active%20structure%20of%20human%20relaxin-2&publication_year=2011&author=M.A.%20Hossain&author=K.J.%20Rosengren&author=C.S.%20Samuel&author=F.%20Shabanpoor&author=L.J.%20Chan&author=R.A.%20Bathgate&author=J.D.%20Wade
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S2041652016008658
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84971321409&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=A%20single-chain%20derivative%20of%20the%20relaxin%20hormone%20is%20a%20functionally%20selective%20agonist%20of%20the%20G%20protein-coupled%20receptor%2C%20RXFP1&publication_year=2016&author=M.A.%20Hossain&author=M.%20Kocan&author=S.T.%20Yao&author=S.G.%20Royce&author=V.B.%20Nair&author=C.%20Siwek&author=N.A.%20Patil&author=I.P.%20Harrison&author=K.J.%20Rosengren&author=S.%20Selemidis&author=R.J.%20Summers&author=J.D.%20Wade&author=R.A.%20Bathgate&author=C.S.%20Samuel
+Markdown Link [Crossref]: https://doi.org/10.1096/fj.08-120857
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-65349122390&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20inhibits%20renal%20myofibroblast%20differentiation%20via%20RXFP1%2C%20the%20nitric%20oxide%20pathway%2C%20and%20Smad2&publication_year=2009&author=I.%20Mookerjee&author=T.D.%20Hewitson&author=M.L.%20Halls&author=R.J.%20Summers&author=M.L.%20Mathai&author=R.A.%20Bathgate&author=G.W.%20Tregear&author=C.S.%20Samuel
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0085253815302532/pdfft?md5=56b0708d5d276f199de578a3f55a6a3c&pid=1-s2.0-S0085253815302532-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0085253815302532
+Markdown Link [Crossref]: https://doi.org/10.1038/ki.2013.518
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84903773477&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20requires%20the%20angiotensin%20II%20type%202%20receptor%20to%20abrogate%20renal%20interstitial%20fibrosis&publication_year=2014&author=B.S.%20Chow&author=M.%20Kocan&author=S.%20Bosnyak&author=M.%20Sarwar&author=B.%20Wigg&author=E.S.%20Jones&author=R.E.%20Widdop&author=R.J.%20Summers&author=R.A.%20Bathgate&author=T.D.%20Hewitson&author=C.S.%20Samuel
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0378377416300452/pdfft?md5=01245b00d239346a3c6b4627d6d58fa2&pid=1-s2.0-S0378377416300452-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0378377416300452
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=The%20anti-fibrotic%20actions%20of%20relaxin%20are%20mediated%20through%20a%20NO-sGC-cGMP-Dependent%20pathway%20in%20renal%20myofibroblasts%20in%20vitro%20and%20enhanced%20by%20the%20NO%20donor%2C%20diethylamine%20NONOate&publication_year=2016&author=C.%20Wang&author=B.K.%20Kemp-Harper&author=M.%20Kocan&author=S.Y.%20Ang&author=T.D.%20Hewitson&author=C.S.%20Samuel
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0021925818870004/pdfft?md5=cf177a3626de9791527dfb1ed0e9d2cc&pid=1-s2.0-S0021925818870004-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0021925818870004
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0025302162&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20modulates%20synthesis%20and%20secretion%20of%20procollagenase%20and%20collagen%20by%20human%20dermal%20fibroblasts&publication_year=1990&author=E.N.%20Unemori&author=E.P.%20Amento
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0030453783&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20induces%20an%20extracellular%20matrix-degrading%20phenotype%20in%20human%20lung%20fibroblasts%20in%20vitro%20and%20inhibits%20lung%20fibrosis%20in%20a%20murine%20model%20in%20vivo&publication_year=1996&author=E.N.%20Unemori&author=L.B.%20Pickford&author=A.L.%20Salles&author=C.E.%20Piercy&author=B.H.%20Grove&author=M.E.%20Erikson&author=E.P.%20Amento
+Markdown Link [Crossref]: https://doi.org/10.1111/j.1582-4934.2007.00111.x
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-35649009903&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Paracrine%20effects%20of%20transplanted%20myoblasts%20and%20relaxin%20on%20post-infarction%20heart%20remodelling&publication_year=2007&author=L.%20Formigli&author=A.M.%20Perna&author=E.%20Meacci&author=L.%20Cinci&author=M.%20Margheri&author=S.%20Nistri&author=A.%20Tani&author=J.%20Silvertown&author=G.%20Orlandini&author=C.%20Porciani&author=S.%20Zecchi-Orlandini&author=J.%20Medin&author=D.%20Bani
+Markdown Link [Crossref]: https://doi.org/10.1371/journal.pone.0042714
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84865168929&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20signals%20through%20a%20RXFP1-pERK-nNOS-NO-cGMP-dependent%20pathway%20to%20up-regulate%20matrix%20metalloproteinases%3A%20the%20additional%20involvement%20of%20iNOS&publication_year=2012&author=B.S.%20Chow&author=E.G.%20Chew&author=C.%20Zhao&author=R.A.%20Bathgate&author=T.D.%20Hewitson&author=C.S.%20Samuel
+Markdown Link [Crossref]: https://doi.org/10.1111/liv.12247
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84893793330&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20decreases%20the%20severity%20of%20established%20hepatic%20fibrosis%20in%20mice&publication_year=2014&author=R.G.%20Bennett&author=D.G.%20Heimann&author=S.%20Singh&author=R.L.%20Simpson&author=D.J.%20Tuma
+Markdown Link [Crossref]: https://doi.org/10.1007/s10741-009-9135-0
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-70449112931&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=A%20novel%20approach%20to%20improve%20cardiac%20performance%3A%20cardiac%20myosin%20activators&publication_year=2009&author=J.R.%20Teerlink
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85083914713&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=B7-33%2C%20a%20functionally%20selective%20relaxin%20receptor%201%20agonist%2C%20attenuates%20myocardial%20infarction-related%20adverse%20cardiac%20remodeling%20in%20mice&publication_year=2020&author=T.%20Devarakonda&author=A.G.%20Mauro&author=G.%20Guzman&author=S.%20Hovsepian&author=C.%20Cain&author=A.%20Das&author=P.%20Praveen&author=M.A.%20Hossain&author=F.N.%20Salloum
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0014299917303059/pdfft?md5=b5b2a3369fa253fdef00665c9b431873&pid=1-s2.0-S0014299917303059-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0014299917303059
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85019088868&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=B7-33%20replicates%20the%20vasoprotective%20functions%20of%20human%20relaxin-2%20&publication_year=2017&author=S.A.%20Marshall&author=K.%20O%27Sullivan&author=H.H.%20Ng&author=R.A.D.%20Bathgate&author=L.J.%20Parry&author=M.A.%20Hossain&author=C.H.%20Leo
+Markdown Link [Crossref]: https://doi.org/10.1159/000524722
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85131770805&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Metabolic%20and%20metabolomics%20insights%20into%20dilated%20cardiomyopathy&publication_year=2022&author=I.%20Ampong
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-48949101191&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Higher%20levels%20of%20collagen%20and%20facilitated%20healing%20protect%20against%20ventricular%20rupture%20following%20myocardial%20infarction&publication_year=2008&author=L.%20Fang&author=X.M.%20Gao&author=C.S.%20Samuel&author=Y.%20Su&author=Y.L.%20Lim&author=A.M.%20Dart&author=X.J.%20Du
+Markdown Link [Crossref]: https://doi.org/10.1152/physiolgenomics.00071.2010
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-77958066967&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Influence%20of%20genetic%20background%20on%20ex%20vivo%20and%20in%20vivo%20cardiac%20function%20in%20several%20commonly%20used%20inbred%20mouse%20strains&publication_year=2010&author=M.S.%20Barnabei&author=N.J.%20Palpant&author=J.M.%20Metzger
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84904514461&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Serelaxin%20is%20a%20more%20efficacious%20antifibrotic%20than%20enalapril%20in%20an%20experimental%20model%20of%20heart%20disease&publication_year=2014&author=C.S.%20Samuel&author=H.%20Bodaragama&author=J.Y.%20Chew&author=R.E.%20Widdop&author=S.G.%20Royce&author=T.D.%20Hewitson
+Markdown Link [Crossref]: https://doi.org/10.1111/bph.15428
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85103391614&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Simultaneous%20targeting%20of%20oxidative%20stress%20and%20fibrosis%20reverses%20cardiomyopathy-induced%20ventricular%20remodelling%20and%20dysfunction&publication_year=2021&author=C.%20Wang&author=T.A.%20Gaspari&author=D.%20Ferens&author=I.%20Spizzo&author=B.K.%20Kemp-Harper&author=C.S.%20Samuel
+Markdown Link [Crossref]: https://doi.org/10.1007/s10557-005-5059-7
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-17644396696&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Cardioprotective%20action%20of%20perindopril%20versus%20candesartan%20in%20renovascular%20hypertensive%20rats&publication_year=2004&author=M.%20Nagai&author=K.%20Horikoshi&author=T.%20Izumi&author=S.%20Seki&author=M.%20Taniguchi&author=I.%20Taniguchi&author=S.%20Mochizuki
+Markdown Link [Crossref]: https://doi.org/10.1371/journal.pone.0168425
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85007490279&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=The%20effects%20of%20rilmenidine%20and%20perindopril%20on%20arousal%20blood%20pressure%20during%2024%E2%80%89h%20recordings%20in%20SHR&publication_year=2016&author=K.%20Lim&author=K.L.%20Jackson&author=S.L.%20Burke&author=G.A.%20Head
+Markdown Link [Crossref]: https://doi.org/10.1093/cvr/cvm021
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-38849168247&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Chronic%20angiotensin%20IV%20treatment%20reverses%20endothelial%20dysfunction%20in%20ApoE-deficient%20mice&publication_year=2008&author=A.%20Vinh&author=R.E.%20Widdop&author=G.R.%20Drummond&author=T.A.%20Gaspari
+Markdown Link [Crossref]: https://doi.org/10.1007/s00210-013-0920-x
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84891603202&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Hydrogen%20sulfide%20protects%20endothelial%20nitric%20oxide%20function%20under%20conditions%20of%20acute%20oxidative%20stress%20in%20vitro&publication_year=2014&author=M.R.%20Al-Magableh&author=B.K.%20Kemp-Harper&author=H.H.%20Ng&author=A.A.%20Miller&author=J.L.%20Hart
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85105035178&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Assessment%20of%20renal%20fibrosis%20and%20anti-fibrotic%20agents%20using%20a%20novel%20diagnostic%20and%20stain-free%20second-harmonic%20generation%20platform&publication_year=2021&author=S.%20Bhuiyan&author=M.%20Shen&author=S.%20Chelvaretnam&author=A.Y.%20Tan&author=G.%20Ho&author=M.A.%20Hossain&author=R.E.%20Widdop&author=C.S.%20Samuel
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0303720719300085/pdfft?md5=82dc034980700c5a28d5bfedca938394&pid=1-s2.0-S0303720719300085-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0303720719300085
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85060714553&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Single%20chain%20peptide%20agonists%20of%20relaxin%20receptors&publication_year=2019&author=P.%20Praveen&author=M.%20Kocan&author=A.%20Valkovic&author=R.%20Bathgate&author=M.A.%20Hossain
+Markdown Link [Crossref]: https://doi.org/10.1093/cvr/cvu062
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84899048801&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Crosstalk%20between%20fibroblasts%20and%20inflammatory%20cells&publication_year=2014&author=S.%20Van%20Linthout&author=K.%20Miteva&author=C.%20Tschope
+Markdown Link [Crossref]: https://doi.org/10.1681/asn.2019060597
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85074378624&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=AT1R-AT2R-RXFP1%20functional%20crosstalk%20in%20myofibroblasts%3A%20impact%20on%20the%20therapeutic%20targeting%20of%20renal%20and%20cardiac%20fibrosis&publication_year=2019&author=B.S.M.%20Chow&author=M.%20Kocan&author=M.%20Shen&author=Y.%20Wang&author=L.%20Han&author=J.Y.%20Chew&author=C.%20Wang&author=S.%20Bosnyak&author=K.M.%20Mirabito-Colafella&author=G.%20Barsha&author=B.%20Wigg&author=E.K.M.%20Johnstone&author=M.A.%20Hossain&author=K.D.G.%20Pfleger&author=K.M.%20Denton&author=R.E.%20Widdop&author=R.J.%20Summers&author=R.A.D.%20Bathgate&author=T.D.%20Hewitson&author=C.S.%20Samuel
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Serelaxin%20and%20the%20AT2%20receptor%20agonist%20CGP42112%20evoked%20a%20similar%2C%20nonadditive%2C%20cardiac%20antifibrotic%20effect%20in%20high%20salt-fed%20mice%20that%20were%20refractory%20to%20candesartan%20cilexetil&publication_year=2020&author=Y.%20Wang&author=L.%20Han&author=M.%20Shen&author=E.S.%20Jones&author=I.%20Spizzo&author=S.L.%20Walton&author=K.M.%20Denton&author=T.A.%20Gaspari&author=C.S.%20Samuel&author=R.E.%20Widdop
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%2C%20a%20pleiotropic%20vasodilator%20for%20the%20treatment%20of%20heart%20failure&publication_year=2008&author=S.L.%20Teichman&author=E.%20Unemori&author=T.%20Dschietzig&author=K.%20Conrad&author=A.A.%20Voors&author=J.R.%20Teerlink&author=G.M.%20Felker&author=M.%20Metra&author=G.%20Cotter
+Markdown Link [Crossref]: https://doi.org/10.1111/bph.13695
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85011106038&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Serelaxin%20in%20clinical%20development%3A%20past%2C%20present%20and%20future&publication_year=2017&author=E.%20Unemori
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0303720719300139/pdfft?md5=831a2c9bfff372616e219156decbeba0&pid=1-s2.0-S0303720719300139-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0303720719300139
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85060127594&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin-2%20for%20heart%20failure%20with%20preserved%20ejection%20fraction%20%3A%20rationale%20for%20future%20clinical%20trials&publication_year=2019&author=T.B.%20Dschietzig
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/014067369290665P/pdf?md5=2610c7e9f396df0220aaa2be7126e2a6&pid=1-s2.0-014067369290665P-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/014067369290665P
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0026608441&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Cardiac%20effects%20of%20relaxin%20in%20rats&publication_year=1992&author=H.%20Kakouris&author=L.W.%20Eddie&author=R.J.%20Summers
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0028082029&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20increases%20heart%20rate%20by%20modulating%20calcium%20current%20in%20cardiac%20pacemaker%20cells&publication_year=1994&author=X.%20Han&author=Y.%20Habuchi&author=W.R.%20Giles
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0026721330&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20influences%20the%20growth%20of%20MCF-7%20breast%20cancer%20cells.%20Mitogenic%20and%20antimitogenic%20action%20depends%20on%20peptide%20concentration&publication_year=1992&author=M.%20Bigazzi&author=M.L.%20Brandi&author=G.%20Bani&author=T.B.%20Sacchi
+Markdown Link [View PDF]: https://www.sciencedirect.com/science/article/pii/S0021925820578733/pdfft?md5=2b78369088714720bf3e25259ff5ba70&pid=1-s2.0-S0021925820578733-main.pdf
+Markdown Link [View article]: https://www.sciencedirect.com/science/article/pii/S0021925820578733
+Markdown Link [Crossref]: https://doi.org/10.1074/jbc.M114.589325
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84920972775&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20activates%20peroxisome%20proliferator-activated%20receptor%20gamma%20%20through%20a%20pathway%20involving%20PPARgamma%20coactivator%201alpha%20&publication_year=2015&author=S.%20Singh&author=R.L.%20Simpson&author=R.G.%20Bennett
+Markdown Link [Crossref]: https://doi.org/10.1111/bph.12964
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84921792573&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Serelaxin-mediated%20signal%20transduction%20in%20human%20vascular%20cells%3A%20bell-shaped%20concentration-response%20curves%20reflect%20differential%20coupling%20to%20G%20proteins&publication_year=2015&author=M.%20Sarwar&author=C.S.%20Samuel&author=R.A.%20Bathgate&author=D.R.%20Stewart&author=R.J.%20Summers
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85020405949&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=ML290%20is%20a%20biased%20allosteric%20agonist%20at%20the%20relaxin%20receptor%20RXFP1&publication_year=2017&author=M.%20Kocan&author=M.%20Sarwar&author=S.Y.%20Ang&author=J.%20Xiao&author=J.J.%20Marugan&author=M.A.%20Hossain&author=C.%20Wang&author=D.S.%20Hutchinson&author=C.S.%20Samuel&author=A.I.%20Agoulnik&author=R.A.D.%20Bathgate&author=R.J.%20Summers
+Markdown Link [Crossref]: https://doi.org/10.3390/ijms23137074
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20inhibits%20the%20cardiac%20myofibroblast%20NLRP3%20inflammasome%20as%20part%20of%20its%20anti-fibrotic%20actions%20via%20the%20angiotensin%20type%202%20and%20ATP%20%20receptors&publication_year=2022&author=F.%20Tapia%20Caceres&author=T.A.%20Gaspari&author=M.A.%20Hossain&author=C.S.%20Samuel
+Markdown Link [Crossref]: https://doi.org/10.34067/kid.0002722021
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85132711849&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20attenuates%20organ%20fibrosis%20via%20an%20angiotensin%20type%202%20receptor%20mechanism%20in%20aged%20hypertensive%20female%20rats&publication_year=2021&author=G.%20Barsha&author=S.L.%20Walton&author=E.%20Kwok&author=K.M.%20Mirabito%20Colafella&author=A.A.%20Pinar&author=L.M.%20Hilliard%20Krause&author=T.A.%20Gaspari&author=R.E.%20Widdop&author=C.S.%20Samuel&author=K.M.%20Denton
+Markdown Link [Crossref]: https://doi.org/10.1038/sj.bjp.0706749
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-33745634668&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Changes%20in%20vascular%20reactivity%20following%20administration%20of%20isoproterenol%20for%201%20week%3A%20a%20role%20for%20endothelial%20modulation&publication_year=2006&author=A.P.%20Davel&author=E.M.%20Kawamoto&author=C.%20Scavone&author=D.V.%20Vassallo&author=L.V.%20Rossoni
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-59449107765&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Fenofibrate%20and%20pioglitazone%20do%20not%20ameliorate%20the%20altered%20vascular%20reactivity%20in%20aorta%20of%20isoproterenol-treated%20rats&publication_year=2008&author=L.E.%20Fukuda&author=A.P.%20Davel&author=S.%20Verissimo-Filho&author=L.R.%20Lopes&author=V.%20Cachofeiro&author=V.%20Lahera&author=L.V.%20Rossoni
+Markdown Link [Crossref]: https://doi.org/10.1111/j.1476-5381.1995.tb15096.x
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0028863225&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Endothelium-dependent%20relaxations%20in%20sheep%20pulmonary%20arteries%20and%20veins%3A%20resistance%20to%20block%20by%20NG-nitro-L-arginine%20in%20pulmonary%20hypertension&publication_year=1995&author=B.K.%20Kemp&author=J.J.%20Smolich&author=B.C.%20Ritchie&author=T.M.%20Cocks
+Markdown Link [Crossref]: https://doi.org/10.1097/01.fjc.0000175879.14994.63
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-26044443743&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Altered%20vascular%20reactivity%20in%20mice%20made%20hypertensive%20by%20nitric%20oxide%20synthase%20inhibition&publication_year=2005&author=A.E.%20Linder&author=D.S.%20Weber&author=S.E.%20Whitesall&author=L.G.%20D%27Alecy&author=R.C.%20Webb
+Markdown Link [Crossref]: https://doi.org/10.1038/sj.bjp.0704683
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0036271495&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Cellular%20basis%20of%20endothelial%20dysfunction%20in%20small%20mesenteric%20arteries%20from%20spontaneously%20diabetic%20%20mice%3A%20role%20of%20decreased%20tetrahydrobiopterin%20bioavailability&publication_year=2002&author=M.%20Pannirselvam&author=S.%20Verma&author=T.J.%20Anderson&author=C.R.%20Triggle
+Markdown Link [Crossref]: https://doi.org/10.1038/sj.bjp.0706121
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-17844375947&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Enhanced%20vascular%20reactivity%20of%20small%20mesenteric%20arteries%20from%20diabetic%20mice%20is%20associated%20with%20enhanced%20oxidative%20stress%20and%20cyclooxygenase%20products&publication_year=2005&author=M.%20Pannirselvam&author=W.B.%20Wiehler&author=T.%20Anderson&author=C.R.%20Triggle
+Markdown Link [Crossref]: https://doi.org/10.1371/journal.pone.0091877
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-84898713100&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Isoproterenol%20induces%20vascular%20oxidative%20stress%20and%20endothelial%20dysfunction%20via%20a%20Gialpha-coupled%20beta2-adrenoceptor%20signaling%20pathway&publication_year=2014&author=A.P.%20Davel&author=P.C.%20Brum&author=L.V.%20Rossoni
+Markdown Link [Crossref]: https://doi.org/10.1210/en.2010-1126
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-79959468302&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Relaxin%20induces%20rapid%20dilation%20of%20rodent%20small%20renal%20and%20human%20subcutaneous%20arteries%20via%20PI3%20kinase%20and%20nitric%20oxide&publication_year=2011&author=J.T.%20McGuane&author=J.E.%20Debrah&author=L.%20Sautina&author=Y.P.%20Jarajapu&author=J.%20Novak&author=J.P.%20Rubin&author=M.B.%20Grant&author=M.%20Segal&author=K.P.%20Conrad
+Markdown Link [Crossref]: https://doi.org/10.1152/ajpregu.00635.2001
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-0036333695&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Myogenic%20reactivity%20is%20reduced%20in%20small%20renal%20arteries%20isolated%20from%20relaxin-treated%20rats&publication_year=2002&author=J.%20Novak&author=R.J.%20Ramirez&author=R.E.%20Gandley&author=O.D.%20Sherwood&author=K.P.%20Conrad
+Markdown Link [Crossref]: https://doi.org/10.1152/ajpheart.00244.2020
+Markdown Link [View in Scopus]: https://www.scopus.com/inward/record.url?eid=2-s2.0-85089358730&partnerID=10&rel=R3.0.0
+Markdown Link [Google Scholar]: https://scholar.google.com/scholar_lookup?title=Chronic%20stress%20and%20endothelial%20dysfunction%3A%20mechanisms%2C%20experimental%20challenges%2C%20and%20the%20way%20ahead&publication_year=2020&author=L.D.%20Sher&author=H.%20Geddie&author=L.%20Olivier&author=M.%20Cairns&author=N.%20Truter&author=L.%20Beselaar&author=M.F.%20Essop
+Markdown Link [The involvement of the Wnt/β-catenin signaling cascade in fibrosis progression and its therapeutic targeting by relaxin]: https://www.sciencedirect.com/science/article/pii/S0006295224001138
+Markdown Link [Novel AT2R agonist, β-Pro7Ang III, is cardio- and vaso-protective in diabetic spontaneously hypertensive rats]: https://www.sciencedirect.com/science/article/pii/S0753332223010296
+Markdown Link [Cardiovascular effects of relaxin-2: therapeutic potential and future perspectives]: https://doi.org/10.1007/s00392-023-02305-1
+Markdown Link [Further Developments towards a Minimal Potent Derivative of Human Relaxin-2]: https://doi.org/10.3390/ijms241612670
+Markdown Link [Emergent Peptides of the Antifibrotic Arsenal: Taking Aim at Myofibroblast Promoting Pathways]: https://doi.org/10.3390/biom13081179
+Markdown Link [A Lipidated Single-B-Chain Derivative of Relaxin Exhibits Improved In Vitro Serum Stability without Altering Activity]: https://doi.org/10.3390/ijms24076616
+Markdown Link [View all citing articles on Scopus]: http://www.scopus.com/scopus/inward/citedby.url?partnerID=10&rel=3.0.0&eid=2-s2.0-85147360617&md5=4b76d36647aea8a6fd216f1ce031
+Markdown Link [<sup>1</sup>]: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bfn1
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib1
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib2
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib3
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib4
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib5
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib6
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/heart-muscle-injury
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/serelaxin
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib2
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib3
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib4
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib5
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib7
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib8
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/clinical-trial
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/periodontal-disease
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib9
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/scleroderma
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib10
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/acute-heart-failure
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib11
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib12
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib13
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/disulfide-bond
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib14
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib15
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/peptidomimetic-agent
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/matrix-metalloproteinase
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib17
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib19
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib20
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib21
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib22
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib23
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib24
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib25
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/cardiomyopathy
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/respiratory-tract-disease
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/heart-muscle-fibrosis
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib27
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/congestive-cardiomyopathy
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/myocardial-disease
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib28
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/perindopril
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/perindopril
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib29
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib30
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/congestive-cardiomyopathy
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/dipeptidyl-carboxypeptidase-inhibitor
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/subcutaneous-injection
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/cardiomyopathy
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/fibrosis
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/vasodilator-agent
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/ionomycin
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib17
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib22
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib33
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib34
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib33
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib35
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib36
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/calcium-chloride
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/carbogen
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/15-hydroxy-11alpha-9alpha-epoxymethanoprosta-5-13-dienoic-acid
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/nitric-oxide-donor
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/diethylamine
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/caiman
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/phenylephrine
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/fibrillar-collagen
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/monoclonal-antibody
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/polyclonal-antibody
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib32
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/fibrosis
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/heart-left-ventricle-hypertrophy
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/vasodilator-agent
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/ionomycin
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/injury
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/aortic-constriction
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#tbl1fnStar
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#tbl1fnStar
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib27
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/binding-site
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib38
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib2
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib3
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib4
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib5
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib6
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib7
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib8
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/heart-muscle-fibrosis
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib39
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/inflammasome
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/endothelial-dysfunction
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib27
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/dipeptidyl-carboxypeptidase
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/kidney-fibrosis
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/enalapril
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib31
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/candesartan-hexetil
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib40
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib41
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib42
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib43
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib44
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib45
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib46
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib47
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib48
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib17
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib19
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib49
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib17
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib50
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib23
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/angiotensin-2-receptor
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib51
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib52
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/injury
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib53
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib54
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/calcium-ionophore
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/nitric-oxide
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib55
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib56
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib57
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib58
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib59
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/wistar-rat
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib53
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib60
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib61
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib27
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib62
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/respiratory-tract-disease
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib37
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib27
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bib26
+Raw URL: https://www.sciencedirect.com/topics/pharmacology-toxicology-and-pharmaceutical-science/cyclic-gmp
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib1
+Raw URL: https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib2
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib3
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib4
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib5
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib6
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib7
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib8
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib9
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib10
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib11
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib12
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib13
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib14
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib15
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib16
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib17
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib18
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib19
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib20
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib21
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib22
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib23
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib24
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib25
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib26
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib27
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib28
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib29
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib30
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib31
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib32
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib33
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib34
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib35
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib36
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib37
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib38
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib39
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib40
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib41
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib42
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib43
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib44
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib45
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib46
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib47
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib48
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib49
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib50
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib51
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib52
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib53
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib54
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib55
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib56
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib57
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib58
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib59
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib60
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib61
+Raw URL: https://www.sciencedirect.com/science/article/pii/?via%3Dihub#bbib62
