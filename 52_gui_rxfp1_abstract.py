@@ -236,11 +236,24 @@ class RxfpAbstractRAGGUI:
                 title = meta.get("title", "")
                 tags = meta.get("tags", "")
                 mesh = meta.get("mesh_terms", "")
+                section = meta.get("section", "")
+                subsection = meta.get("subsection", "")
+                paragraph_index = meta.get("paragraph_index", "")
+                total_paragraphs = meta.get("total_paragraphs", "")
                 abstract_preview = node.text[:120].replace("\n", " ")
 
                 output += f"{i}. [{source}] {citekey}  (score: {score:.4f})\n"
                 if title:
                     output += f"   Title: {title[:80]}\n"
+                if section or paragraph_index:
+                    section_info = section if section else "N/A"
+                    if subsection:
+                        section_info += f" > {subsection}"
+                    para_info = ""
+                    if paragraph_index:
+                        para_info = f"  (paragraph {paragraph_index}"
+                        para_info += f"/{total_paragraphs})" if total_paragraphs else ")"
+                    output += f"   Section: {section_info}{para_info}\n"
                 if tags:
                     output += f"   Tags: {tags}\n"
                 if mesh:
@@ -284,6 +297,19 @@ class RxfpAbstractRAGGUI:
                 meta = node.metadata
                 f.write(f"Source {i}: [{source}] {meta.get('citekey', '?')} (score: {score:.4f})\n")
                 f.write(f"- Title: {meta.get('title', '')}\n")
+                section = meta.get('section', '')
+                subsection = meta.get('subsection', '')
+                paragraph_index = meta.get('paragraph_index', '')
+                total_paragraphs = meta.get('total_paragraphs', '')
+                if section or paragraph_index:
+                    section_info = section if section else "N/A"
+                    if subsection:
+                        section_info += f" > {subsection}"
+                    para_info = ""
+                    if paragraph_index:
+                        para_info = f" (paragraph {paragraph_index}"
+                        para_info += f"/{total_paragraphs})" if total_paragraphs else ")"
+                    f.write(f"- Section: {section_info}{para_info}\n")
                 f.write(f"- DOI: {meta.get('doi', '')}\n")
                 f.write(f"- Tags: {meta.get('tags', '')}\n")
                 f.write(f"- MeSH: {meta.get('mesh_terms', '')}\n")
