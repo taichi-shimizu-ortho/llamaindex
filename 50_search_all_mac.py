@@ -25,7 +25,7 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 # パス設定（Mac: Dropboxから読み込む）
 SCRIPT_DIR = Path(__file__).resolve().parent
 JSON_FILE = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/articles_all3.json"
-STORAGE_DIR = SCRIPT_DIR / "storage_all"
+STORAGE_DIR = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/storage_all"
 
 # デフォルト検索対象セクション（本論文コンテンツのみ）
 DEFAULT_SECTION_TYPES = ['intro', 'materials|methods', 'results', 'discussion', 'conclusion', 'review']
@@ -114,13 +114,13 @@ def write_result(f, query: str, response, section_types=None, citekeys=None):
         meta = node.metadata
 
         citekey = meta.get('citekey', 'Unknown')
-        published = meta.get('published', '')
+        title = meta.get('title', '')
         source = meta.get('source', '')
         section = meta.get('section', '')
         subsection = meta.get('subsection', '')
         section_type = meta.get('section_type', '')
 
-        location = f"{citekey}（{published}）"
+        location = f"{citekey} - {title}"
         if source:
             location += f" *{source}*"
 

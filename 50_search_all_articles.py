@@ -10,8 +10,12 @@
 """
 
 import sys
+import platform
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv(Path.home() / "uv-envs/llamaindex/.env")
 
 from llama_index.core import Settings, StorageContext, load_index_from_storage
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
@@ -22,13 +26,20 @@ from llama_index.llms.openai import OpenAI
 Settings.llm = OpenAI(model="gpt-5-nano-2025-08-07", temperature=0.1)
 Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
-# パス設定
+# パス設定（Mac/Windows対応）
 SCRIPT_DIR = Path(__file__).resolve().parent
-STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
+if platform.system() == "Darwin":
+    # Mac: CloudStorageパス
+    STORAGE_DIR = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/storage_all"
+    OUTPUT_DIR = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex"
+else:
+    # Windows: 環境変数参照
+    STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
+    OUTPUT_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex"
 
-# デフォルト検索対象セクション（intro と materials_methods を除外）
-# 'other' はレビュー論文の全セクションに相当するため含める
-DEFAULT_SECTION_TYPES = ['results', 'discussion', 'conclusion', 'abstract', 'other']
+# デフォルト検索対象セクション
+# materials_methods は除外（方法論より結果・考察を優先）
+DEFAULT_SECTION_TYPES = ['abstract', 'introduction', 'results', 'discussion', 'conclusion']
 
 
 def load_index():
@@ -116,14 +127,14 @@ def write_result(f, query: str, response, section_types=None, citekeys=None):
         meta = node.metadata
 
         citekey = meta.get('citekey', 'Unknown')
-        published = meta.get('published', '')
+        title = meta.get('title', '')
         source = meta.get('source', '')
         section = meta.get('section', '')
         subsection = meta.get('subsection', '')
         section_type = meta.get('section_type', '')
 
         # 引用場所の表示
-        location = f"{citekey}（{published}）"
+        location = f"{citekey} - {title}"
         if source:
             location += f" *{source}*"
 
@@ -162,6 +173,83 @@ def run_searches(index, queries: list[str], output_path: Path,
     print(f"\n[OK] 結果を保存しました: {output_path}")
 
 
+def run_interactive_search(index, output_path: Path, section_types: list[str] | None = None):
+    """対話的に1クエリごとに検索して、結果をファイルに追記"""
+    # ファイルヘッダーを初期化
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write("# 全論文横断RAG検索結果\n\n")
+        f.write(f"**インデックス**: {STORAGE_DIR.name}/\n\n")
+        if section_types:
+            f.write(f"**対象セクション**: {', '.join(section_types)}\n\n")
+        f.write("---\n\n")
+
+    query_count = 0
+    print("\n" + "=" * 80)
+    print("検索クエリを入力してください（1クエリごとに検索・結果を追記します）")
+    print("（入力終了: 'quit' または 'exit' を入力）")
+    print("=" * 80 + "\n")
+
+    while True:
+        query = input("クエリを入力 > ").strip()
+
+        if query.lower() in ['quit', 'exit']:
+            break
+
+        if not query:
+            print("  → 空のクエリはスキップしました\n")
+            continue
+
+        # 検索実行
+        print(f"  [検索中...]")
+        response = search(index, query, top_k=5, section_types=section_types)
+
+        # 結果をファイルに追記
+        with open(output_path, 'a', encoding='utf-8') as f:
+            write_result(f, query, response, section_types=section_types)
+
+        query_count += 1
+        print(f"  ✓ 完了 (引用元: {len(response.source_nodes)}件)\n")
+
+    if query_count == 0:
+        print("\n[!] クエリが実行されていません")
+        return
+
+    # ファイルの最後に検索統計を追記
+    with open(output_path, 'a', encoding='utf-8') as f:
+        f.write(f"\n---\n\n")
+        f.write(f"**検索日時**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write(f"**実行クエリ数**: {query_count}件\n")
+
+    print(f"\n[OK] 結果を保存しました: {output_path}")
+
+
+def parse_cli_args():
+    """コマンドライン引数をパース。--sections オプションに対応。
+
+    使い方:
+        python 50_search_all_articles.py クエリ1 クエリ2
+        python 50_search_all_articles.py --sections results,discussion クエリ1 クエリ2
+    """
+    section_types = None
+    queries = []
+
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+
+        if arg == "--sections" and i + 1 < len(sys.argv):
+            # 次の引数がセクション指定
+            section_str = sys.argv[i + 1]
+            section_types = [s.strip() for s in section_str.split(",")]
+            i += 2
+        else:
+            # クエリ
+            queries.append(arg)
+            i += 1
+
+    return queries, section_types
+
+
 def main():
     print("=" * 80)
     print("全論文横断RAG検索")
@@ -170,20 +258,25 @@ def main():
     # インデックス読み込み
     index = load_index()
 
-    # コマンドライン引数からクエリを取得、なければデフォルト
-    if len(sys.argv) > 1:
-        queries = sys.argv[1:]
-    else:
-        queries = [
-            "仙腸関節痛と妊娠",
-            "RXFP1とMMP産生",
-        ]
-
     # 出力ファイル名
     search_date = datetime.now().strftime('%m%d_%H%M')
-    output_path = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / f"search_{search_date}.md"
+    output_path = OUTPUT_DIR / f"search_{search_date}.md"
 
-    run_searches(index, queries, output_path, section_types=DEFAULT_SECTION_TYPES)
+    # コマンドライン引数をパース
+    queries, section_types = parse_cli_args()
+    if section_types is None:
+        section_types = DEFAULT_SECTION_TYPES
+
+    # 指定されたセクションを表示
+    if section_types != DEFAULT_SECTION_TYPES:
+        print(f"[*] 対象セクション: {', '.join(section_types)}\n")
+
+    # クエリがある場合はバッチ実行、ない場合は対話的入力
+    if queries:
+        run_searches(index, queries, output_path, section_types=section_types)
+    else:
+        # 対話的入力：1クエリごとに検索・追記
+        run_interactive_search(index, output_path, section_types=section_types)
 
     print("\n" + "=" * 80)
     print(f"完了！  {output_path.name}")

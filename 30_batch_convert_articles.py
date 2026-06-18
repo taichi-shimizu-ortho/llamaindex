@@ -111,9 +111,26 @@ def extract_sections_from_main_text(
 ) -> List[Dict[str, Any]]:
     """
     h2 (##) ヘッダーでセクションを分割する。
+    冒頭に見出しがない場合は、最初のセクション見出しまでの文章をintroとして抽出。
     is_review=True の場合、ack/references 以外は全て type='review' に分類。
     """
     sections = []
+
+    # 最初のセクション見出しの位置を探す
+    first_heading_match = re.search(r'\n##\s+', main_text_body)
+
+    # 冒頭に見出しがない場合、見出しまでの文章をintroとして抽出
+    if first_heading_match:
+        preamble = main_text_body[:first_heading_match.start()].strip()
+        if preamble and not is_review:
+            sections.append({
+                'title': 'Introduction',
+                'type': 'intro',
+                'content': preamble,
+                'subsections': [],
+            })
+
+    # セクション見出しを処理
     pattern = r'##\s+([^\n]+)\n(.*?)(?=\n##\s+|$)'
     for match in re.finditer(pattern, main_text_body, re.DOTALL):
         section_title = match.group(1).strip()
