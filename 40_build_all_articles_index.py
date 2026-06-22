@@ -120,40 +120,48 @@ def create_section_documents_regular(articles: list[dict]) -> list[Document]:
                 continue
 
             # メインセクションのコンテンツ（段落単位）
-            for para_idx, paragraph in enumerate(section_content.split('\n\n')):
-                paragraph = paragraph.strip()
-                if paragraph and not should_exclude_paragraph(paragraph):
-                    doc = Document(
-                        text=paragraph,
-                        metadata={
-                            **base_metadata,
-                            'section': section_title,
-                            'section_type': section_type,
-                            'subsection': '',
-                            'paragraph_index': para_idx,
-                        }
-                    )
-                    documents.append(doc)
+            valid_paragraphs = [
+                p.strip() for p in section_content.split('\n\n')
+                if p.strip() and not should_exclude_paragraph(p.strip())
+            ]
+            total_paragraphs = len(valid_paragraphs)
+            for para_idx, paragraph in enumerate(valid_paragraphs, 1):
+                doc = Document(
+                    text=paragraph,
+                    metadata={
+                        **base_metadata,
+                        'section': section_title,
+                        'section_type': section_type,
+                        'subsection': '',
+                        'paragraph_index': para_idx,
+                        'total_paragraphs': total_paragraphs,
+                    }
+                )
+                documents.append(doc)
 
             # サブセクション（段落単位）
             for subsection in section.get('subsections', []):
                 subsection_title = subsection.get('title', 'Untitled')
                 subsection_content = subsection.get('content', '')
 
-                for para_idx, paragraph in enumerate(subsection_content.split('\n\n')):
-                    paragraph = paragraph.strip()
-                    if paragraph and not should_exclude_paragraph(paragraph):
-                        doc = Document(
-                            text=paragraph,
-                            metadata={
-                                **base_metadata,
-                                'section': section_title,
-                                'section_type': section_type,
-                                'subsection': subsection_title,
-                                'paragraph_index': para_idx,
-                            }
-                        )
-                        documents.append(doc)
+                valid_paragraphs = [
+                    p.strip() for p in subsection_content.split('\n\n')
+                    if p.strip() and not should_exclude_paragraph(p.strip())
+                ]
+                total_paragraphs = len(valid_paragraphs)
+                for para_idx, paragraph in enumerate(valid_paragraphs, 1):
+                    doc = Document(
+                        text=paragraph,
+                        metadata={
+                            **base_metadata,
+                            'section': section_title,
+                            'section_type': section_type,
+                            'subsection': subsection_title,
+                            'paragraph_index': para_idx,
+                            'total_paragraphs': total_paragraphs,
+                        }
+                    )
+                    documents.append(doc)
 
     return documents
 
@@ -226,21 +234,24 @@ def create_section_documents_review(articles: list[dict]) -> list[Document]:
 
             # セクション内容を段落で分割（\n\n で区切られた部分）
             if combined_content.strip():
-                paragraphs = combined_content.split('\n\n')
-                for para_idx, paragraph in enumerate(paragraphs):
-                    paragraph = paragraph.strip()
-                    # 空でない段落で、references/cited by を含まないものをDocument化
-                    if paragraph and not should_exclude_paragraph(paragraph):
-                        doc = Document(
-                            text=paragraph,
-                            metadata={
-                                **base_metadata,
-                                'section': section_title,
-                                'section_type': section_type,
-                                'paragraph_index': para_idx,
-                            }
-                        )
-                        documents.append(doc)
+                # 空でない段落で、references/cited by を含まないものをDocument化
+                valid_paragraphs = [
+                    p.strip() for p in combined_content.split('\n\n')
+                    if p.strip() and not should_exclude_paragraph(p.strip())
+                ]
+                total_paragraphs = len(valid_paragraphs)
+                for para_idx, paragraph in enumerate(valid_paragraphs, 1):
+                    doc = Document(
+                        text=paragraph,
+                        metadata={
+                            **base_metadata,
+                            'section': section_title,
+                            'section_type': section_type,
+                            'paragraph_index': para_idx,
+                            'total_paragraphs': total_paragraphs,
+                        }
+                    )
+                    documents.append(doc)
 
     return documents
 

@@ -257,17 +257,57 @@ def remove_url_references(text: str) -> str:
     return text
 
 
+def merge_orphan_headings(text: str) -> str:
+    """見出しだけの段落（####, ##### など）を直後の本文段落に統合する。
+
+    Main Text の ## / ### より深い見出し（####, ##### …）は section/subsection に
+    分割されず content 内へ本文として残るため、\\n\\n 分割時に「見出しだけで中身の
+    ない段落」になり、検索でそれ単体が引用元になってしまう。
+    そこで見出し行を直後の本文段落の先頭へ統合し、後続本文が無い見出しは破棄する。
+    """
+    if not text:
+        return text
+
+    def is_heading_only(block: str) -> bool:
+        lines = [l for l in block.split('\n') if l.strip()]
+        return bool(lines) and all(re.match(r'^#{1,6}\s', l) for l in lines)
+
+    def clean_heading(block: str) -> str:
+        cleaned = []
+        for l in block.split('\n'):
+            if not l.strip():
+                continue
+            l = re.sub(r'^#{1,6}\s*', '', l)       # 見出し記号を除去
+            l = re.sub(r'\\([.\-)])', r'\1', l)     # \. \- \) のエスケープ解除
+            cleaned.append(l.strip())
+        return '\n'.join(cleaned)
+
+    blocks = [b.strip() for b in text.split('\n\n') if b.strip()]
+    result: List[str] = []
+    pending: List[str] = []
+    for b in blocks:
+        if is_heading_only(b):
+            pending.append(clean_heading(b))
+        else:
+            if pending:
+                b = '\n'.join(pending) + '\n' + b
+                pending = []
+            result.append(b)
+    # pending に残った見出しは後続本文が無いので破棄する
+    return '\n\n'.join(result)
+
+
 def filter_sections(article: Dict[str, Any]) -> Dict[str, Any]:
-    """除外対象セクションを削除し、URL 参照をクリーニングする。"""
+    """除外対象セクションを削除し、URL 参照と孤立見出しをクリーニングする。"""
     filtered = []
     for section in article.get('sections', []):
         if section.get('type') in EXCLUDE_SECTION_TYPES:
             continue
         if 'content' in section:
-            section['content'] = remove_url_references(section['content'])
+            section['content'] = merge_orphan_headings(remove_url_references(section['content']))
         for sub in section.get('subsections', []):
             if 'content' in sub:
-                sub['content'] = remove_url_references(sub['content'])
+                sub['content'] = merge_orphan_headings(remove_url_references(sub['content']))
         filtered.append(section)
     article['sections'] = filtered
     return article
