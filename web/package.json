@@ -1,0 +1,38 @@
+{
+  "name": "rxfp1-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "convert": "tsx src/server/buildJson.ts",
+    "build-index": "tsx src/server/buildIndex.ts",
+    "server": "tsx watch src/server/server.ts",
+    "dev:client": "vite",
+    "dev": "concurrently -k -n SERVER,CLIENT -c blue,green \"npm:server\" \"npm:dev:client\"",
+    "build:client": "vite build",
+    "start": "cross-env NODE_ENV=production tsx src/server/server.ts"
+  },
+  "dependencies": {
+    "@llamaindex/openai": "^0.4.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "js-yaml": "^4.1.0",
+    "llamaindex": "^0.11.0",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}

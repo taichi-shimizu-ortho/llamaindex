@@ -3,7 +3,8 @@
     "allow": [
       "Read(//c/Users/a2189/dropbox/obsidian/10_article/general/**)",
       "Bash(uv run *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(npx tsx -e ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,

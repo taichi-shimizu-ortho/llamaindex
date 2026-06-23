@@ -17,7 +17,7 @@ PYTHON = sys.executable
 
 STEP_30 = "30_batch_convert_articles.py"
 STEP_40 = "40_build_all_articles_index.py"
-STEP_52 = "52_gui_rxfp1_abstract.py"
+STEP_52 = "52_gui_rxfp1.py"
 
 
 class MasterGUI:
