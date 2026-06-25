@@ -9,3 +9,7 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# LlamaIndex vector stores (large files, stored in Dropbox)
+storage_all/
+storage*/
