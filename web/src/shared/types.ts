@@ -56,33 +56,3 @@ export interface ArticlesFile {
   };
 }
 
-// 検索結果（API レスポンス）
-export interface SourceNode {
-  source: "RXFP1" | "All";
-  score: number;
-  citekey: string;
-  title: string;
-  authors: string;
-  journal: string;
-  published: string;
-  volume: string;
-  issue: string;
-  section: string;
-  subsection: string;
-  section_type: string;
-  paragraph_index: number | string;
-  total_paragraphs: number | string;
-  doi: string;
-  pmid: string;
-  tags: string;
-  mesh_terms: string;
-  text: string;
-}
-
-export interface QueryResult {
-  original_query: string;
-  en_query: string;
-  answer: string;
-  targets: string[];
-  sources: SourceNode[];
-}

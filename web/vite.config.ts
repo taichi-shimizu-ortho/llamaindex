@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     open: true, // 起動時にデフォルトブラウザで自動的に開く
     proxy: {
-      "/api": "http://localhost:5174",
+      "/api": `http://localhost:${process.env.PORT ?? 5174}`,
     },
   },
   build: {

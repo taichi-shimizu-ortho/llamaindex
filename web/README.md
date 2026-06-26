@@ -1,48 +1,53 @@
-# RXFP1 文献検索 (TypeScript / LlamaIndex.TS)
+# Reference Abstract RAG
 
-Python パイプライン（30→40→52）を TypeScript に作り替えたローカル Web アプリ。
-**JSON 構造化の原理は Python 版と完全一致**（全92件バイトレベル検証済み）。
+論文ページのHTMLから参考文献リンクを拾い、PubMedのPMID/abstractを取得してJSON化し、そのabstractだけを対象にLlamaIndex.TSで検索するローカルWebアプリ。
 
-## アーキテクチャ
+## 想定ワークフロー
 
-| ファイル | 対応する Python | 役割 |
-|---|---|---|
-| `src/server/parse.ts` | `30_batch_convert_articles.py` | MD → 構造化JSON（frontmatter / Info block / Main Text を h2/h3 で section・subsection 分割、type分類、review判定） |
-| `src/server/documents.ts` | `40_*`（Document化部） | 構造化JSON → 段落単位 Document（regular/review別、除外type） |
-| `src/server/buildIndex.ts` | `40_build_all_articles_index.py` | Document → OpenAI埋め込み → ベクトルIndex永続化 |
-| `src/server/rag.ts` | `52_gui_rxfp1.py`（検索部） | 日本語→英語翻訳 → ベクトル検索 → 回答合成 → 引用元整形 |
-| `src/server/server.ts` | — | Express API |
-| `src/client/` | `52_gui_rxfp1.py`（GUI部） | React UI（tkinter置き換え） |
+1. 制限付き論文をログイン済みブラウザで開く。
+2. ページHTMLを保存するか、References周辺のHTMLをコピーする。
+3. Web UIにHTMLファイルまたはHTMLテキストを渡してJSONを作る。
+4. 作成されたreference setに対して日本語または英語で検索する。
 
-## セットアップ
+サーバ側のURL取得も使えますが、ログインCookieは共有されないため、制限付き記事ではHTMLファイル/貼り付けが主経路です。
+
+## 主なファイル
+
+| ファイル | 役割 |
+|---|---|
+| `src/server/referenceHarvester.ts` | HTMLから参考文献候補を抽出し、PubMed E-utilitiesでPMID/abstractを取得してJSON保存 |
+| `src/server/referenceRag.ts` | 保存済みreference setをabstract単位のDocumentにしてLlamaIndex検索 |
+| `src/server/server.ts` | Express API |
+| `src/client/App.tsx` | React UI |
+
+保存先:
+
+```text
+~/Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/reference_sets
+```
+
+## 実行
 
 ```bash
 cd web
 npm install
+npm run dev
 ```
 
-`OPENAI_API_KEY` はリポジトリ直下の `.env` を自動読み込み（`web/.env` でも上書き可）。
+UI:
 
-パス（`src/server/config.ts`）:
-- MD入力: `~/Dropbox/obsidian/10_article/RXFP1`
-- 構造化JSON: `~/Dropbox/obsidian/50_coding/llamaindex/articles_all3.json`
-- ベクトルIndex: `~/Dropbox/obsidian/50_coding/llamaindex/storage_all_ts`（Python版 `storage_all` とは別ディレクトリ）
-
-## 実行手順
-
-```bash
-npm run convert       # MD → 構造化JSON（step 30 相当・無料）
-npm run build-index   # JSON → ベクトルIndex（step 40 相当・OpenAI課金あり）
-npm run dev           # APIサーバ + Vite を同時起動 → http://localhost:5173
+```text
+http://localhost:5173
 ```
 
-本番配信:
-```bash
-npm run build:client  # dist/ を生成
-npm run start         # Express が API と dist/ を配信（http://localhost:5174）
+API:
+
+```text
+http://localhost:5174
 ```
 
-## メモ
+`OPENAI_API_KEY` はリポジトリ直下の `.env` または `web/.env` から読み込みます。
 
-- ベクトルストアは LlamaIndex.TS 形式で、Python版の `storage_all` とは互換でないため `build-index` で作り直す。
-- 検索は単一の「All Articles」インデックス。UI でセクションタイプ別フィルタ・スコアバー・DOI/PubMedリンク・対話のMarkdown保存に対応。
+## 旧RXFP1 RAG
+
+既存の全論文RAG用コードは `src/server/rag.ts`、`buildJson.ts`、`buildIndex.ts` などに残しています。Reference Abstract RAGとはAPIとUIを分けてあります。

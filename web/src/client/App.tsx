@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import type { QueryResult, SourceNode, Status } from "./types.js";
+import type {
+  ArticleQueryResult,
+  ArticleSet,
+  ArticleSetSummary,
+  IntegratedQueryResult,
+  ReferenceQueryResult,
+  ReferenceRecord,
+  ReferenceSet,
+  ReferenceSetSummary,
+  Status,
+} from "./types.js";
 
-const SECTION_LABELS: Record<string, string> = {
-  intro: "Intro",
-  "materials|methods": "Methods",
-  results: "Results",
-  discussion: "Discussion",
-  conclusion: "Conclusion",
-  review: "Review",
-  abstract: "Abstract",
-  other: "Other",
-};
+type Theme = "light" | "dark";
+type SearchMode = "integrated" | "article" | "reference";
+
+function initialTheme(): Theme {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light" || saved === "dark") return saved;
+  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
 
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.max(0, Math.min(100, score * 100));
@@ -22,151 +30,342 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function SourceCard({ s, idx }: { s: SourceNode; idx: number }) {
+function ReferenceRow({ record }: { record: ReferenceRecord }) {
+  const abstract = record.pubmed?.abstract ?? "";
+  return (
+    <div className={abstract ? "ref-row" : "ref-row muted-row"}>
+      <div className="ref-index">{record.index}</div>
+      <div className="ref-main">
+        <div className="ref-title">{record.pubmed?.title || record.text}</div>
+        <div className="ref-meta">
+          {record.pubmed?.journal && <span>{record.pubmed.journal}</span>}
+          {record.pubmed?.year && <span>{record.pubmed.year}</span>}
+          {record.pmid && (
+            <a href={`https://pubmed.ncbi.nlm.nih.gov/${record.pmid}`} target="_blank" rel="noreferrer">
+              PMID {record.pmid}
+            </a>
+          )}
+          {record.doi && (
+            <a href={`https://doi.org/${record.doi}`} target="_blank" rel="noreferrer">
+              DOI
+            </a>
+          )}
+          {record.error && <span className="warn-text">{record.error}</span>}
+        </div>
+      </div>
+      <span className={abstract ? "pill ok" : "pill warn"}>{abstract ? "Abstract" : "No abstract"}</span>
+    </div>
+  );
+}
+
+function ResultSource({ source, idx }: { source: ReferenceQueryResult["sources"][number]; idx: number }) {
   const [open, setOpen] = useState(false);
-  const sec = s.subsection ? `${s.section} › ${s.subsection}` : s.section;
-  const preview = s.text.length > 240 ? s.text.slice(0, 240) + "…" : s.text;
+  const preview = source.abstract.length > 360 ? `${source.abstract.slice(0, 360)}...` : source.abstract;
   return (
     <div className="source-card">
       <div className="source-head">
         <span className="source-idx">{idx + 1}</span>
         <div className="source-cite">
-          <div className="source-citekey">{s.citekey}</div>
-          {s.title && <div className="source-title">{s.title}</div>}
-          {s.journal && (
-            <div className="source-journal">
-              <em>{s.journal}</em>
-              {s.published && ` · ${s.published}`}
-              {s.volume && ` · ${s.volume}${s.issue ? `(${s.issue})` : ""}`}
-            </div>
-          )}
+          <div className="source-citekey">Reference {source.refIndex}</div>
+          <div className="source-title">{source.title || source.referenceText}</div>
+          <div className="source-journal">
+            {source.journal}
+            {source.year && ` · ${source.year}`}
+          </div>
         </div>
-        <ScoreBar score={s.score} />
+        <ScoreBar score={source.score} />
       </div>
       <div className="source-meta">
-        {s.section_type && (
-          <span className={`chip chip-${s.section_type.replace(/[^a-z]/gi, "")}`}>
-            {SECTION_LABELS[s.section_type] ?? s.section_type}
-          </span>
-        )}
-        {sec && <span className="meta-sec">{sec}</span>}
-        {s.paragraph_index ? (
-          <span className="meta-para">¶ {s.paragraph_index}/{s.total_paragraphs}</span>
-        ) : null}
-        {s.doi && (
-          <a className="meta-doi" href={`https://doi.org/${s.doi}`} target="_blank" rel="noreferrer">
-            DOI
-          </a>
-        )}
-        {s.pmid && (
-          <a className="meta-doi" href={`https://pubmed.ncbi.nlm.nih.gov/${s.pmid}`} target="_blank" rel="noreferrer">
+        {source.pmid && (
+          <a className="meta-doi" href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`} target="_blank" rel="noreferrer">
             PubMed
           </a>
         )}
+        {source.doi && (
+          <a className="meta-doi" href={`https://doi.org/${source.doi}`} target="_blank" rel="noreferrer">
+            DOI
+          </a>
+        )}
+        {source.authors && <span>{source.authors}</span>}
       </div>
-      <p className="source-text">{open ? s.text : preview}</p>
-      {s.text.length > 240 && (
+      <p className="source-text">{open ? source.abstract : preview}</p>
+      {source.abstract.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
-          {open ? "閉じる" : "全文を表示"}
+          {open ? "閉じる" : "Abstractを表示"}
         </button>
       )}
-      {open && s.mesh_terms && <div className="source-mesh">MeSH: {s.mesh_terms}</div>}
     </div>
   );
 }
 
-type Theme = "light" | "dark";
+function ArticleResultSource({ source, idx }: { source: ArticleQueryResult["sources"][number]; idx: number }) {
+  const [open, setOpen] = useState(false);
+  const preview = source.text.length > 360 ? `${source.text.slice(0, 360)}...` : source.text;
+  const section = source.subsection ? `${source.section} > ${source.subsection}` : source.section;
+  return (
+    <div className="source-card">
+      <div className="source-head">
+        <span className="source-idx">{idx + 1}</span>
+        <div className="source-cite">
+          <div className="source-citekey">Main article</div>
+          <div className="source-title">{section}</div>
+          <div className="source-journal">
+            {source.journal}
+            {source.year && ` · ${source.year}`}
+            {` · paragraph ${source.paragraphIndex}/${source.totalParagraphs}`}
+          </div>
+        </div>
+        <ScoreBar score={source.score} />
+      </div>
+      <div className="source-meta">
+        {source.doi && (
+          <a className="meta-doi" href={`https://doi.org/${source.doi}`} target="_blank" rel="noreferrer">
+            DOI
+          </a>
+        )}
+        {source.authors && <span>{source.authors}</span>}
+      </div>
+      <p className="source-text">{open ? source.text : preview}</p>
+      {source.text.length > 360 && (
+        <button className="link-btn" onClick={() => setOpen((v) => !v)}>
+          {open ? "閉じる" : "段落を表示"}
+        </button>
+      )}
+    </div>
+  );
+}
 
-function initialTheme(): Theme {
-  const saved = localStorage.getItem("theme");
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult["sources"][number]; idx: number }) {
+  const [open, setOpen] = useState(false);
+  const preview = source.text.length > 360 ? `${source.text.slice(0, 360)}...` : source.text;
+  return (
+    <div className="source-card">
+      <div className="source-head">
+        <span className="source-idx">{idx + 1}</span>
+        <div className="source-cite">
+          <div className="source-citekey">{source.scope === "main_article" ? "Main article" : source.label}</div>
+          <div className="source-title">{source.scope === "main_article" ? source.label : source.title}</div>
+          <div className="source-journal">
+            {source.journal}
+            {source.year && ` · ${source.year}`}
+          </div>
+        </div>
+        <ScoreBar score={source.score} />
+      </div>
+      <div className="source-meta">
+        {source.pmid && (
+          <a className="meta-doi" href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`} target="_blank" rel="noreferrer">
+            PubMed
+          </a>
+        )}
+        {source.doi && (
+          <a className="meta-doi" href={`https://doi.org/${source.doi}`} target="_blank" rel="noreferrer">
+            DOI
+          </a>
+        )}
+        {source.authors && <span>{source.authors}</span>}
+      </div>
+      <p className="source-text">{open ? source.text : preview}</p>
+      {source.text.length > 360 && (
+        <button className="link-btn" onClick={() => setOpen((v) => !v)}>
+          {open ? "閉じる" : "本文を表示"}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [status, setStatus] = useState<Status | null>(null);
+  const [sets, setSets] = useState<ReferenceSetSummary[]>([]);
+  const [articleSets, setArticleSets] = useState<ArticleSetSummary[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedArticleId, setSelectedArticleId] = useState("");
+  const [currentSet, setCurrentSet] = useState<ReferenceSet | null>(null);
+  const [currentArticle, setCurrentArticle] = useState<ArticleSet | null>(null);
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [html, setHtml] = useState("");
+  const [title, setTitle] = useState("");
+  const [limit, setLimit] = useState(80);
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(5);
   const [translate, setTranslate] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [stage, setStage] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("integrated");
+  const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<QueryResult | null>(null);
-  const [filter, setFilter] = useState<string>("all");
-  const [saved, setSaved] = useState("");
+  const [result, setResult] = useState<ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  async function loadSets(nextId?: string) {
+    const res = await fetch("/api/reference/sets");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "データセット一覧を取得できませんでした");
+    const nextSets = data.sets ?? [];
+    setSets(nextSets);
+    const id = nextId || selectedId || nextSets[0]?.id || "";
+    if (id) {
+      setSelectedId(id);
+      await loadSet(id);
+    }
+  }
+
+  async function loadArticleSets(nextId?: string) {
+    const res = await fetch("/api/article/sets");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "主論文JSON一覧を取得できませんでした");
+    const nextSets = data.sets ?? [];
+    setArticleSets(nextSets);
+    const id = nextId || selectedArticleId || nextSets[0]?.id || "";
+    if (id) {
+      setSelectedArticleId(id);
+      await loadArticleSet(id);
+    }
+  }
+
+  async function loadSet(id: string) {
+    const res = await fetch(`/api/reference/sets/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "JSONを読み込めませんでした");
+    setCurrentSet(data);
+    setResult(null);
+  }
+
+  async function loadArticleSet(id: string) {
+    const res = await fetch(`/api/article/sets/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "主論文JSONを読み込めませんでした");
+    setCurrentArticle(data);
+    setResult(null);
+  }
+
   useEffect(() => {
     fetch("/api/status")
       .then((r) => r.json())
       .then(setStatus)
       .catch(() => setStatus(null));
+    loadSets().catch(() => undefined);
+    loadArticleSets().catch(() => undefined);
   }, []);
 
-  const sectionTypes = useMemo(() => {
-    if (!result) return [];
-    return Array.from(new Set(result.sources.map((s) => s.section_type).filter(Boolean)));
-  }, [result]);
+  const abstractRate = useMemo(() => {
+    if (!currentSet?.totalReferences) return "0%";
+    return `${Math.round((currentSet.abstractFound / currentSet.totalReferences) * 100)}%`;
+  }, [currentSet]);
 
-  const shownSources = useMemo(() => {
-    if (!result) return [];
-    if (filter === "all") return result.sources;
-    return result.sources.filter((s) => s.section_type === filter);
-  }, [result, filter]);
-
-  async function send() {
-    if (!query.trim() || loading) return;
-    setLoading(true);
+  async function harvest() {
+    if ((!sourceUrl.trim() && !html.trim()) || busy) return;
+    setBusy("参考文献リンクとPubMed abstractを取得中...");
     setError("");
     setResult(null);
-    setSaved("");
-    setStage(translate ? "翻訳して検索中…" : "検索中…");
     try {
-      const res = await fetch("/api/query", {
+      const res = await fetch("/api/reference/harvest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, topK, translate }),
+        body: JSON.stringify({
+          sourceUrl: sourceUrl.trim(),
+          html: html.trim() || undefined,
+          title: title.trim() || undefined,
+          limit,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "取得に失敗しました");
+      setCurrentSet(data);
+      setSelectedId(data.id);
+      await loadSets(data.id);
+    } catch (e: any) {
+      setError(String(e?.message ?? e));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function harvestArticle() {
+    if ((!sourceUrl.trim() && !html.trim()) || busy) return;
+    setBusy("主論文本文を構造化JSONに変換中...");
+    setError("");
+    setResult(null);
+    try {
+      const res = await fetch("/api/article/harvest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceUrl: sourceUrl.trim(),
+          html: html.trim() || undefined,
+          title: title.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "主論文JSON化に失敗しました");
+      setCurrentArticle(data);
+      setSelectedArticleId(data.id);
+      await loadArticleSets(data.id);
+    } catch (e: any) {
+      setError(String(e?.message ?? e));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function search() {
+    if (!query.trim() || busy) return;
+    if (searchMode === "reference" && !currentSet) return;
+    if (searchMode === "article" && !currentArticle) return;
+    if (searchMode === "integrated" && (!currentArticle || !currentSet)) return;
+    setBusy(translate ? "翻訳してRAG検索中..." : "RAG検索中...");
+    setError("");
+    try {
+      const endpoint =
+        searchMode === "article"
+          ? "/api/article/query"
+          : searchMode === "integrated"
+            ? "/api/integrated/query"
+            : "/api/reference/query";
+      const payload =
+        searchMode === "article"
+          ? { articleId: currentArticle?.id, query: query.trim(), topK, translate }
+          : searchMode === "integrated"
+            ? { articleId: currentArticle?.id, referenceSetId: currentSet?.id, query: query.trim(), topK, translate }
+            : { setId: currentSet?.id, query: query.trim(), topK, translate };
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "検索に失敗しました");
       setResult(data);
-      setFilter("all");
     } catch (e: any) {
       setError(String(e?.message ?? e));
     } finally {
-      setLoading(false);
-      setStage("");
+      setBusy("");
     }
   }
 
-  async function save() {
-    if (!result) return;
-    const res = await fetch("/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(result),
-    });
-    const data = await res.json();
-    if (res.ok) setSaved(`保存しました: ${data.file.split("/").pop()}`);
+  function onQueryKey(e: React.KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") search();
   }
 
-  function onKey(e: React.KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send();
+  async function readHtmlFile(file: File | null) {
+    if (!file) return;
+    const text = await file.text();
+    setHtml(text);
+    if (!title.trim()) setTitle(file.name.replace(/\.(html?|xhtml)$/i, ""));
   }
 
   return (
-    <div className="app">
+    <div className="app wide-app">
       <header className="topbar">
         <div className="brand">
-          <span className="logo">🧬</span>
+          <span className="logo-mark">R</span>
           <div>
-            <h1>RXFP1 文献検索</h1>
-            <p className="subtitle">構造化JSON × ベクトル検索（LlamaIndex.TS）</p>
+            <h1>Reference Abstract RAG</h1>
+            <p className="subtitle">HTML references → PubMed abstracts → JSON search</p>
           </div>
         </div>
         <div className="status">
@@ -176,99 +375,221 @@ export function App() {
             title={theme === "dark" ? "ライトテーマに切替" : "ダークテーマに切替"}
             aria-label="テーマ切替"
           >
-            {theme === "dark" ? "☀️" : "🌙"}
+            {theme === "dark" ? "Light" : "Dark"}
           </button>
-          {status === null ? (
-            <span className="dot dot-gray" />
-          ) : status.indexReady && status.hasApiKey ? (
-            <span className="badge badge-ok">準備完了</span>
-          ) : (
-            <span className="badge badge-warn">
-              {!status.hasApiKey ? "APIキー未設定" : "インデックス未構築"}
-            </span>
-          )}
+          {status?.hasApiKey ? <span className="badge badge-ok">API ready</span> : <span className="badge badge-warn">API key</span>}
         </div>
       </header>
 
-      <section className="query-panel">
-        <textarea
-          className="query-input"
-          placeholder="質問を入力（日本語可）… 例: リラキシンはMMP-9をどの経路で誘導する？"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKey}
-          rows={3}
-        />
-        <div className="controls">
-          <label className="ctrl">
-            <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
-            日本語→英語に翻訳
+      <main className="workspace">
+        <section className="tool-panel">
+          <div className="panel-head">
+            <h2>Harvest</h2>
+            <span className="panel-note">NCBI E-utilities</span>
+          </div>
+          <label className="field">
+            <span>論文HTML URL</span>
+            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
           </label>
-          <label className="ctrl">
-            Top-K
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={topK}
-              onChange={(e) => setTopK(Number(e.target.value))}
-              className="topk"
-            />
+          <label className="field">
+            <span>タイトル</span>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="空ならHTMLから推定" />
           </label>
-          <button className="primary" onClick={send} disabled={loading || !query.trim()}>
-            {loading ? "検索中…" : "検索 (⌘/Ctrl+Enter)"}
-          </button>
-        </div>
-      </section>
-
-      {loading && (
-        <div className="loading">
-          <div className="spinner" />
-          <span>{stage}</span>
-        </div>
-      )}
-      {error && <div className="error">⚠ {error}</div>}
-
-      {result && (
-        <section className="result">
-          <div className="answer-card">
-            <div className="answer-head">
-              <h2>回答</h2>
-              <button className="ghost" onClick={save}>
-                Markdownに保存
-              </button>
-            </div>
-            {result.en_query !== result.original_query && (
-              <div className="trans">EN: {result.en_query}</div>
-            )}
-            <p className="answer-text">{result.answer}</p>
-            {saved && <div className="saved-note">✓ {saved}</div>}
+          <label className="field">
+            <span>HTML直接貼り付け</span>
+            <textarea value={html} onChange={(e) => setHtml(e.target.value)} rows={5} placeholder="URL取得できないサイト用" />
+          </label>
+          <label className="field">
+            <span>HTMLファイル</span>
+            <input type="file" accept=".html,.htm,.xhtml,text/html" onChange={(e) => readHtmlFile(e.target.files?.[0] ?? null)} />
+          </label>
+          <div className="controls compact-controls">
+            <label className="ctrl">
+              最大件数
+              <input className="topk" type="number" min={1} max={200} value={limit} onChange={(e) => setLimit(Number(e.target.value))} />
+            </label>
+            <button className="primary" onClick={harvest} disabled={Boolean(busy) || (!sourceUrl.trim() && !html.trim())}>
+              Abstract抽出
+            </button>
+            <button className="primary secondary" onClick={harvestArticle} disabled={Boolean(busy) || (!sourceUrl.trim() && !html.trim())}>
+              主論文JSON
+            </button>
           </div>
 
-          <div className="sources-head">
-            <h2>引用元 ({shownSources.length})</h2>
-            <div className="filters">
-              <button className={filter === "all" ? "fchip active" : "fchip"} onClick={() => setFilter("all")}>
-                すべて
-              </button>
-              {sectionTypes.map((t) => (
-                <button
-                  key={t}
-                  className={filter === t ? "fchip active" : "fchip"}
-                  onClick={() => setFilter(t)}
-                >
-                  {SECTION_LABELS[t] ?? t}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="sources">
-            {shownSources.map((s, i) => (
-              <SourceCard key={i} s={s} idx={i} />
-            ))}
+          <div className="dataset-picker">
+            <label className="field">
+              <span>保存済みJSON</span>
+              <select
+                value={selectedId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedId(id);
+                  if (id) loadSet(id).catch((err) => setError(String(err?.message ?? err)));
+                }}
+              >
+                <option value="">未選択</option>
+                {sets.map((set) => (
+                  <option key={set.id} value={set.id}>
+                    {set.title || set.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>保存済み主論文JSON</span>
+              <select
+                value={selectedArticleId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedArticleId(id);
+                  if (id) loadArticleSet(id).catch((err) => setError(String(err?.message ?? err)));
+                }}
+              >
+                <option value="">未選択</option>
+                {articleSets.map((set) => (
+                  <option key={set.id} value={set.id}>
+                    {set.title || set.id}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </section>
-      )}
+
+        <section className="main-panel">
+          {busy && <div className="loading inline-loading"><div className="spinner" /><span>{busy}</span></div>}
+          {error && <div className="error">{error}</div>}
+
+          {currentSet || currentArticle ? (
+            <>
+              <div className="dataset-summary">
+                <div>
+                  <h2>{currentArticle?.title || currentSet?.title || currentSet?.id}</h2>
+                  <p>{currentArticle?.sourceUrl || currentSet?.sourceUrl}</p>
+                </div>
+                <div className="summary-grid">
+                  <div><strong>{currentArticle?.sections.length ?? 0}</strong><span>sections</span></div>
+                  <div><strong>{currentArticle?.chunkCount ?? 0}</strong><span>paragraphs</span></div>
+                  <div><strong>{currentSet?.abstractFound ?? 0}</strong><span>{currentSet ? abstractRate : "abstracts"}</span></div>
+                </div>
+              </div>
+
+              <section className="query-panel embedded-query">
+                <textarea
+                  className="query-input"
+                  placeholder="abstractに聞きたいことを入力"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={onQueryKey}
+                  rows={3}
+                />
+                <div className="controls">
+                  <label className="ctrl">
+                    対象
+                    <select value={searchMode} onChange={(e) => setSearchMode(e.target.value as SearchMode)}>
+                      <option value="integrated">統合</option>
+                      <option value="article">主論文</option>
+                      <option value="reference">Abstract</option>
+                    </select>
+                  </label>
+                  <label className="ctrl">
+                    <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
+                    日本語→英語
+                  </label>
+                  <label className="ctrl">
+                    Top-K
+                    <input className="topk" type="number" min={1} max={20} value={topK} onChange={(e) => setTopK(Number(e.target.value))} />
+                  </label>
+                  <button
+                    className="primary"
+                    onClick={search}
+                    disabled={
+                      Boolean(busy) ||
+                      !query.trim() ||
+                      (searchMode === "article" && !currentArticle) ||
+                      (searchMode === "reference" && !currentSet) ||
+                      (searchMode === "integrated" && (!currentArticle || !currentSet))
+                    }
+                  >
+                    検索
+                  </button>
+                </div>
+              </section>
+
+              {result && (
+                <section className="result">
+                  <div className="answer-card">
+                    <div className="answer-head">
+                      <h2>Answer</h2>
+                      {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
+                    </div>
+                    <p className="answer-text">{result.answer}</p>
+                  </div>
+                  <div className="sources-head">
+                    <h2>Sources ({result.sources.length})</h2>
+                  </div>
+                  <div className="sources">
+                    {"articleAnswer" in result
+                      ? result.sources.map((source, idx) => (
+                          <IntegratedResultSource key={`${source.scope}-${source.doi}-${source.pmid}-${idx}`} source={source} idx={idx} />
+                        ))
+                      : "articleId" in result
+                        ? result.sources.map((source, idx) => (
+                            <ArticleResultSource key={`${source.section}-${source.subsection}-${source.paragraphIndex}-${idx}`} source={source} idx={idx} />
+                          ))
+                        : result.sources.map((source, idx) => (
+                            <ResultSource key={`${source.pmid}-${idx}`} source={source} idx={idx} />
+                          ))}
+                  </div>
+                </section>
+              )}
+
+              {currentArticle && (
+                <>
+                  <div className="sources-head">
+                    <h2>Main Article ({currentArticle.chunkCount})</h2>
+                  </div>
+                  <div className="ref-list">
+                    {currentArticle.sections.map((section) => (
+                      <div key={`${section.type}-${section.title}`} className="ref-row">
+                        <div className="ref-index">{section.paragraphs.length + section.subsections.reduce((n, sub) => n + sub.paragraphs.length, 0)}</div>
+                        <div className="ref-main">
+                          <div className="ref-title">{section.title}</div>
+                          <div className="ref-meta">
+                            <span>{section.type}</span>
+                            {section.subsections.map((sub) => (
+                              <span key={sub.title}>{sub.title}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="pill ok">JSON</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {currentSet && (
+                <>
+                  <div className="sources-head">
+                    <h2>References ({currentSet.records.length})</h2>
+                  </div>
+                  <div className="ref-list">
+                    {currentSet.records.map((record) => (
+                      <ReferenceRow key={`${record.index}-${record.pmid}-${record.href}`} record={record} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <h2>JSON未選択</h2>
+              <p>論文ページのURLを入力するか、保存済みJSONを選択してください。</p>
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

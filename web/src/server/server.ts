@@ -2,32 +2,51 @@
 import path from "node:path";
 import fs from "node:fs";
 import express from "express";
-import { runQuery, reloadIndex, indexExists } from "./rag.js";
-import { PATHS } from "./config.js";
-import type { QueryResult } from "../shared/types.js";
+import { harvestReferences, listReferenceSets, loadReferenceSet } from "./referenceHarvester.js";
+import { runReferenceQuery } from "./referenceRag.js";
+import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
+import { runArticleQuery } from "./articleRag.js";
+import { runIntegratedQuery } from "./integratedRag.js";
 
 const app = express();
-app.use(express.json({ limit: "1mb" }));
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+app.use(express.json({ limit: "32mb" }));
 
 const PORT = Number(process.env.PORT ?? 5174);
 
 // 状態確認
 app.get("/api/status", (_req, res) => {
   res.json({
-    indexReady: indexExists(),
-    storageDir: PATHS.storageAll,
     hasApiKey: Boolean(process.env.OPENAI_API_KEY),
   });
 });
 
-// 検索
-app.post("/api/query", async (req, res) => {
-  const { query, topK, translate } = req.body ?? {};
-  if (!query || typeof query !== "string" || !query.trim()) {
-    return res.status(400).json({ error: "クエリを入力してください" });
-  }
+app.get("/api/reference/sets", (_req, res) => {
   try {
-    const result = await runQuery(query.trim(), { topK, translate });
+    res.json({ sets: listReferenceSets() });
+  } catch (e: any) {
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.get("/api/reference/sets/:id", (req, res) => {
+  try {
+    res.json(loadReferenceSet(req.params.id));
+  } catch (e: any) {
+    res.status(404).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/reference/harvest", async (req, res) => {
+  const { sourceUrl, html, title, limit } = req.body ?? {};
+  try {
+    const result = await harvestReferences({ sourceUrl, html, title, limit });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -35,45 +54,71 @@ app.post("/api/query", async (req, res) => {
   }
 });
 
-// インデックス再読み込み
-app.post("/api/reload", async (_req, res) => {
+app.post("/api/reference/query", async (req, res) => {
+  const { setId, query, topK, translate } = req.body ?? {};
+  if (!setId || !query) return res.status(400).json({ error: "データセットとクエリを指定してください" });
   try {
-    await reloadIndex();
-    res.json({ ok: true });
+    const result = await runReferenceQuery(String(setId), String(query).trim(), { topK, translate });
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.get("/api/article/sets", (_req, res) => {
+  try {
+    res.json({ sets: listArticleSets() });
   } catch (e: any) {
     res.status(500).json({ error: String(e?.message ?? e) });
   }
 });
 
-// 対話ログを Markdown に保存（Python版 _save_to_file 相当）
-app.post("/api/save", (req, res) => {
-  const result = req.body as QueryResult;
-  if (!result?.original_query) return res.status(400).json({ error: "保存データが不正です" });
+app.get("/api/article/sets/:id", (req, res) => {
   try {
-    const ts = new Date();
-    const stamp = ts.toISOString().slice(0, 19).replace(/[:T]/g, "").replace(/-/g, "");
-    const file = path.join(PATHS.outputDir, `${stamp}_rxfp1_web.md`);
-    let md = `# RXFP1 RAG Dialogue (Web)\nDate: ${ts.toLocaleString()}\n\n`;
-    md += `## Q: ${result.original_query}\n*(EN: ${result.en_query})*\n\n`;
-    md += `**Answer**: ${result.answer}\n\n**Sources**:\n\n`;
-    result.sources.forEach((s, i) => {
-      md += `Source ${i + 1}: [${s.source}] ${s.citekey} (score: ${s.score.toFixed(4)})\n`;
-      md += `- Title: ${s.title}\n`;
-      const cite = [s.journal, s.published, s.volume && `${s.volume}${s.issue ? `(${s.issue})` : ""}`]
-        .filter(Boolean)
-        .join(", ");
-      if (cite) md += `- Journal: ${cite}\n`;
-      const sec = s.subsection ? `${s.section} > ${s.subsection}` : s.section;
-      md += `- Section: ${sec} (paragraph ${s.paragraph_index}/${s.total_paragraphs})\n`;
-      md += `- DOI: ${s.doi}\n- MeSH: ${s.mesh_terms}\n\n${s.text}\n\n`;
-    });
-    md += "---\n\n";
-    fs.writeFileSync(file, md, "utf-8");
-    res.json({ ok: true, file });
+    res.json(loadArticleSet(req.params.id));
   } catch (e: any) {
+    res.status(404).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/article/harvest", async (req, res) => {
+  const { sourceUrl, html, title } = req.body ?? {};
+  try {
+    const result = await harvestArticle({ sourceUrl, html, title });
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
   }
 });
+
+app.post("/api/article/query", async (req, res) => {
+  const { articleId, query, topK, translate } = req.body ?? {};
+  if (!articleId || !query) return res.status(400).json({ error: "主論文JSONとクエリを指定してください" });
+  try {
+    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate });
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/integrated/query", async (req, res) => {
+  const { articleId, referenceSetId, query, topK, translate } = req.body ?? {};
+  if (!articleId || !referenceSetId || !query) {
+    return res.status(400).json({ error: "主論文JSON、reference set、クエリを指定してください" });
+  }
+  try {
+    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate });
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
 
 // 本番: ビルド済みクライアントを配信
 const clientDist = path.resolve(import.meta.dirname, "../../dist");
@@ -84,5 +129,5 @@ if (fs.existsSync(clientDist)) {
 
 app.listen(PORT, () => {
   console.log(`[server] http://localhost:${PORT}`);
-  console.log(`[server] index ready: ${indexExists()}`);
+  console.log(`[server] api ready: ${Boolean(process.env.OPENAI_API_KEY) ? "with OPENAI_API_KEY" : "missing OPENAI_API_KEY"}`);
 });

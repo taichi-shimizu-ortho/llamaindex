@@ -1,11 +1,9 @@
 {
-  "name": "rxfp1-web",
+  "name": "reference-abstract-rag",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "convert": "tsx src/server/buildJson.ts",
-    "build-index": "tsx src/server/buildIndex.ts",
     "server": "tsx watch src/server/server.ts",
     "dev:client": "vite",
     "dev": "concurrently -k -n SERVER,CLIENT -c blue,green \"npm:server\" \"npm:dev:client\"",

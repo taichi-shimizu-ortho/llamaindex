@@ -14,7 +14,11 @@ function ensureSettings() {
 }
 
 export function indexExists(): boolean {
-  return fs.existsSync(PATHS.storageAll) && fs.readdirSync(PATHS.storageAll).length > 0;
+  try {
+    return fs.existsSync(PATHS.storageAll) && fs.readdirSync(PATHS.storageAll).length > 0;
+  } catch {
+    return false;
+  }
 }
 
 async function loadIndex(): Promise<VectorStoreIndex> {
