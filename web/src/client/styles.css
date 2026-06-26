@@ -332,7 +332,30 @@ body {
 .answer-head h2 { margin: 0; font-size: 17px; }
 .trans { color: var(--muted); font-size: 13px; margin-top: 6px; font-style: italic; }
 .answer-text { white-space: pre-wrap; margin: 12px 0 0; }
+.answer-split {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+.answer-block {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.answer-block h3 {
+  margin: 0;
+  color: var(--accent-2);
+  font-size: 14px;
+}
+.answer-block .answer-text {
+  margin-top: 10px;
+}
 .saved-note { color: var(--accent-2); font-size: 13px; margin-top: 10px; }
+.refresh-btn {
+  width: 100%;
+  margin-top: 14px;
+}
 
 .ghost, .link-btn, .fchip {
   background: transparent;

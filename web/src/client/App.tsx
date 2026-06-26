@@ -13,11 +13,31 @@ import type {
 
 type Theme = "light" | "dark";
 type SearchMode = "integrated" | "article" | "reference";
+type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult;
 
 function initialTheme(): Theme {
   const saved = localStorage.getItem("theme");
   if (saved === "light" || saved === "dark") return saved;
   return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function sessionStamp(): string {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
+}
+
+function initialSessionId(): string {
+  const saved = sessionStorage.getItem("ragSessionId");
+  if (saved) return saved;
+  const next = sessionStamp();
+  sessionStorage.setItem("ragSessionId", next);
+  return next;
 }
 
 function ScoreBar({ score }: { score: number }) {
@@ -175,6 +195,15 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
   );
 }
 
+function AnswerBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="answer-block">
+      <h3>{title}</h3>
+      <p className="answer-text">{text}</p>
+    </div>
+  );
+}
+
 export function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [status, setStatus] = useState<Status | null>(null);
@@ -184,17 +213,15 @@ export function App() {
   const [selectedArticleId, setSelectedArticleId] = useState("");
   const [currentSet, setCurrentSet] = useState<ReferenceSet | null>(null);
   const [currentArticle, setCurrentArticle] = useState<ArticleSet | null>(null);
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [html, setHtml] = useState("");
-  const [title, setTitle] = useState("");
-  const [limit, setLimit] = useState(80);
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(5);
   const [translate, setTranslate] = useState(true);
   const [searchMode, setSearchMode] = useState<SearchMode>("integrated");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult | null>(null);
+  const [savedFile, setSavedFile] = useState("");
+  const [sessionId] = useState(initialSessionId);
+  const [result, setResult] = useState<QueryResultUnion | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -257,59 +284,15 @@ export function App() {
     return `${Math.round((currentSet.abstractFound / currentSet.totalReferences) * 100)}%`;
   }, [currentSet]);
 
-  async function harvest() {
-    if ((!sourceUrl.trim() && !html.trim()) || busy) return;
-    setBusy("参考文献リンクとPubMed abstractを取得中...");
-    setError("");
-    setResult(null);
-    try {
-      const res = await fetch("/api/reference/harvest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceUrl: sourceUrl.trim(),
-          html: html.trim() || undefined,
-          title: title.trim() || undefined,
-          limit,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "取得に失敗しました");
-      setCurrentSet(data);
-      setSelectedId(data.id);
-      await loadSets(data.id);
-    } catch (e: any) {
-      setError(String(e?.message ?? e));
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function harvestArticle() {
-    if ((!sourceUrl.trim() && !html.trim()) || busy) return;
-    setBusy("主論文本文を構造化JSONに変換中...");
-    setError("");
-    setResult(null);
-    try {
-      const res = await fetch("/api/article/harvest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceUrl: sourceUrl.trim(),
-          html: html.trim() || undefined,
-          title: title.trim() || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "主論文JSON化に失敗しました");
-      setCurrentArticle(data);
-      setSelectedArticleId(data.id);
-      await loadArticleSets(data.id);
-    } catch (e: any) {
-      setError(String(e?.message ?? e));
-    } finally {
-      setBusy("");
-    }
+  async function saveResult(nextResult: QueryResultUnion) {
+    const res = await fetch("/api/session/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, result: nextResult }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Markdown保存に失敗しました");
+    setSavedFile(data.file ?? "");
   }
 
   async function search() {
@@ -340,6 +323,7 @@ export function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "検索に失敗しました");
       setResult(data);
+      await saveResult(data);
     } catch (e: any) {
       setError(String(e?.message ?? e));
     } finally {
@@ -348,14 +332,10 @@ export function App() {
   }
 
   function onQueryKey(e: React.KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") search();
-  }
-
-  async function readHtmlFile(file: File | null) {
-    if (!file) return;
-    const text = await file.text();
-    setHtml(text);
-    if (!title.trim()) setTitle(file.name.replace(/\.(html?|xhtml)$/i, ""));
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      search();
+    }
   }
 
   return (
@@ -384,36 +364,8 @@ export function App() {
       <main className="workspace">
         <section className="tool-panel">
           <div className="panel-head">
-            <h2>Harvest</h2>
-            <span className="panel-note">NCBI E-utilities</span>
-          </div>
-          <label className="field">
-            <span>論文HTML URL</span>
-            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
-          </label>
-          <label className="field">
-            <span>タイトル</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="空ならHTMLから推定" />
-          </label>
-          <label className="field">
-            <span>HTML直接貼り付け</span>
-            <textarea value={html} onChange={(e) => setHtml(e.target.value)} rows={5} placeholder="URL取得できないサイト用" />
-          </label>
-          <label className="field">
-            <span>HTMLファイル</span>
-            <input type="file" accept=".html,.htm,.xhtml,text/html" onChange={(e) => readHtmlFile(e.target.files?.[0] ?? null)} />
-          </label>
-          <div className="controls compact-controls">
-            <label className="ctrl">
-              最大件数
-              <input className="topk" type="number" min={1} max={200} value={limit} onChange={(e) => setLimit(Number(e.target.value))} />
-            </label>
-            <button className="primary" onClick={harvest} disabled={Boolean(busy) || (!sourceUrl.trim() && !html.trim())}>
-              Abstract抽出
-            </button>
-            <button className="primary secondary" onClick={harvestArticle} disabled={Boolean(busy) || (!sourceUrl.trim() && !html.trim())}>
-              主論文JSON
-            </button>
+            <h2>Datasets</h2>
+            <span className="panel-note">Bookmarklet input</span>
           </div>
 
           <div className="dataset-picker">
@@ -453,6 +405,9 @@ export function App() {
                 ))}
               </select>
             </label>
+            <button className="ghost refresh-btn" onClick={() => { loadSets().catch((err) => setError(String(err?.message ?? err))); loadArticleSets().catch((err) => setError(String(err?.message ?? err))); }}>
+              一覧を更新
+            </button>
           </div>
         </section>
 
@@ -477,7 +432,7 @@ export function App() {
               <section className="query-panel embedded-query">
                 <textarea
                   className="query-input"
-                  placeholder="abstractに聞きたいことを入力"
+                  placeholder="質問を入力"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onQueryKey}
@@ -523,7 +478,15 @@ export function App() {
                       <h2>Answer</h2>
                       {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
                     </div>
-                    <p className="answer-text">{result.answer}</p>
+                    {"articleAnswer" in result ? (
+                      <div className="answer-split">
+                        <AnswerBlock title="Main Article" text={result.articleAnswer} />
+                        <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} />
+                      </div>
+                    ) : (
+                      <p className="answer-text">{result.answer}</p>
+                    )}
+                    {savedFile && <div className="saved-note">Saved: {savedFile}</div>}
                   </div>
                   <div className="sources-head">
                     <h2>Sources ({result.sources.length})</h2>

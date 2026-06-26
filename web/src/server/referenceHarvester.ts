@@ -161,8 +161,11 @@ function findReferenceRegions(html: string): string[] {
       const start = Math.max(0, (match.index ?? 0) - 1000);
       const rest = html.slice(start);
       const afterMarker = Math.max(1000, (match.index ?? 0) - start + 1000);
-      const nextMainHeading = rest.slice(afterMarker).search(/<h[12]\b[^>]*>/i);
-      const end = nextMainHeading > 0 ? afterMarker + nextMainHeading : Math.min(rest.length, 500_000);
+      const tail = rest.slice(afterMarker);
+      const nextMainHeading = tail.search(/<h[12]\b[^>]*>/i);
+      const supplementaryHeading = tail.search(/<h[1-4]\b[^>]*>\s*(?:Supplementary Material|Supplemental Material|Supporting Information)\b/i);
+      const candidates = [nextMainHeading, supplementaryHeading].filter((n) => n > 0);
+      const end = candidates.length ? afterMarker + Math.min(...candidates) : Math.min(rest.length, 500_000);
       regions.push(rest.slice(0, end));
     }
   }
@@ -194,6 +197,7 @@ function recordFromBlock(block: string, sourceUrl: string, index: number): Refer
   const anchors = Array.from(block.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi));
   const hrefs = anchors.map((m) => absoluteUrl(attr(m[1] ?? "", "href"), sourceUrl)).filter(Boolean);
   const haystack = `${stripTags(block)} ${hrefs.join(" ")}`;
+  if (isSupplementaryLink(haystack)) return null;
   const pmid = extractPmid(haystack);
   const doi = extractDoi(haystack);
   if (!pmid && !doi && !/scholar_lookup|crossref|scholar.google/i.test(haystack)) return null;
@@ -235,6 +239,10 @@ function sourceDoi(sourceUrl: string, html: string): string {
   return extractDoi(`${sourceUrl} ${html.match(/<meta[^>]+name=["']citation_doi["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? ""}`).toLowerCase();
 }
 
+function isSupplementaryLink(text: string): boolean {
+  return /(?:\/doi\/suppl\/|\/suppl_file\/|supplementary-materials|core-supplementary-material|\.docx?\b|\.xlsx?\b|\.pptx?\b|\.zip\b)/i.test(text);
+}
+
 function scoreRecord(record: ReferenceRecord): number {
   let score = 0;
   if (record.pubmed?.abstract) score += 100;
@@ -255,6 +263,7 @@ function dedupeEnrichedRecords(records: ReferenceRecord[], sourceUrl: string, ht
     const doi = (record.pubmed?.doi || record.doi || "").toLowerCase();
     const pmid = record.pubmed?.pmid || record.pmid || "";
     if (ownDoi && doi === ownDoi) continue;
+    if (isSupplementaryLink(`${record.href} ${record.doi} ${record.text}`)) continue;
     if (/^(skip to main content|search this journal)$/i.test(record.text.trim())) continue;
 
     const key = pmid ? `pmid:${pmid}` : doi ? `doi:${doi}` : `text:${record.text.toLowerCase().slice(0, 120)}`;
@@ -357,6 +366,7 @@ function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceR
     const href = absoluteUrl(hrefRaw, sourceUrl);
     const text = cleanReferenceText(stripTags(match[2] ?? ""));
     const haystack = `${href} ${text}`;
+    if (isSupplementaryLink(haystack)) continue;
     const pmid = extractPmid(haystack);
     const doi = extractDoi(haystack);
     if (/^skip to main content$/i.test(text)) continue;

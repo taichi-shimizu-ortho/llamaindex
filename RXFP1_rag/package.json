@@ -1,0 +1,25 @@
+{
+  "name": "rxfp1-rag",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RXFP1 論文のベクトル検索RAGシステム（独立プロジェクト）",
+  "scripts": {
+    "convert": "tsx src/server/buildJson.ts",
+    "build-index": "tsx src/server/buildIndex.ts",
+    "dev": "tsx watch src/server/rag.ts"
+  },
+  "dependencies": {
+    "@llamaindex/openai": "^0.4.0",
+    "dotenv": "^16.4.7",
+    "js-yaml": "^4.1.0",
+    "llamaindex": "^0.11.0",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

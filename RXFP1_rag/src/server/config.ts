@@ -3,10 +3,10 @@ import os from "node:os";
 import path from "node:path";
 import dotenv from "dotenv";
 
-// リポジトリ直下の .env（OPENAI_API_KEY）を読み込む
-dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });
-// web/.env があれば上書き
+// RXFP1_rag/.env（OPENAI_API_KEY）を読み込む
 dotenv.config({ path: path.resolve(import.meta.dirname, "../../.env") });
+// リポジトリ直下の .env があれば上書き
+dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });
 
 const HOME = os.homedir();
 const BASE = path.join(HOME, "Library", "CloudStorage", "Dropbox", "obsidian", "50_coding", "llamaindex");
@@ -16,8 +16,6 @@ export const PATHS = {
   articlesJson: path.join(BASE, "articles_all3.json"),
   storageAll: path.join(BASE, "storage_all_ts"),
   outputDir: BASE,
-  referenceOutputDir: path.resolve(import.meta.dirname, "../../reference_sets"),
-  articleOutputDir: path.resolve(import.meta.dirname, "../../article_sets"),
 };
 
 export const MODELS = {

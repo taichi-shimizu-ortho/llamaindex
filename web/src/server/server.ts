@@ -7,12 +7,15 @@ import { runReferenceQuery } from "./referenceRag.js";
 import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
 import { runArticleQuery } from "./articleRag.js";
 import { runIntegratedQuery } from "./integratedRag.js";
+import { PATHS } from "./config.js";
 
 const app = express();
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
+  res.setHeader("Vary", "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
@@ -115,6 +118,74 @@ app.post("/api/integrated/query", async (req, res) => {
     res.json(result);
   } catch (e: any) {
     console.error(e);
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+function safeSessionId(value: unknown): string {
+  const raw = typeof value === "string" ? value : "";
+  const id = raw.replace(/[^0-9A-Za-z_.-]/g, "");
+  return /^\d{6}_\d{6}/.test(id) ? id : new Date().toISOString().slice(2, 19).replace(/[-:T]/g, "");
+}
+
+function sourceMarkdown(source: any, index: number): string {
+  const scope = source.scope === "reference_abstract" ? "Reference Abstract" : source.scope === "main_article" ? "Main Article" : "Source";
+  const heading = source.label || source.section || source.title || `Source ${index}`;
+  const cite = [source.journal, source.year || source.published].filter(Boolean).join(" · ");
+  const links = [
+    source.pmid ? `[PubMed](https://pubmed.ncbi.nlm.nih.gov/${source.pmid})` : "",
+    source.doi ? `[DOI](https://doi.org/${source.doi})` : "",
+  ].filter(Boolean).join(" ");
+  return [
+    `#### ${index}. ${scope}: ${heading}`,
+    source.score != null ? `- Score: ${Number(source.score).toFixed(4)}` : "",
+    source.title ? `- Title: ${source.title}` : "",
+    cite ? `- Journal: ${cite}` : "",
+    source.authors ? `- Authors: ${source.authors}` : "",
+    links ? `- Links: ${links}` : "",
+    "",
+    source.text || source.abstract || "",
+  ].filter((line) => line !== "").join("\n");
+}
+
+function resultMarkdown(result: any): string {
+  const parts = [
+    "---",
+    "",
+    `## Q: ${result.originalQuery || result.original_query || ""}`,
+  ];
+  if (result.enQuery && result.enQuery !== result.originalQuery) {
+    parts.push("", `*EN: ${result.enQuery}*`);
+  }
+
+  if ("articleAnswer" in result) {
+    parts.push("", "### Main Article", "", result.articleAnswer || "", "", "### Reference Abstracts", "", result.referenceAnswer || "");
+  } else {
+    parts.push("", "### Answer", "", result.answer || "");
+  }
+
+  const sources = Array.isArray(result.sources) ? result.sources : [];
+  if (sources.length) {
+    parts.push("", "### Sources", "", sources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
+  }
+  parts.push("");
+  return parts.join("\n");
+}
+
+app.post("/api/session/save", (req, res) => {
+  const { sessionId, result } = req.body ?? {};
+  if (!result) return res.status(400).json({ error: "保存する検索結果がありません" });
+  try {
+    fs.mkdirSync(PATHS.outputDir, { recursive: true });
+    const id = safeSessionId(sessionId);
+    const file = path.join(PATHS.outputDir, `${id}_rag.md`);
+    if (!fs.existsSync(file)) {
+      const title = result.articleId || result.referenceSetId || result.setId || "RAG session";
+      fs.writeFileSync(file, `# RAG Session\n\n- Session: ${id}\n- Target: ${title}\n\n`, "utf-8");
+    }
+    fs.appendFileSync(file, resultMarkdown(result), "utf-8");
+    res.json({ ok: true, file });
+  } catch (e: any) {
     res.status(500).json({ error: String(e?.message ?? e) });
   }
 });
