@@ -42,11 +42,10 @@ body {
 }
 
 .app {
-  max-width: 980px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 24px 20px 80px;
 }
-.wide-app { max-width: 1280px; }
 
 /* ---- topbar ---- */
 .topbar {
@@ -185,7 +184,7 @@ body {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 18px;
   align-items: start;
 }
@@ -200,8 +199,7 @@ body {
 }
 
 .tool-panel {
-  position: sticky;
-  top: 16px;
+  padding: 10px 12px;
 }
 
 .panel-head,
@@ -217,6 +215,14 @@ body {
 .dataset-summary h2 {
   margin: 0;
   font-size: 17px;
+}
+
+.tool-panel .panel-head {
+  align-items: center;
+}
+
+.tool-panel .panel-head h2 {
+  font-size: 13px;
 }
 
 .panel-note {
@@ -262,9 +268,25 @@ body {
 }
 
 .dataset-picker {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.dataset-picker .field {
+  gap: 3px;
+  margin-top: 0;
+  font-size: 11px;
+}
+
+.dataset-picker .field select {
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 12px;
 }
 
 .inline-loading {
@@ -285,26 +307,41 @@ body {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, 72px);
+  grid-template-columns: repeat(3, 82px);
   gap: 8px;
 }
 
 .summary-grid div {
+  display: grid;
+  place-items: center;
+  min-width: 0;
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 7px;
-  padding: 8px;
+  padding: 8px 6px;
   text-align: center;
 }
 
 .summary-grid strong {
   display: block;
   font-size: 18px;
+  line-height: 1.2;
 }
 
 .summary-grid span {
+  display: block;
+  width: 100%;
   color: var(--muted);
   font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.summary-grid .summary-subvalue {
+  display: inline;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .empty-state {
@@ -353,8 +390,10 @@ body {
 }
 .saved-note { color: var(--accent-2); font-size: 13px; margin-top: 10px; }
 .refresh-btn {
-  width: 100%;
-  margin-top: 14px;
+  width: auto;
+  min-height: 32px;
+  margin-top: 0;
+  white-space: nowrap;
 }
 
 .ghost, .link-btn, .fchip {
@@ -517,11 +556,8 @@ body {
 }
 
 @media (max-width: 860px) {
-  .workspace {
+  .dataset-picker {
     grid-template-columns: 1fr;
-  }
-  .tool-panel {
-    position: static;
   }
   .summary-grid {
     grid-template-columns: repeat(3, minmax(58px, 1fr));

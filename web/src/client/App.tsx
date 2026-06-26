@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   ArticleQueryResult,
   ArticleSet,
@@ -158,13 +158,18 @@ function ArticleResultSource({ source, idx }: { source: ArticleQueryResult["sour
 function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult["sources"][number]; idx: number }) {
   const [open, setOpen] = useState(false);
   const preview = source.text.length > 360 ? `${source.text.slice(0, 360)}...` : source.text;
+
   return (
     <div className="source-card">
       <div className="source-head">
         <span className="source-idx">{idx + 1}</span>
         <div className="source-cite">
-          <div className="source-citekey">{source.scope === "main_article" ? "Main article" : source.label}</div>
-          <div className="source-title">{source.scope === "main_article" ? source.label : source.title}</div>
+          <div className="source-citekey">
+            {source.scope === "main_article" ? "Main article" : source.label}
+          </div>
+          <div className="source-title">
+            {source.scope === "main_article" ? source.label : source.title}
+          </div>
           <div className="source-journal">
             {source.journal}
             {source.year && ` · ${source.year}`}
@@ -172,20 +177,33 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
         </div>
         <ScoreBar score={source.score} />
       </div>
+
       <div className="source-meta">
         {source.pmid && (
-          <a className="meta-doi" href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`} target="_blank" rel="noreferrer">
+          <a
+            className="meta-doi"
+            href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             PubMed
           </a>
         )}
         {source.doi && (
-          <a className="meta-doi" href={`https://doi.org/${source.doi}`} target="_blank" rel="noreferrer">
+          <a
+            className="meta-doi"
+            href={`https://doi.org/${source.doi}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             DOI
           </a>
         )}
         {source.authors && <span>{source.authors}</span>}
       </div>
+
       <p className="source-text">{open ? source.text : preview}</p>
+
       {source.text.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
           {open ? "閉じる" : "本文を表示"}
@@ -279,11 +297,6 @@ export function App() {
     loadArticleSets().catch(() => undefined);
   }, []);
 
-  const abstractRate = useMemo(() => {
-    if (!currentSet?.totalReferences) return "0%";
-    return `${Math.round((currentSet.abstractFound / currentSet.totalReferences) * 100)}%`;
-  }, [currentSet]);
-
   async function saveResult(nextResult: QueryResultUnion) {
     const res = await fetch("/api/session/save", {
       method: "POST",
@@ -339,7 +352,7 @@ export function App() {
   }
 
   return (
-    <div className="app wide-app">
+    <div className="app">
       <header className="topbar">
         <div className="brand">
           <span className="logo-mark">R</span>
@@ -425,7 +438,13 @@ export function App() {
                 <div className="summary-grid">
                   <div><strong>{currentArticle?.sections.length ?? 0}</strong><span>sections</span></div>
                   <div><strong>{currentArticle?.chunkCount ?? 0}</strong><span>paragraphs</span></div>
-                  <div><strong>{currentSet?.abstractFound ?? 0}</strong><span>{currentSet ? abstractRate : "abstracts"}</span></div>
+                  <div>
+                    <strong>
+                      {currentSet?.abstractFound ?? 0}
+                      <span className="summary-subvalue">/{currentSet?.totalReferences ?? 0}</span>
+                    </strong>
+                    <span>abstract</span>
+                  </div>
                 </div>
               </div>
 
