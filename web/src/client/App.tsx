@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import type {
   ArticleQueryResult,
   ArticleSet,
@@ -14,6 +15,69 @@ import type {
 type Theme = "light" | "dark";
 type SearchMode = "integrated" | "article" | "reference";
 type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult;
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={idx}>{part.slice(2, -2)}</strong>;
+    }
+    return <Fragment key={idx}>{part}</Fragment>;
+  });
+}
+
+function renderMarkdownLine(text: string): ReactNode[] {
+  return text.split("\n").flatMap((line, idx) => {
+    const nodes = renderInlineMarkdown(line);
+    return idx === 0 ? nodes : [<br key={`br-${idx}`} />, ...nodes];
+  });
+}
+
+function MarkdownText({ className, text }: { className?: string; text: string }) {
+  const blocks: ReactNode[] = [];
+  let paragraph: string[] = [];
+  let listItems: string[] = [];
+
+  function flushParagraph() {
+    if (!paragraph.length) return;
+    blocks.push(
+      <p className="markdown-paragraph" key={`p-${blocks.length}`}>
+        {renderMarkdownLine(paragraph.join("\n"))}
+      </p>,
+    );
+    paragraph = [];
+  }
+
+  function flushList() {
+    if (!listItems.length) return;
+    blocks.push(
+      <ul className="markdown-list" key={`ul-${blocks.length}`}>
+        {listItems.map((item, idx) => (
+          <li key={idx}>{renderInlineMarkdown(item)}</li>
+        ))}
+      </ul>,
+    );
+    listItems = [];
+  }
+
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trimEnd();
+    const listMatch = line.match(/^\s*[-*]\s+(.+)$/);
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+    } else if (listMatch) {
+      flushParagraph();
+      listItems.push(listMatch[1]);
+    } else {
+      flushList();
+      paragraph.push(line);
+    }
+  }
+  flushParagraph();
+  flushList();
+
+  return <div className={className}>{blocks}</div>;
+}
 
 function initialTheme(): Theme {
   const saved = localStorage.getItem("theme");
@@ -38,6 +102,21 @@ function initialSessionId(): string {
   const next = sessionStamp();
   sessionStorage.setItem("ragSessionId", next);
   return next;
+}
+
+function datasetBaseId(id: string): string {
+  return id.replace(/-\d+$/, "");
+}
+
+function datasetLabel(id: string): string {
+  return id;
+}
+
+function matchingReferenceSet(articleId: string, summaries: ReferenceSetSummary[]): ReferenceSetSummary | undefined {
+  const baseId = datasetBaseId(articleId);
+  return summaries
+    .filter((set) => datasetBaseId(set.id) === baseId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
 function ScoreBar({ score }: { score: number }) {
@@ -158,49 +237,56 @@ function ArticleResultSource({ source, idx }: { source: ArticleQueryResult["sour
 function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult["sources"][number]; idx: number }) {
   const [open, setOpen] = useState(false);
   const preview = source.text.length > 360 ? `${source.text.slice(0, 360)}...` : source.text;
+  const isMainArticle = source.scope === "main_article";
 
   return (
     <div className="source-card">
       <div className="source-head">
         <span className="source-idx">{idx + 1}</span>
         <div className="source-cite">
-          <div className="source-citekey">
-            {source.scope === "main_article" ? "Main article" : source.label}
-          </div>
-          <div className="source-title">
-            {source.scope === "main_article" ? source.label : source.title}
-          </div>
-          <div className="source-journal">
-            {source.journal}
-            {source.year && ` · ${source.year}`}
-          </div>
+          <div className="source-citekey">{isMainArticle ? "Main article" : source.label}</div>
+          <div className="source-title">{isMainArticle ? source.label : source.title}</div>
+          {isMainArticle ? (
+            <div className="source-journal">
+              {source.paragraphIndex && source.totalParagraphs
+                ? `${source.paragraphIndex}/${source.totalParagraphs} paragraph`
+                : "paragraph"}
+            </div>
+          ) : (
+            <div className="source-journal">
+              {source.journal}
+              {source.year && ` · ${source.year}`}
+            </div>
+          )}
         </div>
         <ScoreBar score={source.score} />
       </div>
 
-      <div className="source-meta">
-        {source.pmid && (
-          <a
-            className="meta-doi"
-            href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            PubMed
-          </a>
-        )}
-        {source.doi && (
-          <a
-            className="meta-doi"
-            href={`https://doi.org/${source.doi}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            DOI
-          </a>
-        )}
-        {source.authors && <span>{source.authors}</span>}
-      </div>
+      {!isMainArticle && (
+        <div className="source-meta">
+          {source.pmid && (
+            <a
+              className="meta-doi"
+              href={`https://pubmed.ncbi.nlm.nih.gov/${source.pmid}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              PubMed
+            </a>
+          )}
+          {source.doi && (
+            <a
+              className="meta-doi"
+              href={`https://doi.org/${source.doi}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              DOI
+            </a>
+          )}
+          {source.authors && <span>{source.authors}</span>}
+        </div>
+      )}
 
       <p className="source-text">{open ? source.text : preview}</p>
 
@@ -213,11 +299,42 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
   );
 }
 
+function IntegratedSources({ sources }: { sources: IntegratedQueryResult["sources"] }) {
+  const mainSources = sources.filter((source) => source.scope === "main_article");
+  const abstractSources = sources.filter((source) => source.scope === "reference_abstract");
+
+  return (
+    <>
+      <div className="source-group">
+        <div className="sources-head">
+          <h2>Main Article ({mainSources.length})</h2>
+        </div>
+        <div className="sources">
+          {mainSources.map((source, idx) => (
+            <IntegratedResultSource key={`${source.scope}-${source.section}-${source.subsection}-${idx}`} source={source} idx={idx} />
+          ))}
+        </div>
+      </div>
+
+      <div className="source-group">
+        <div className="sources-head">
+          <h2>Abstract ({abstractSources.length})</h2>
+        </div>
+        <div className="sources">
+          {abstractSources.map((source, idx) => (
+            <IntegratedResultSource key={`${source.scope}-${source.doi}-${source.pmid}-${idx}`} source={source} idx={idx} />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function AnswerBlock({ title, text }: { title: string; text: string }) {
   return (
     <div className="answer-block">
       <h3>{title}</h3>
-      <p className="answer-text">{text}</p>
+      <MarkdownText className="answer-text" text={text} />
     </div>
   );
 }
@@ -246,29 +363,53 @@ export function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  async function loadSets(nextId?: string) {
+  async function fetchReferenceSetSummaries(): Promise<ReferenceSetSummary[]> {
     const res = await fetch("/api/reference/sets");
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "データセット一覧を取得できませんでした");
     const nextSets = data.sets ?? [];
     setSets(nextSets);
-    const id = nextId || selectedId || nextSets[0]?.id || "";
-    if (id) {
-      setSelectedId(id);
-      await loadSet(id);
-    }
+    return nextSets;
   }
 
-  async function loadArticleSets(nextId?: string) {
+  async function fetchArticleSetSummaries(): Promise<ArticleSetSummary[]> {
     const res = await fetch("/api/article/sets");
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "主論文JSON一覧を取得できませんでした");
     const nextSets = data.sets ?? [];
     setArticleSets(nextSets);
+    return nextSets;
+  }
+
+  async function loadMatchingReferenceSet(articleId: string, summaries?: ReferenceSetSummary[]) {
+    const nextSets = summaries ?? (sets.length ? sets : await fetchReferenceSetSummaries());
+    const match = matchingReferenceSet(articleId, nextSets);
+    const id = match?.id ?? "";
+    setSelectedId(id);
+    if (id) {
+      await loadSet(id);
+    } else {
+      setCurrentSet(null);
+      setResult(null);
+    }
+  }
+
+  async function loadArticleSets(nextId?: string) {
+    const [nextSets, referenceSets] = await Promise.all([
+      fetchArticleSetSummaries(),
+      fetchReferenceSetSummaries(),
+    ]);
     const id = nextId || selectedArticleId || nextSets[0]?.id || "";
     if (id) {
       setSelectedArticleId(id);
       await loadArticleSet(id);
+      await loadMatchingReferenceSet(id, referenceSets);
+    } else {
+      setSelectedArticleId("");
+      setSelectedId("");
+      setCurrentArticle(null);
+      setCurrentSet(null);
+      setResult(null);
     }
   }
 
@@ -293,7 +434,6 @@ export function App() {
       .then((r) => r.json())
       .then(setStatus)
       .catch(() => setStatus(null));
-    loadSets().catch(() => undefined);
     loadArticleSets().catch(() => undefined);
   }, []);
 
@@ -383,42 +523,39 @@ export function App() {
 
           <div className="dataset-picker">
             <label className="field">
-              <span>保存済みJSON</span>
-              <select
-                value={selectedId}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  setSelectedId(id);
-                  if (id) loadSet(id).catch((err) => setError(String(err?.message ?? err)));
-                }}
-              >
-                <option value="">未選択</option>
-                {sets.map((set) => (
-                  <option key={set.id} value={set.id}>
-                    {set.title || set.id}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>保存済み主論文JSON</span>
+              <span>主論文JSON</span>
               <select
                 value={selectedArticleId}
                 onChange={(e) => {
                   const id = e.target.value;
                   setSelectedArticleId(id);
-                  if (id) loadArticleSet(id).catch((err) => setError(String(err?.message ?? err)));
+                  if (id) {
+                    loadArticleSet(id)
+                      .then(() => loadMatchingReferenceSet(id))
+                      .catch((err) => setError(String(err?.message ?? err)));
+                  } else {
+                    setCurrentArticle(null);
+                    setSelectedId("");
+                    setCurrentSet(null);
+                    setResult(null);
+                  }
                 }}
               >
                 <option value="">未選択</option>
                 {articleSets.map((set) => (
                   <option key={set.id} value={set.id}>
-                    {set.title || set.id}
+                    {datasetLabel(set.id)}
                   </option>
                 ))}
               </select>
             </label>
-            <button className="ghost refresh-btn" onClick={() => { loadSets().catch((err) => setError(String(err?.message ?? err))); loadArticleSets().catch((err) => setError(String(err?.message ?? err))); }}>
+            <label className="field">
+              <span>Reference JSON</span>
+              <div className={selectedId ? "dataset-value" : "dataset-value muted-dataset-value"}>
+                {selectedId ? datasetLabel(selectedId) : "対応するJSONなし"}
+              </div>
+            </label>
+            <button className="ghost refresh-btn" onClick={() => { loadArticleSets().catch((err) => setError(String(err?.message ?? err))); }}>
               一覧を更新
             </button>
           </div>
@@ -503,26 +640,28 @@ export function App() {
                         <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} />
                       </div>
                     ) : (
-                      <p className="answer-text">{result.answer}</p>
+                      <MarkdownText className="answer-text" text={result.answer} />
                     )}
                     {savedFile && <div className="saved-note">Saved: {savedFile}</div>}
                   </div>
-                  <div className="sources-head">
-                    <h2>Sources ({result.sources.length})</h2>
-                  </div>
-                  <div className="sources">
-                    {"articleAnswer" in result
-                      ? result.sources.map((source, idx) => (
-                          <IntegratedResultSource key={`${source.scope}-${source.doi}-${source.pmid}-${idx}`} source={source} idx={idx} />
-                        ))
-                      : "articleId" in result
-                        ? result.sources.map((source, idx) => (
-                            <ArticleResultSource key={`${source.section}-${source.subsection}-${source.paragraphIndex}-${idx}`} source={source} idx={idx} />
-                          ))
-                        : result.sources.map((source, idx) => (
-                            <ResultSource key={`${source.pmid}-${idx}`} source={source} idx={idx} />
-                          ))}
-                  </div>
+                  {"articleAnswer" in result ? (
+                    <IntegratedSources sources={result.sources} />
+                  ) : (
+                    <>
+                      <div className="sources-head">
+                        <h2>Sources ({result.sources.length})</h2>
+                      </div>
+                      <div className="sources">
+                        {"articleId" in result
+                          ? result.sources.map((source, idx) => (
+                              <ArticleResultSource key={`${source.section}-${source.subsection}-${source.paragraphIndex}-${idx}`} source={source} idx={idx} />
+                            ))
+                          : result.sources.map((source, idx) => (
+                              <ResultSource key={`${source.pmid}-${idx}`} source={source} idx={idx} />
+                            ))}
+                      </div>
+                    </>
+                  )}
                 </section>
               )}
 

@@ -18,6 +18,8 @@ export interface IntegratedSource {
   href: string;
   section: string;
   subsection: string;
+  paragraphIndex: number | string;
+  totalParagraphs: number | string;
   text: string;
 }
 
@@ -47,6 +49,8 @@ function articleSourceToIntegrated(source: ArticleQuerySource): IntegratedSource
     href: source.sourceUrl,
     section: source.section,
     subsection: source.subsection,
+    paragraphIndex: source.paragraphIndex,
+    totalParagraphs: source.totalParagraphs,
     text: source.text,
   };
 }
@@ -80,6 +84,8 @@ export async function runIntegratedQuery(
     href: source.href,
     section: "Abstract",
     subsection: "",
+    paragraphIndex: "",
+    totalParagraphs: "",
     text: source.abstract,
   }));
 

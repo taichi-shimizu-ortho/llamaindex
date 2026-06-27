@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
@@ -93,6 +94,10 @@ function decodeEntityStrings<T>(value: T): T {
 function attr(tag: string, name: string): string {
   const re = new RegExp(`${name}\\s*=\\s*["']([^"']+)["']`, "i");
   return tag.match(re)?.[1]?.trim() ?? "";
+}
+
+function metaContent(tag: string): string {
+  return decodeHtmlEntities(attr(tag, "content"));
 }
 
 function absoluteUrl(href: string, base: string): string {
@@ -223,6 +228,24 @@ function recordFromBlock(block: string, sourceUrl: string, index: number): Refer
   };
 }
 
+function recordFromText(text: string, sourceUrl: string, index: number): ReferenceRecord | null {
+  const cleanText = cleanReferenceText(stripTags(text));
+  if (!cleanText || isSupplementaryLink(cleanText)) return null;
+  const pmid = extractPmid(cleanText);
+  const doi = extractDoi(cleanText);
+  if (!pmid && !doi && cleanText.length < 30) return null;
+
+  return {
+    index,
+    text: cleanText,
+    sourceUrl,
+    href: pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : doi ? `https://doi.org/${doi}` : sourceUrl,
+    doi,
+    pmid,
+    pubmedFound: false,
+  };
+}
+
 function dedupeRecords(records: ReferenceRecord[]): ReferenceRecord[] {
   const seen = new Set<string>();
   const out: ReferenceRecord[] = [];
@@ -237,6 +260,25 @@ function dedupeRecords(records: ReferenceRecord[]): ReferenceRecord[] {
 
 function sourceDoi(sourceUrl: string, html: string): string {
   return extractDoi(`${sourceUrl} ${html.match(/<meta[^>]+name=["']citation_doi["'][^>]+content=["']([^"']+)["']/i)?.[1] ?? ""}`).toLowerCase();
+}
+
+function metaValues(html: string, names: RegExp): string[] {
+  return Array.from(html.matchAll(/<meta\b[^>]*>/gi))
+    .map((match) => match[0] ?? "")
+    .filter((tag) => names.test(attr(tag, "name") || attr(tag, "property")))
+    .map(metaContent)
+    .filter(Boolean);
+}
+
+function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "generic" {
+  const metadata = metaValues(html, /^(?:citation_publisher|citation_journal_title|dc\.publisher)$/i).join(" ");
+  const haystack = `${sourceUrl} ${metadata}`;
+  if (/sagepub|sage publications|american journal of sports medicine/i.test(haystack)) return "sage";
+  if (/onlinelibrary\.wiley|wiley|journal of orthopaedic research/i.test(haystack)) return "wiley";
+  if (metaValues(html, /^(?:citation_reference|dc\.reference|dcterms\.bibliographiccitation|bepress_citation_reference|article_references?)$/i).length) {
+    return "metadata";
+  }
+  return "generic";
 }
 
 function isSupplementaryLink(text: string): boolean {
@@ -328,17 +370,95 @@ function extractBibrReferences(html: string, sourceUrl: string): ReferenceRecord
 
 function decodeMaybe(s: string): string {
   try {
-    return decodeURIComponent(s);
+    return decodeURIComponent(decodeHtmlEntities(s));
   } catch {
-    return s;
+    return decodeHtmlEntities(s);
   }
 }
 
-function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceRecord[] {
-  const bibr = extractBibrReferences(html, sourceUrl);
-  if (bibr.length) return bibr;
+// Wiley/Atypon: references may be inside a collapsed accordion. When they are
+// present in the captured DOM, each citation is a <li data-bib-id="...-bib-N">.
+function extractWileyBibReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const markRe = /<li\b[^>]*data-bib-id=["'][^"']*\bbib-(\d+)["'][^>]*>/gi;
+  const marks: { n: number; start: number }[] = [];
+  for (let m = markRe.exec(html); m; m = markRe.exec(html)) {
+    marks.push({ n: Number(m[1]), start: m.index });
+  }
+  if (!marks.length) return [];
+  marks.sort((a, b) => a.start - b.start);
 
+  const records: ReferenceRecord[] = [];
+  for (let i = 0; i < marks.length; i++) {
+    const end = i + 1 < marks.length ? marks[i + 1].start : Math.min(html.length, marks[i].start + 10000);
+    const block = html.slice(marks[i].start, end).replace(/&amp;/g, "&");
+    const withoutExtraLinks = block
+      .replace(/<div\b[^>]*class=["'][^"']*\bextra-links\b[^"']*["'][^>]*>[\s\S]*?<\/div>\s*<\/li>/gi, "</li>")
+      .replace(/<div\b[^>]*class=["'][^"']*\bextra-links\b[^"']*["'][^>]*>[\s\S]*$/gi, "");
+    const text = cleanReferenceText(stripTags(withoutExtraLinks).replace(/^\d+\s+/, ""));
+    const pmid = block.match(/[?&](?:key|pmid)=(\d{5,})\b/i)?.[1] ?? extractPmid(block);
+    const doi = extractWileyReferenceDoi(block);
+    const href = pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : doi ? `https://doi.org/${doi}` : sourceUrl;
 
+    records.push({
+      index: marks[i].n,
+      text: text || href,
+      sourceUrl,
+      href,
+      doi,
+      pmid,
+      pubmedFound: false,
+    });
+  }
+  return records;
+}
+
+function extractWileyReferenceDoi(block: string): string {
+  const dataDoi = stripTags(block.match(/<span\b[^>]*class=["'][^"']*\bdata-doi\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1] ?? "");
+  const directDoi = block.match(/href=["']https?:\/\/(?:dx\.)?doi\.org\/(10\.\d{4,9}\/[^"'<\s]+)["']/i)?.[1] ?? "";
+  const refDoi = decodeMaybe(block.match(/[?&]refDoi=([^&"']+)/i)?.[1] ?? "");
+  const doiOfLink = decodeMaybe(block.match(/[?&]doiOfLink=([^&"']+)/i)?.[1] ?? "");
+  const frontiersDoi = block.match(/frontiersin\.org\/journals\/[^"']+\/articles\/(10\.\d{4,9}\/[^"'<\s]+)/i)?.[1] ?? "";
+  return extractDoi(dataDoi || directDoi || refDoi || doiOfLink || frontiersDoi);
+}
+
+function extractMetaReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const records: ReferenceRecord[] = [];
+  const referenceNameRe =
+    /^(?:citation_reference|dc\.reference|dcterms\.bibliographiccitation|bepress_citation_reference|article_references?)$/i;
+
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const tag = match[0] ?? "";
+    const name = attr(tag, "name") || attr(tag, "property");
+    if (!referenceNameRe.test(name)) continue;
+    const content = metaContent(tag);
+    const record = recordFromText(content, sourceUrl, records.length + 1);
+    if (record) records.push(record);
+  }
+
+  return dedupeRecords(records);
+}
+
+export function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceRecord[] {
+  const generic = () => extractGenericReferences(html, sourceUrl);
+  const publisher = detectPublisher(html, sourceUrl);
+  const extractors =
+    publisher === "sage"
+      ? [extractBibrReferences, extractMetaReferences, generic]
+      : publisher === "wiley"
+        ? [extractWileyBibReferences, extractMetaReferences, generic]
+        : publisher === "metadata"
+          ? [extractMetaReferences, extractBibrReferences, extractWileyBibReferences, generic]
+          : [extractBibrReferences, extractWileyBibReferences, extractMetaReferences, generic];
+
+  for (const extractor of extractors) {
+    const records = extractor(html, sourceUrl);
+    if (records.length > 1) return records;
+  }
+
+  return generic();
+}
+
+function extractGenericReferences(html: string, sourceUrl: string): ReferenceRecord[] {
   const regionResults = findReferenceRegions(html)
     .map((region) =>
       dedupeRecords(
@@ -634,7 +754,7 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   const html = options.html ?? (await fetchText(sourceUrl, {}));
   const title = options.title?.trim() || inferTitle(html, sourceUrl);
-  const limit = Math.max(1, Math.min(200, Number(options.limit ?? 80)));
+  const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
   const candidates = extractReferenceCandidates(html, sourceUrl).slice(0, limit);
   const enrichedRecords: ReferenceRecord[] = [];
 
@@ -643,8 +763,7 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   }
   const records = dedupeEnrichedRecords(enrichedRecords, sourceUrl, html);
 
-  const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
-  const id = `${slugify(title || sourceUrl)}-${stamp}`;
+  const id = uniqueJsonId(PATHS.referenceOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
   const set: ReferenceSet = {
     id,
     sourceUrl,

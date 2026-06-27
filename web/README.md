@@ -5,11 +5,19 @@
 ## 想定ワークフロー
 
 1. 制限付き論文をログイン済みブラウザで開く。
-2. ページHTMLを保存するか、References周辺のHTMLをコピーする。
-3. Web UIにHTMLファイルまたはHTMLテキストを渡してJSONを作る。
+2. Web UIの `ORS Import` ブックマークレットをChromeのブックマークバーに登録する。
+3. 論文ページを開いた状態でブックマークレットを実行し、主論文JSONとReference JSONを作る。
 4. 作成されたreference setに対して日本語または英語で検索する。
 
 サーバ側のURL取得も使えますが、ログインCookieは共有されないため、制限付き記事ではHTMLファイル/貼り付けが主経路です。
+ブックマークレットはログイン済みChromeの現在DOMを `http://localhost:5174/api/import/ors` に送るため、制限付き記事ではこちらが推奨経路です。
+
+## ORSブックマークレット
+
+1. `npm run dev` でAPIサーバとWeb UIを起動する。
+2. Web UI上部の `ORS Import` をブックマークバーへドラッグする。クリックした場合はJavaScript URLがクリップボードにコピーされる。
+3. ORSの論文ページをChromeで開き、登録した `ORS Import` を実行する。
+4. 完了後、Web UIで「一覧を更新」し、作成された主論文JSONを選択する。
 
 ## 主なファイル
 

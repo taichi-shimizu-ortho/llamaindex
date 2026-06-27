@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 
 const BODY_SECTION_TYPES = new Set(["intro", "materials|methods", "results", "discussion", "conclusion"]);
@@ -272,8 +273,7 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
   const sections = buildSections(html);
   if (!sections.length) throw new Error("本文セクションを抽出できませんでした");
 
-  const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
-  const id = `${slugify(title || sourceUrl)}-${stamp}`;
+  const id = uniqueJsonId(PATHS.articleOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
   const set: ArticleSet = {
     id,
     sourceUrl,

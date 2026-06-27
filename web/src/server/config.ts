@@ -21,7 +21,7 @@ export const PATHS = {
 };
 
 export const MODELS = {
-  llm: "gpt-4o-mini",
+  llm: "gpt-5.4-mini",
   embed: "text-embedding-3-large",
   translate: "gpt-4o-mini",
 };

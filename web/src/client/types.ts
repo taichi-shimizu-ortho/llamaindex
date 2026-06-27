@@ -136,6 +136,8 @@ export interface IntegratedQueryResult {
     href: string;
     section: string;
     subsection: string;
+    paragraphIndex: number | string;
+    totalParagraphs: number | string;
     text: string;
   }[];
 }

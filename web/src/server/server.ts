@@ -19,7 +19,7 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
-app.use(express.json({ limit: "32mb" }));
+app.use(express.json({ limit: "128mb" }));
 
 const PORT = Number(process.env.PORT ?? 5174);
 
@@ -67,6 +67,65 @@ app.post("/api/reference/query", async (req, res) => {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
   }
+});
+
+function errorText(e: unknown): string {
+  return String((e as any)?.message ?? e);
+}
+
+function articleSummary(article: Awaited<ReturnType<typeof harvestArticle>>) {
+  return {
+    id: article.id,
+    title: article.title,
+    sourceUrl: article.sourceUrl,
+    chunkCount: article.chunkCount,
+    createdAt: article.createdAt,
+  };
+}
+
+function referenceSummary(reference: Awaited<ReturnType<typeof harvestReferences>>) {
+  return {
+    id: reference.id,
+    title: reference.title,
+    sourceUrl: reference.sourceUrl,
+    totalReferences: reference.totalReferences,
+    abstractFound: reference.abstractFound,
+    createdAt: reference.createdAt,
+  };
+}
+
+app.post("/api/import/ors", async (req, res) => {
+  const { sourceUrl, html, title, limit } = req.body ?? {};
+  if (!sourceUrl && !html) return res.status(400).json({ error: "URLまたはHTMLを入力してください" });
+
+  const result: {
+    ok: boolean;
+    article?: ReturnType<typeof articleSummary>;
+    reference?: ReturnType<typeof referenceSummary>;
+    articleError?: string;
+    referenceError?: string;
+  } = { ok: false };
+
+  try {
+    result.article = articleSummary(await harvestArticle({ sourceUrl, html, title }));
+  } catch (e) {
+    result.articleError = errorText(e);
+  }
+
+  try {
+    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit }));
+  } catch (e) {
+    result.referenceError = errorText(e);
+  }
+
+  result.ok = Boolean(result.article || result.reference);
+  if (!result.ok) {
+    return res.status(500).json({
+      ...result,
+      error: [result.articleError, result.referenceError].filter(Boolean).join(" / ") || "インポートに失敗しました",
+    });
+  }
+  res.json(result);
 });
 
 app.get("/api/article/sets", (_req, res) => {
