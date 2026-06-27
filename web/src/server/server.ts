@@ -198,6 +198,7 @@ function sourceMarkdown(source: any, index: number): string {
   return [
     `#### ${index}. ${scope}: ${heading}`,
     source.score != null ? `- Score: ${Number(source.score).toFixed(4)}` : "",
+    source.citationLabel ? `- Citation: ${source.citationLabel}` : "",
     source.title ? `- Title: ${source.title}` : "",
     cite ? `- Journal: ${cite}` : "",
     source.authors ? `- Authors: ${source.authors}` : "",

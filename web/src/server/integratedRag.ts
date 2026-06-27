@@ -16,6 +16,7 @@ export interface IntegratedSource {
   doi: string;
   pmid: string;
   href: string;
+  citationLabel?: string;
   section: string;
   subsection: string;
   paragraphIndex: number | string;
@@ -82,6 +83,7 @@ export async function runIntegratedQuery(
     doi: source.doi,
     pmid: source.pmid,
     href: source.href,
+    citationLabel: source.citationLabel,
     section: "Abstract",
     subsection: "",
     paragraphIndex: "",

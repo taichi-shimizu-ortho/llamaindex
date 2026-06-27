@@ -165,7 +165,10 @@ function ResultSource({ source, idx }: { source: ReferenceQueryResult["sources"]
       <div className="source-head">
         <span className="source-idx">{idx + 1}</span>
         <div className="source-cite">
-          <div className="source-citekey">Reference {source.refIndex}</div>
+          <div className="source-citekey">
+            Reference {source.refIndex}
+            {source.citationLabel && ` · ${source.citationLabel}`}
+          </div>
           <div className="source-title">{source.title || source.referenceText}</div>
           <div className="source-journal">
             {source.journal}
@@ -244,7 +247,10 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
       <div className="source-head">
         <span className="source-idx">{idx + 1}</span>
         <div className="source-cite">
-          <div className="source-citekey">{isMainArticle ? "Main article" : source.label}</div>
+          <div className="source-citekey">
+            {isMainArticle ? "Main article" : source.label}
+            {!isMainArticle && source.citationLabel && ` · ${source.citationLabel}`}
+          </div>
           <div className="source-title">{isMainArticle ? source.label : source.title}</div>
           {isMainArticle ? (
             <div className="source-journal">

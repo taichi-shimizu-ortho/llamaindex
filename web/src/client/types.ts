@@ -60,6 +60,7 @@ export interface ReferenceQueryResult {
     href: string;
     referenceText: string;
     abstract: string;
+    citationLabel: string;
   }[];
 }
 
@@ -134,6 +135,7 @@ export interface IntegratedQueryResult {
     doi: string;
     pmid: string;
     href: string;
+    citationLabel?: string;
     section: string;
     subsection: string;
     paragraphIndex: number | string;

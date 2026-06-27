@@ -20,6 +20,23 @@ function hasJapanese(s: string): boolean {
   return /[぀-ヿ㐀-鿿]/.test(s);
 }
 
+function citationAuthor(authors: string, fallback: string): string {
+  const firstAuthor = authors.split(",")[0]?.trim() || fallback;
+  const cleaned = firstAuthor
+    .replace(/\bet\s+al\.?$/i, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .trim();
+  return cleaned.split(/\s+/)[0] || fallback;
+}
+
+function citationYear(year: string): string {
+  return year.match(/\d{4}/)?.[0] ?? "n.d.";
+}
+
+function citationLabel(authors: string, year: string, refIndex: number | string): string {
+  return `${citationAuthor(authors, `Ref${refIndex || ""}`)}${citationYear(year)}`;
+}
+
 async function translateToEnglish(text: string): Promise<string> {
   const client = new OpenAIClient();
   const res = await client.chat.completions.create({
@@ -38,6 +55,8 @@ async function translateToEnglish(text: string): Promise<string> {
 function recordToDocument(set: ReferenceSet, record: ReferenceRecord): Document | null {
   const abstract = record.pubmed?.abstract?.trim();
   if (!abstract) return null;
+  const authors = record.pubmed?.authors?.join(", ") || "";
+  const year = record.pubmed?.year || "";
   return new Document({
     text: abstract,
     metadata: {
@@ -49,10 +68,11 @@ function recordToDocument(set: ReferenceSet, record: ReferenceRecord): Document 
       pmid: record.pubmed?.pmid || record.pmid,
       doi: record.pubmed?.doi || record.doi,
       title: record.pubmed?.title || "",
-      authors: record.pubmed?.authors?.join(", ") || "",
+      authors,
       journal: record.pubmed?.journal || "",
-      year: record.pubmed?.year || "",
+      year,
       publication_types: record.pubmed?.publicationTypes?.join(", ") || "",
+      citation_label: citationLabel(authors, year, record.index),
       metadata_source: record.pubmed?.source || "pubmed",
     },
   });
@@ -85,6 +105,74 @@ function nodeText(n: any): string {
   return n.text ?? "";
 }
 
+type ReferenceSource = {
+  score: number;
+  refIndex: number | string;
+  title: string;
+  authors: string;
+  journal: string;
+  year: string;
+  doi: string;
+  pmid: string;
+  href: string;
+  referenceText: string;
+  abstract: string;
+  citationLabel: string;
+};
+
+async function synthesizeAnswerWithCitations(
+  originalQuery: string,
+  enQuery: string,
+  sources: ReferenceSource[],
+): Promise<string> {
+  const client = new OpenAIClient();
+  const context = sources
+    .map((source, i) => {
+      const citation = source.citationLabel;
+      const title = source.title ? `Title: ${source.title}` : "";
+      const journal = [source.journal, source.year].filter(Boolean).join(", ");
+      const journalLine = journal ? `Journal: ${journal}` : "";
+      return [
+        `Source ${i + 1} (${citation})`,
+        title,
+        source.authors ? `Authors: ${source.authors}` : "",
+        journalLine,
+        `Abstract: ${source.abstract}`,
+      ].filter(Boolean).join("\n");
+    })
+    .join("\n\n---\n\n");
+
+  const res = await client.chat.completions.create({
+    model: MODELS.llm,
+    temperature: 0.1,
+    messages: [
+      {
+        role: "system",
+        content: [
+          "You answer questions using only the provided PubMed reference abstracts.",
+          "Every substantive answer sentence must end with one or more citations in parentheses, using the exact citation labels shown for the sources, for example (Smith2020) or (Smith2020; Lee2022).",
+          "If a sentence combines evidence from multiple abstracts, cite every abstract used for that sentence.",
+          "Do not cite sources that do not support the sentence.",
+          "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant abstract if applicable.",
+          "Answer in the same language as the user's original query.",
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content: [
+          `Original query: ${originalQuery}`,
+          enQuery !== originalQuery ? `English retrieval query: ${enQuery}` : "",
+          "",
+          "Reference abstracts:",
+          context,
+        ].filter(Boolean).join("\n"),
+      },
+    ],
+  });
+
+  return res.choices[0].message.content?.trim() ?? "";
+}
+
 export interface ReferenceQueryResult {
   setId: string;
   originalQuery: string;
@@ -102,6 +190,7 @@ export interface ReferenceQueryResult {
     href: string;
     referenceText: string;
     abstract: string;
+    citationLabel: string;
   }[];
 }
 
@@ -115,35 +204,40 @@ export async function runReferenceQuery(
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
-  const queryEngine = index.asQueryEngine({ similarityTopK: topK });
-  const response: any = await queryEngine.query({ query: enQuery });
-  const answer: string = response?.response ?? response?.message?.content ?? String(response ?? "");
-  const rawNodes: any[] = response?.sourceNodes ?? [];
+  const retriever = index.asRetriever({ similarityTopK: topK });
+  const rawNodes: any[] = await retriever.retrieve(enQuery);
+  const sources = rawNodes
+    .map((nws): ReferenceSource => {
+      const node = nws.node ?? nws;
+      const meta = node.metadata ?? {};
+      const refIndex = meta.ref_index ?? "";
+      const authors = meta.authors ?? "";
+      const year = meta.year ?? "";
+      return {
+        score: typeof nws.score === "number" ? nws.score : 0,
+        refIndex,
+        title: meta.title ?? "",
+        authors,
+        journal: meta.journal ?? "",
+        year,
+        doi: meta.doi ?? "",
+        pmid: meta.pmid ?? "",
+        href: meta.href ?? "",
+        referenceText: meta.reference_text ?? "",
+        abstract: nodeText(node),
+        citationLabel: meta.citation_label ?? citationLabel(authors, year, refIndex),
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
+
+  const answer = await synthesizeAnswerWithCitations(originalQuery, enQuery, sources);
 
   return {
     setId,
     originalQuery,
     enQuery,
     answer,
-    sources: rawNodes
-      .map((nws) => {
-        const node = nws.node ?? nws;
-        const meta = node.metadata ?? {};
-        return {
-          score: typeof nws.score === "number" ? nws.score : 0,
-          refIndex: meta.ref_index ?? "",
-          title: meta.title ?? "",
-          authors: meta.authors ?? "",
-          journal: meta.journal ?? "",
-          year: meta.year ?? "",
-          doi: meta.doi ?? "",
-          pmid: meta.pmid ?? "",
-          href: meta.href ?? "",
-          referenceText: meta.reference_text ?? "",
-          abstract: nodeText(node),
-        };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK),
+    sources,
   };
 }

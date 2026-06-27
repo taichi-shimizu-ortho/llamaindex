@@ -161,29 +161,36 @@ function headingMarkers(html: string) {
     .filter((h) => h.title);
 }
 
+function isBoilerplateParagraph(text: string): boolean {
+  const t = text.trim();
+  return /^https?:\/\/(?:dx\.)?doi\.org\/10\.\d{4,9}\/\S+\s+Digital Object Identifier \(DOI\)$/i.test(t);
+}
+
 function paragraphTexts(html: string): string[] {
   const paragraphs = Array.from(html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>/gi))
     .map((m) => stripTags(m[1] ?? ""))
-    .filter(Boolean);
+    .filter((text) => text && !isBoilerplateParagraph(text));
 
   if (paragraphs.length) return paragraphs;
 
   const fallback = stripTags(html);
-  return fallback ? [fallback] : [];
+  return fallback && !isBoilerplateParagraph(fallback) ? [fallback] : [];
 }
 
 function sectionContent(html: string): string {
   return paragraphTexts(html).join("\n\n");
 }
 
-function buildSections(html: string): ArticleSection[] {
+export function buildSections(html: string): ArticleSection[] {
   const body = bodyMatter(html);
   const headings = headingMarkers(body);
+  const h2s = headings.filter((h) => h.level === 2);
   const top = headings.filter((h) => h.level === 2 && BODY_SECTION_TYPES.has(classifySection(h.title)));
   const methods = top.find((h) => classifySection(h.title) === "materials|methods");
+  const hasIntroHeading = top.some((h) => classifySection(h.title) === "intro");
   const sections: ArticleSection[] = [];
 
-  if (methods && methods.start > 0) {
+  if (!hasIntroHeading && methods && methods.start > 0) {
     const introHtml = body.slice(0, methods.start);
     const introParas = paragraphTexts(introHtml);
     if (introParas.length) {
@@ -199,7 +206,7 @@ function buildSections(html: string): ArticleSection[] {
 
   for (let i = 0; i < top.length; i += 1) {
     const h = top[i];
-    const next = top[i + 1]?.start ?? body.length;
+    const next = h2s.find((nextH) => nextH.start > h.start)?.start ?? body.length;
     const block = body.slice(h.end, next);
     const subHeads = headingMarkers(block).filter((sub) => sub.level === 3 || sub.level === 4);
     const firstSub = subHeads[0]?.start ?? -1;
