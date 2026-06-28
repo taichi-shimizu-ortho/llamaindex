@@ -98,7 +98,7 @@ async function buildArticleIndex(id: string): Promise<CachedArticleIndex> {
   const set = loadArticleSet(id);
   const documents = documentsFromArticle(set);
   if (!documents.length) throw new Error("検索対象の本文段落がありません");
-  const index = await VectorStoreIndex.fromDocuments(documents);
+  const index = await VectorStoreIndex.init({ nodes: documents });
   return { set, index };
 }
 

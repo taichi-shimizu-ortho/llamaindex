@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type {
   ArticleQueryResult,
@@ -16,23 +16,97 @@ type Theme = "light" | "dark";
 type SearchMode = "integrated" | "article" | "reference";
 type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult;
 
-function renderInlineMarkdown(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, idx) => {
+// 本文中の引用番号 [83] / [ 1 , 2 ] を参照文献メタデータに紐付けるための索引。
+const ReferenceMapContext = createContext<Map<number, ReferenceRecord>>(new Map());
+
+// 数字・空白・カンマ・ダッシュのみで構成された角括弧（[14/167 patients] のような非引用は除外）。
+const CITATION_GROUP = /\[\s*\d[\d\s,–-]*\]/g;
+
+function Citation({ n, record }: { n: number; record?: ReferenceRecord }) {
+  if (!record) return <>{n}</>;
+  const title = record.pubmed?.title || record.text;
+  const journal = record.pubmed?.journal ?? "";
+  const year = record.pubmed?.year ?? "";
+  const authors = record.pubmed?.authors?.slice(0, 3).join(", ") ?? "";
+  return (
+    <span className="cite" tabIndex={0}>
+      <span className="cite-num">{n}</span>
+      <span className="cite-pop" role="tooltip">
+        <span className="cite-pop-idx">Reference {record.index}</span>
+        <span className="cite-pop-title">{title}</span>
+        {(journal || year) && (
+          <span className="cite-pop-meta">
+            {journal}
+            {journal && year ? " · " : ""}
+            {year}
+          </span>
+        )}
+        {authors && <span className="cite-pop-authors">{authors}{record.pubmed && record.pubmed.authors.length > 3 ? ", et al." : ""}</span>}
+      </span>
+    </span>
+  );
+}
+
+function renderCitationGroup(group: string, refMap: Map<number, ReferenceRecord>, keyBase: string): ReactNode {
+  const inner = group.slice(1, -1);
+  return (
+    <span className="cite-group" key={keyBase}>
+      [
+      {inner.split(/(\d+)/).map((part, idx) => {
+        if (/^\d+$/.test(part)) {
+          const n = Number(part);
+          return <Citation key={idx} n={n} record={refMap.get(n)} />;
+        }
+        const sep = part.replace(/\s+/g, "").replace(/,/g, ", ");
+        return <Fragment key={idx}>{sep}</Fragment>;
+      })}
+      ]
+    </span>
+  );
+}
+
+function renderCitations(text: string, refMap: Map<number, ReferenceRecord>, keyBase: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let last = 0;
+  let i = 0;
+  let m: RegExpExecArray | null;
+  CITATION_GROUP.lastIndex = 0;
+  while ((m = CITATION_GROUP.exec(text))) {
+    if (m.index > last) out.push(<Fragment key={`${keyBase}-t${i}`}>{text.slice(last, m.index)}</Fragment>);
+    out.push(renderCitationGroup(m[0], refMap, `${keyBase}-c${i}`));
+    last = m.index + m[0].length;
+    i += 1;
+  }
+  if (last < text.length) out.push(<Fragment key={`${keyBase}-t${i}`}>{text.slice(last)}</Fragment>);
+  return out;
+}
+
+function renderInline(text: string, refMap: Map<number, ReferenceRecord>, cite: boolean, keyBase: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).flatMap((part, idx) => {
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={idx}>{part.slice(2, -2)}</strong>;
+      return [<strong key={`${keyBase}-b${idx}`}>{part.slice(2, -2)}</strong>];
     }
-    return <Fragment key={idx}>{part}</Fragment>;
+    return cite
+      ? renderCitations(part, refMap, `${keyBase}-${idx}`)
+      : [<Fragment key={`${keyBase}-${idx}`}>{part}</Fragment>];
   });
 }
 
-function renderMarkdownLine(text: string): ReactNode[] {
+function renderMarkdownLine(text: string, refMap: Map<number, ReferenceRecord>, cite: boolean): ReactNode[] {
   return text.split("\n").flatMap((line, idx) => {
-    const nodes = renderInlineMarkdown(line);
+    const nodes = renderInline(line, refMap, cite, `l${idx}`);
     return idx === 0 ? nodes : [<br key={`br-${idx}`} />, ...nodes];
   });
 }
 
-function MarkdownText({ className, text }: { className?: string; text: string }) {
+// 本文段落（ソース表示）向け: 引用番号のみをリンク化する軽量レンダラー。
+function CitedText({ className, text }: { className?: string; text: string }) {
+  const refMap = useContext(ReferenceMapContext);
+  return <span className={className}>{renderCitations(text, refMap, "ct")}</span>;
+}
+
+function MarkdownText({ className, text, cite = false }: { className?: string; text: string; cite?: boolean }) {
+  const refMap = useContext(ReferenceMapContext);
   const blocks: ReactNode[] = [];
   let paragraph: string[] = [];
   let listItems: string[] = [];
@@ -41,7 +115,7 @@ function MarkdownText({ className, text }: { className?: string; text: string })
     if (!paragraph.length) return;
     blocks.push(
       <p className="markdown-paragraph" key={`p-${blocks.length}`}>
-        {renderMarkdownLine(paragraph.join("\n"))}
+        {renderMarkdownLine(paragraph.join("\n"), refMap, cite)}
       </p>,
     );
     paragraph = [];
@@ -52,7 +126,7 @@ function MarkdownText({ className, text }: { className?: string; text: string })
     blocks.push(
       <ul className="markdown-list" key={`ul-${blocks.length}`}>
         {listItems.map((item, idx) => (
-          <li key={idx}>{renderInlineMarkdown(item)}</li>
+          <li key={idx}>{renderInline(item, refMap, cite, `li${idx}`)}</li>
         ))}
       </ul>,
     );
@@ -227,7 +301,7 @@ function ArticleResultSource({ source, idx }: { source: ArticleQueryResult["sour
         )}
         {source.authors && <span>{source.authors}</span>}
       </div>
-      <p className="source-text">{open ? source.text : preview}</p>
+      <CitedText className="source-text" text={open ? source.text : preview} />
       {source.text.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
           {open ? "閉じる" : "段落を表示"}
@@ -294,7 +368,11 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
         </div>
       )}
 
-      <p className="source-text">{open ? source.text : preview}</p>
+      {isMainArticle ? (
+        <CitedText className="source-text" text={open ? source.text : preview} />
+      ) : (
+        <p className="source-text">{open ? source.text : preview}</p>
+      )}
 
       {source.text.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
@@ -336,11 +414,11 @@ function IntegratedSources({ sources }: { sources: IntegratedQueryResult["source
   );
 }
 
-function AnswerBlock({ title, text }: { title: string; text: string }) {
+function AnswerBlock({ title, text, cite = false }: { title: string; text: string; cite?: boolean }) {
   return (
     <div className="answer-block">
       <h3>{title}</h3>
-      <MarkdownText className="answer-text" text={text} />
+      <MarkdownText className="answer-text" text={text} cite={cite} />
     </div>
   );
 }
@@ -363,6 +441,12 @@ export function App() {
   const [savedFile, setSavedFile] = useState("");
   const [sessionId] = useState(initialSessionId);
   const [result, setResult] = useState<QueryResultUnion | null>(null);
+
+  const referenceMap = useMemo(() => {
+    const map = new Map<number, ReferenceRecord>();
+    currentSet?.records.forEach((record) => map.set(record.index, record));
+    return map;
+  }, [currentSet]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -498,6 +582,7 @@ export function App() {
   }
 
   return (
+    <ReferenceMapContext.Provider value={referenceMap}>
     <div className="app">
       <header className="topbar">
         <div className="brand">
@@ -642,11 +727,11 @@ export function App() {
                     </div>
                     {"articleAnswer" in result ? (
                       <div className="answer-split">
-                        <AnswerBlock title="Main Article" text={result.articleAnswer} />
+                        <AnswerBlock title="Main Article" text={result.articleAnswer} cite />
                         <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} />
                       </div>
                     ) : (
-                      <MarkdownText className="answer-text" text={result.answer} />
+                      <MarkdownText className="answer-text" text={result.answer} cite={"articleId" in result} />
                     )}
                     {savedFile && <div className="saved-note">Saved: {savedFile}</div>}
                   </div>
@@ -718,5 +803,6 @@ export function App() {
         </section>
       </main>
     </div>
+    </ReferenceMapContext.Provider>
   );
 }

@@ -503,6 +503,47 @@ body {
 .meta-doi:hover { text-decoration: underline; }
 
 .source-text { margin: 6px 0 0; font-size: 14px; }
+
+/* 引用番号ホバー */
+.cite-group { white-space: nowrap; }
+.cite {
+  position: relative;
+  cursor: help;
+  outline: none;
+}
+.cite-num {
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px dotted var(--accent);
+}
+.cite:hover .cite-num,
+.cite:focus .cite-num { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.cite-pop {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  width: max-content;
+  max-width: 320px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  box-shadow: 0 8px 24px var(--shadow);
+  text-align: left;
+  white-space: normal;
+  font-weight: 400;
+}
+.cite:hover .cite-pop,
+.cite:focus .cite-pop { display: flex; }
+.cite-pop-idx { font-size: 11px; color: var(--accent-2); font-weight: 600; }
+.cite-pop-title { font-size: 13px; color: var(--text); line-height: 1.4; }
+.cite-pop-meta { font-size: 12px; color: var(--muted); }
+.cite-pop-authors { font-size: 11px; color: var(--muted); }
 .link-btn { margin-top: 8px; }
 .source-mesh { margin-top: 10px; font-size: 12px; color: var(--muted); }
 

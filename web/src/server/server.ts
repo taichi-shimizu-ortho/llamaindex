@@ -187,9 +187,32 @@ function safeSessionId(value: unknown): string {
   return /^\d{6}_\d{6}/.test(id) ? id : new Date().toISOString().slice(2, 19).replace(/[-:T]/g, "");
 }
 
+function mainArticleLabel(source: any): string {
+  const section = source.section || source.label || "Main article";
+  const subsection = source.subsection || "";
+  return subsection ? `${section} > ${subsection}` : section;
+}
+
+function sourceBody(source: any): string {
+  return source.text || source.abstract || "";
+}
+
 function sourceMarkdown(source: any, index: number): string {
   const scope = source.scope === "reference_abstract" ? "Reference Abstract" : source.scope === "main_article" ? "Main Article" : "Source";
-  const heading = source.label || source.section || source.title || `Source ${index}`;
+  if (source.scope === "main_article") {
+    const paragraph = source.paragraphIndex && source.totalParagraphs
+      ? `Paragraph ${source.paragraphIndex}/${source.totalParagraphs}`
+      : "Paragraph";
+    return [
+      `#### ${index}. ${scope}: ${mainArticleLabel(source)}`,
+      source.score != null ? `- Score: ${Number(source.score).toFixed(4)}` : "",
+      `- ${paragraph}`,
+      "",
+      sourceBody(source),
+    ].filter((line) => line !== "").join("\n");
+  }
+
+  const heading = source.label || source.title || `Source ${index}`;
   const cite = [source.journal, source.year || source.published].filter(Boolean).join(" · ");
   const links = [
     source.pmid ? `[PubMed](https://pubmed.ncbi.nlm.nih.gov/${source.pmid})` : "",
@@ -204,7 +227,7 @@ function sourceMarkdown(source: any, index: number): string {
     source.authors ? `- Authors: ${source.authors}` : "",
     links ? `- Links: ${links}` : "",
     "",
-    source.text || source.abstract || "",
+    sourceBody(source),
   ].filter((line) => line !== "").join("\n");
 }
 
@@ -226,7 +249,18 @@ function resultMarkdown(result: any): string {
 
   const sources = Array.isArray(result.sources) ? result.sources : [];
   if (sources.length) {
-    parts.push("", "### Sources", "", sources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
+    if ("articleAnswer" in result) {
+      const mainSources = sources.filter((source: any) => source.scope === "main_article");
+      const referenceSources = sources.filter((source: any) => source.scope === "reference_abstract");
+      if (mainSources.length) {
+        parts.push("", `### Main Article Sources (${mainSources.length})`, "", mainSources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
+      }
+      if (referenceSources.length) {
+        parts.push("", `### Reference Abstract Sources (${referenceSources.length})`, "", referenceSources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
+      }
+    } else {
+      parts.push("", "### Sources", "", sources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
+    }
   }
   parts.push("");
   return parts.join("\n");

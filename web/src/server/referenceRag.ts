@@ -85,7 +85,7 @@ async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
     .map((record) => recordToDocument(set, record))
     .filter((doc): doc is Document => Boolean(doc));
   if (!documents.length) throw new Error("abstract付き参考文献がありません");
-  const index = await VectorStoreIndex.fromDocuments(documents);
+  const index = await VectorStoreIndex.init({ nodes: documents });
   return { set, index };
 }
 
@@ -121,7 +121,6 @@ type ReferenceSource = {
 };
 
 async function synthesizeAnswerWithCitations(
-  originalQuery: string,
   enQuery: string,
   sources: ReferenceSource[],
 ): Promise<string> {
@@ -154,14 +153,13 @@ async function synthesizeAnswerWithCitations(
           "If a sentence combines evidence from multiple abstracts, cite every abstract used for that sentence.",
           "Do not cite sources that do not support the sentence.",
           "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant abstract if applicable.",
-          "Answer in the same language as the user's original query.",
+          "Always answer in English, regardless of the language of the user's query.",
         ].join(" "),
       },
       {
         role: "user",
         content: [
-          `Original query: ${originalQuery}`,
-          enQuery !== originalQuery ? `English retrieval query: ${enQuery}` : "",
+          `Query: ${enQuery}`,
           "",
           "Reference abstracts:",
           context,
@@ -231,7 +229,7 @@ export async function runReferenceQuery(
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 
-  const answer = await synthesizeAnswerWithCitations(originalQuery, enQuery, sources);
+  const answer = await synthesizeAnswerWithCitations(enQuery, sources);
 
   return {
     setId,
