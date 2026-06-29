@@ -1,0 +1,553 @@
+{
+  "id": "frontiers-manuscript-hn-3",
+  "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+  "title": "Frontiers Manuscript HN",
+  "createdAt": "2026-06-29T08:47:49.712Z",
+  "totalReferences": 50,
+  "pubmedFound": 2,
+  "abstractFound": 2,
+  "records": [
+    {
+      "index": 1,
+      "text": "Haruki Nishimura1*, Taichi Shimizu1, Hitoshi Suzuki1, Yoichi Murata1, Takashi Maruyama2, Soshi Uchida3",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 2,
+      "text": "1Department of Orthopaedic Surgery, School of Medicine, University of Occupational and Environmental Health, Kitakyushu, Japan",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 3,
+      "text": "2Department of Physiology, School of Medicine, University of Occupational and Environmental Health, Kitakyushu, Japan",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "10.1097/GME.0000000000000094",
+      "pmid": "24149918",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "24149918",
+        "doi": "10.1097/GME.0000000000000094",
+        "title": "Inverse correlation between the standard deviation of R-R intervals in supine position and the simplified menopausal index in women with climacteric symptoms.",
+        "abstract": "Disturbance of autonomic nervous activity has been thought to play a role in the climacteric symptoms of postmenopausal women. This study was therefore designed to investigate the relationship between autonomic nervous activity and climacteric symptoms in postmenopausal Japanese women.\n\nThe autonomic nervous activity of 40 Japanese women with climacteric symptoms and 40 Japanese women without climacteric symptoms was measured by power spectral analysis of heart rate variability using a standard hexagonal radar chart. The scores for climacteric symptoms were determined using the simplified menopausal index.\n\nSympathetic excitability and irritability, as well as the standard deviation of mean R-R intervals in supine position, were significantly (P < 0.01, 0.05, and 0.001, respectively) decreased in women with climacteric symptoms. There was a negative correlation between the standard deviation of mean R-R intervals in supine position and the simplified menopausal index score. The lack of control for potential confounding variables was a limitation of this study.\n\nIn climacteric women, the standard deviation of mean R-R intervals in supine position is negatively correlated with the simplified menopausal index score.",
+        "authors": [
+          "Yanagihara Nobuyuki",
+          "Seki Meikan",
+          "Nakano Masahiro",
+          "Hachisuga Toru",
+          "Goto Yukio"
+        ],
+        "journal": "Menopause (New York, N.Y.)",
+        "year": "2014",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 4,
+      "text": "3Department of Orthopaedic Sports Medicine, School of Medicine, University of Occupational and Environmental Health, Kitakyushu, Japan",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 5,
+      "text": "* Correspondence: Haruki Nishimura hnishimura2468@outlook.com",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 6,
+      "text": "Keywords: Oxytocin, Mesenchymal stem cells, Musculoskeletal regeneration, Osteogenesis, Adipogenesis, Chondrogenesis, Regenerative medicine.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "429 Too Many Requests"
+    },
+    {
+      "index": 7,
+      "text": "Mesenchymal stem cells (MSCs) have emerged as promising therapeutic tools for musculoskeletal regenerative medicine because of their multilineage differentiation capacity, immunomodulatory properties, and paracrine-mediated tissue repair effects. However, the therapeutic efficacy of MSC-based approaches is often limited by impaired cellular function caused by aging, chronic inflammation, oxidative stress, and disease-associated microenvironments. Consequently, increasing attention has focused on strategies to enhance MSC function and optimize their regenerative capacity. Oxytocin (OXT), a neuroendocrine peptide classically recognized for its roles in reproduction and social behavior, has recently emerged as a multifunctional regulator involved in peripheral tissue homeostasis and regeneration. Growing evidence suggests that OXT signaling influences MSC biology by regulating lineage commitment, cellular stress responses, and regenerative capacity. This Mini Review summarizes current evidence regarding the effects of OXT on MSC differentiation, with particular emphasis on osteogenesis, adipogenesis, and chondrogenesis in the context of musculoskeletal regeneration. Furthermore, we discuss the translational potential of OXT signaling, including MSC priming strategies, biomaterial-assisted OXT delivery, and future applications of synovial MSC-based therapies for cartilage repair. Finally, we highlight current knowledge gaps and future perspectives regarding OXT as a novel biological modulator for enhancing MSC-based musculoskeletal regenerative therapies.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 8,
+      "text": "Mini Review 3,000 words https://www.frontiersin.org/journals/endocrinology/sections/neuroendocrine-science/for-authors/ -types",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 9,
+      "text": "Mesenchymal stem cells (MSCs) are multipotent stromal cells capable of differentiating into various mesenchymal lineages such as osteoblasts, chondrocytes, and adipocytes[1]. Beyond their differentiation capacity, MSCs exert regenerative effects primarily through paracrine signaling, immunomodulation, and regulation of local tissue microenvironments [2]. Such properties have generated considerable interest in MSC-based therapeutic approaches for a wide range of musculoskeletal disorders, including osteoporosis, bone fractures, osteoarthritis (OA), and cartilage injuries [3].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 10,
+      "text": "Despite promising preclinical and clinical findings, several challenges continue to limit the therapeutic efficacy of MSC-based regenerative strategies that include a dependency on donor characteristics and surrounding host microenvironmental conditions[3]. Additionally, aging, oxidative stress, and chronic inflammation impair MSC proliferation, alter lineage commitment, and induce cellular dysfunction[4]. In particular, senescence-associated changes in MSCs are associated with diminished regenerative potential and increased secretion of pro-inflammatory factors, which may further contribute to tissue degeneration and impaired repair responses[5].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 11,
+      "text": "To overcome such limitations, recent efforts have focused on developing strategies to enhance MSC function and improve therapeutic outcomes. Various approaches, including genetic modification, growth factor stimulation, hypoxic preconditioning, biomaterial-based delivery systems, and pharmacological priming have been investigated to optimize MSC survival, differentiation potential, and paracrine activity[6; 7; 8; 9; 10]. Identification of safe and effective endogenous regulators capable of enhancing MSC function therefore represents an important future direction in regenerative medicine.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 12,
+      "text": "Among potential biological regulators, endocrine and neuroendocrine factors, such as Oxytocin (OXT), have recently gained attention due to their ability to regulate stem cell behavior and tissue homeostasis. OXT, a nonapeptide hormone primarily synthesized in the hypothalamus, has traditionally been recognized for its roles in reproduction, lactation, and social behavior[11]. However, accumulating evidence indicates that OXT functions beyond its classical neuroendocrine roles, additionally contributing to peripheral tissue regulation, including metabolism, inflammation, aging processes, and musculoskeletal homeostasis[12; 13].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 13,
+      "text": "Recent studies suggest that the OXT/oxytocin receptor (OXTR) axis may influence MSC biology by regulating lineage commitment, cellular stress responses, and regenerative capacity. Although OXT-mediated regulation of osteogenesis has extensively been investigated, emerging evidence suggests broader roles of OXT signaling in MSC function, including adipogenic regulation and chondrogenic differentiation[14; 15; 16; 17]. However, important questions remain regarding cell source specific responses, particularly whether OXT enhances the regenerative nature of chondrogenic cell sources like synovial MSCs.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 14,
+      "text": "This Mini Review summarizes current evidence regarding the role of OXT/OXTR signaling in regulating MSC differentiation and regenerative function, with particular emphasis on osteogenesis, adipogenesis, and chondrogenesis. Furthermore, we discuss current knowledge gaps and emerging translational strategies, including MSC priming, biomaterial-assisted OXT delivery, and the potential application of OXT signaling in musculoskeletal regeneration.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 15,
+      "text": "OXT is increasingly recognized as a multifunctional peptide hormone that regulates diverse biological processes beyond its classical neuroendocrine functions. The biological effects of OXT are primarily mediated through OXTR, a G protein-coupled receptor expressed not only in classical target organs but also in various peripheral tissues involved in metabolism and tissue homeostasis[13]. The identification of functional OXTR expression in mesenchymal lineage cells has expanded the potential role of OXT signaling as a regulator of stem cell behavior and regenerative processes[18; 19].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 16,
+      "text": "Activation of OXTR triggers multiple intracellular signaling cascades that influence cellular function. The canonical OXT/OXTR pathway involves the Gαq-mediated activation of phospholipase C, resulting in intracellular calcium mobilization and downstream signaling responses[20]. In addition, OXT interacts with several pathways associated with tissue regeneration and cellular adaptation, including the mitogen-activated protein kinase/extracellular signal-regulated kinase (MAPK/ERK) pathway, phosphoinositide 3-kinase/protein kinase B (PI3K/Akt) pathway, and bone morphogenetic protein (BMP)-related signaling pathways[21; 22; 23]. These signaling networks regulate important MSC functions including proliferation, survival, and differentiation [22; 24]. Additional regulated functions include MSC migration and paracrine activity[22; 24].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 17,
+      "text": "Emerging evidence indicates that MSCs are responsive to OXT stimulation through OXTR-mediated mechanisms. Previous studies using human adipose-derived stem cells (ADSCs) and bone marrow-derived MSCs (BMSCs) have demonstrated OXTR expression and shown that OXT signaling contributes to the regulation of MSC lineage commitment[18; 19]. Interestingly, OXTR expression appears to change dynamically during MSC differentiation, increasing during osteogenic commitment while decreasing during adipogenic differentiation[19]. This reciprocal regulation suggests that the OXT/OXTR axis may contribute to the regulation of MSC fate decisions.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 18,
+      "text": "Beyond differentiation, OXT signaling may also enhance MSC functional properties by regulating cellular stress responses and survival pathways. Noiseux et al. demonstrated that OXT preconditioning of BMSCs activated pro-survival signaling pathways, including the PI3K/Akt pathway and ERK1/2 pathway. OXT stimulation improved MSC proliferation, glucose metabolism, and resistance to apoptosis under hypoxic and serum-deprived conditions[22]. In addition, OXT modulated the expression of cytoprotective and regenerative factors, including vascular endothelial growth factor (VEGF), heat shock protein 27 (Hsp27), and tissue inhibitor of metalloproteinase-1 (TIMP-1). These findings largely support the idea that OXT may enhance MSC therapeutic potential not only by regulating lineage differentiation but also by preserving cellular function and improving adaptation to stressful microenvironments.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 19,
+      "text": "Taken together, current evidence suggests that OXT/OXTR signaling represents an endogenous regulatory pathway capable of modulating multiple aspects of MSC biology. Understanding how this signaling axis influences MSC fate and function provides a foundation for developing OXT-based strategies to improve future regenerative medicine approaches.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 20,
+      "text": "The therapeutic potential of MSCs is closely linked to their ability to maintain an appropriate balance among lineage differentiation, self-renewal, and adaptive responses to environmental stress. Dysregulation of these processes contributes to impaired tissue regeneration, particularly in patients with degenerative diseases and undergoing the aging process. Current evidence suggests that OXT signaling influences several aspects of MSC biology, including osteogenic differentiation, adipogenic regulation, cellular homeostasis, and possibly chondrogenic differentiation ( Figure 1 ).",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 21,
+      "text": "Among MSC differentiation pathways, the osteogenic effect of OXT is the most extensively characterized. Elabd et al. identified the OXTR pathway as a regulator of the osteoblast/adipocyte balance in human multipotent ADSCs[24]. In the study, OXT and carbetocin promoted osteogenic differentiation while suppressing adipogenic differentiation in both human ADSCs and human BMSCs. OXTR expression decreased during adipogenesis and increased during osteogenesis, supporting the concept that OXTR signaling participates in lineage allocation.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 22,
+      "text": "Mechanistically, OXT-induced osteogenic commitment has been associated with increased alkaline phosphatase (ALP) activity, mineralized matrix formation, and expression of osteogenic markers. Elabd et al. demonstrated a transient activation of ERK1/2 after OXT stimulation, suggesting that ERK signaling may contribute to OXT-mediated effects on MSC differentiation. In BMSCs from adult and elderly female rats, OXT at 100 nM was shown to improve osteogenic differentiation, with increased ALP activity, earlier mineralization, and upregulation of BMP-2, bone sialoprotein, osteopontin, and osteocalcin[24].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 23,
+      "text": "More recent work with human ADSCs further supports OXT’s osteogenic role in earlier mineralization and increased bone production. Petrocelli et al. reported that OXT increased OXTR mRNA expression, did not impair cell viability, and promoted osteogenic differentiation in a dose-dependent manner, as shown by Alizarin Red staining and osteogenic gene/protein expression analysis[19]. Together, these findings indicate that OXT acts as a biological enhancer of osteogenic commitment across multiple MSC sources.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 24,
+      "text": "Aging-associated changes in MSC function are characterized by impaired regenerative capacity, altered lineage commitment, and reduced responsiveness to environmental stimuli. One of the characteristic features of MSC aging is a shift in differentiation potential, with decreased osteogenic capacity and increased adipogenic tendency, contributing to marrow adiposity and impaired skeletal regeneration[25]. Therefore, maintaining an appropriate balance between osteogenic and adipogenic commitment represents an important strategy for preserving MSC function during the aging process.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 25,
+      "text": "The regulatory role of OXT in MSC lineage balance was first demonstrated by Elabd et al., who reported that OXT and the OXTR agonist carbetocin shifted MSC differentiation towards an osteogenic phenotype while suppressing adipogenic commitment[24]. In dual-lineage differentiation conditions, activation of OXT signaling enhanced osteogenic markers and reduced adipogenic differentiation, suggesting that the OXT/OXTR axis contributes to MSC fate allocation. Consistent with these findings, Petrocelli et al. demonstrated that OXT did not promote adipogenesis in human ADSCs and reduced early expression of the adipogenic transcription factor peroxisome proliferator-activated receptor gamma (PPARγ) during adipogenic induction[19]. These studies support the concept that OXT signaling may counteract aging-associated shifts in MSC lineage commitment by favoring regenerative differentiation pathways over adipogenic conversion.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 26,
+      "text": "Beyond lineage regulation, OXT has recently gained attention as a potential modulator of cellular aging-related processes. Cho et al. demonstrated that OXT attenuated cellular senescence in human dermal fibroblasts through an OXTR-dependent mechanism[26]. In their study, OXT reduced senescence-associated phenotypes, including increased p16 and p21 expression and senescence-associated β-galactosidase (SA-β-gal) activity, by activating the ERK/nuclear factor erythroid 2-related factor 2 (Nrf2) signaling pathway. These findings suggest that OXT signaling may contribute to cellular homeostasis through regulation of oxidative stress responses and senescence-associated pathways.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 27,
+      "text": "However, the relationship between OXT signaling and senescence regulation in MSCs remains not fully understood. In human ADSCs, Petrocelli et al. observed an increase in SA-β-gal activity after OXT treatment; however, this change was not accompanied by alterations in senescence-related genes such as telomerase reverse transcriptase (TERT) and BMI1 proto-oncogene (BMI-1). The authors suggested that increased SA-β-gal activity may reflect enhanced lysosomal activity and autophagy rather than true induction of cellular senescence[19].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 28,
+      "text": "Taken together, current evidence suggests that OXT may regulate MSC aging-related dysfunction through multiple mechanisms, including modulation of lineage commitment, oxidative stress responses, and cellular homeostasis. Although direct evidence demonstrating anti-senescent effects of OXT in MSCs remains limited, further investigation of OXT-mediated regulation of MSC aging may provide new strategies to enhance regenerative capacity in age-related musculoskeletal disorders.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 29,
+      "text": "Although the role of OXT signaling has been most extensively characterized in bone metabolism, growing evidence indicates that the OXT/OXTR axis also contributes to chondrogenic differentiation and cartilage homeostasis. Since insufficient chondrogenic differentiation and inflammatory joint environments remain major obstacles for MSC-based cartilage regeneration, OXT has recently attracted attention as a potential biological modulator capable of enhancing cartilage repair.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 30,
+      "text": "The first evidence directly linking OXT signaling to MSC chondrogenesis was reported by Roux et al in 2020[27]. Using human multipotent ADSCs and human BMSCs, they demonstrated that both undifferentiated and chondrogenically differentiated cells expressed OXTR. Activation of the OXT pathway using OXT (30 nM) or the OXTR agonist carbetocin enhanced cartilage extracellular matrix formation, as demonstrated by increased glycosaminoglycan deposition in vitro. Furthermore, OXT treatment upregulated key chondrogenic markers, including aggrecan (ACAN), cartilage oligomeric matrix protein (COMP), and SOX9, while decreasing the fibrotic marker collagen type I alpha 1 (COL1A1) expression in both human ADSCs and human BMSCs. These findings suggest that OXT/OXTR signaling promotes MSC chondrogenic differentiation and favors cartilage matrix formation rather than fibrocartilaginous differentiation. To further validate the chondrogenic potential of OXT, Roux et al. evaluated three-dimensional pellet cultures, which better reproduce the cell condensation process required for cartilage formation. OXT-treated pellets exhibited increased expression of ACAN and collagen type X (COL10A1) and enhanced protein expression of SOX9 and type II collagen (COL2). In addition, OXT exerted protective effects under inflammatory conditions by partially reversing interleukin-1β-induced suppression of ACAN expression and reducing ADAMTS-4, a key cartilage-degrading enzyme. These results indicate that OXT may contribute to cartilage regeneration through stimulation of MSC chondrogenesis and attenuation of inflammatory catabolic responses.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 31,
+      "text": "In addition to its effects on MSC differentiation, OXT has been shown to regulate mature chondrocyte function. Wu et al. demonstrated that human articular chondrocytes express OXTR and that OXT protects cartilage matrix integrity under inflammatory stimulation[28]. In their study, OXT attenuated tumor necrosis factor-α-induced degradation of COL2 by suppressing matrix metalloproteinases (MMPs), including MMP-1 and MMP-13, through an OXTR-dependent mechanism involving the JAK2/STAT1 signaling pathway. These findings suggest that OXT may have dual functions in cartilage biology by enhancing MSC-mediated cartilage formation while protecting existing cartilage matrix from inflammatory degradation.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 32,
+      "text": "More recently, regenerative approaches combining OXT with biomaterial-based delivery systems have been investigated. Wang et al. developed an OXT-loaded hyaluronic acid methacrylate hydrogel system for cartilage repair. Sustained local delivery of OXT enhanced BMSC viability and promoted chondrogenic differentiation, as demonstrated by increased expression of cartilage-related genes, including SOX9, COL2A1, and ACAN. Furthermore, OXT-loaded hydrogel improved cartilage regeneration in a rat cartilage defect model, suggesting that controlled OXT delivery may represent a promising strategy for enhancing MSC-based cartilage repair in the future[29].",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 33,
+      "text": "Current evidence suggests that OXT signaling regulates MSC biology beyond its classical endocrine functions. Early investigations primarily focused on the role of OXT in skeletal metabolism and demonstrated that activation of the OXT/OXTR axis promotes osteogenic differentiation and regulates the balance between osteogenic and adipogenic lineage commitment. More recent studies have expanded this concept by demonstrating that OXT influences broader aspects of MSC function, including cellular survival, inflammatory regulation, and chondrogenic differentiation. Collectively, these findings suggest that OXT may act not only as a lineage-specific differentiation factor but also as a biological modulator capable of enhancing MSC regenerative capacity ( Table 1 ).",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 34,
+      "text": "Despite these promising findings, several important questions remain regarding the application of OXT-based strategies in regenerative medicine. First, the biological effects of OXT may vary depending on MSC origin, OXTR expression levels, and surrounding microenvironmental conditions. Most available evidence regarding OXT-mediated MSC regulation has been obtained using BMSCs and ADSCs. However, MSC populations derived from different tissues exhibit distinct biological characteristics, including proliferation capacity, differentiation potential, and responsiveness to external stimuli[30]. Therefore, determining whether the effects of OXT are conserved across MSC sources represents an important future direction.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 35,
+      "text": "Among different MSC sources, synovial MSCs represent a particularly promising candidate for cartilage regenerative applications. A comparative study evaluating MSCs derived from multiple human mesenchymal tissues demonstrated that synovium-derived MSCs exhibit superior proliferative capacity and chondrogenic differentiation potential compared with MSCs derived from bone marrow, adipose tissue, periosteum, and skeletal muscle[31]. These unique characteristics, together with their joint-specific origin, make synovial MSCs an attractive platform for developing advanced cartilage repair strategies.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 36,
+      "text": "Given the emerging evidence that OXT enhances chondrogenic differentiation in BMSC and ADSC populations and modulates cartilage matrix metabolism, investigating the interaction between OXT/OXTR signaling and synovial MSC biology represents an important next step. Critical questions include whether synovial MSCs express functional OXTR, whether OXT stimulation can further enhance their already strong chondrogenic capacity, and how OXT signaling interacts with major chondrogenic regulatory pathways, including TGF-β/SMAD signaling, SOX9 activation, and extracellular matrix synthesis.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 37,
+      "text": "Another important consideration is how OXT can be effectively incorporated into current regenerative medicine strategies. One promising approach is OXT-mediated MSC preconditioning before transplantation. Cell priming strategies have attracted increasing attention as a method to enhance MSC survival, paracrine activity, and therapeutic efficacy under pathological conditions[32]. The concept of OXT-mediated MSC enhancement was demonstrated by Noiseux et al., who showed that OXT-preconditioned BMSCs exhibited improved functional properties through activation of pro-survival signaling pathways, including PI3K/Akt and ERK1/2. OXT stimulation enhanced MSC proliferation, metabolic activity, and resistance to apoptosis under hypoxic and serum-deprived conditions[22]. Moreover, OXT increased the secretion of cytoprotective and regenerative factors, suggesting that OXT may improve MSC therapeutic potential through both intrinsic cellular protection and paracrine mechanisms[22]. These findings are particularly relevant for cartilage regeneration because transplanted MSCs are exposed to a hostile osteoarthritic microenvironment that can involve inflammation, oxidative stress, and catabolic signaling. Improving MSC resistance to these conditions may be essential for achieving durable regenerative effects. Based on evidence demonstrating that OXT enhances MSC chondrogenesis and protects cartilage matrix integrity, OXT-mediated preconditioning may represent a promising strategy to improve cell survival, extracellular matrix production, and functional cartilage repair after MSC transplantation.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 38,
+      "text": "In addition to cell-based approaches, biomaterial-mediated delivery of OXT represents another important translational opportunity. Although OXT has demonstrated regenerative and anti-inflammatory properties[33], systemic administration may be limited by its short biological half-life and inability to maintain effective concentrations within target tissues[34]. Local delivery systems capable of providing sustained OXT exposure may overcome these limitations and enable continuous modulation of the regenerative microenvironment. Recent studies using OXT-loaded hydrogel systems have provided proof-of-concept evidence that local OXT delivery can enhance cartilage regeneration by supporting MSC viability, promoting chondrogenic differentiation, and improving extracellular matrix formation[29]. Furthermore, advances in biomaterial-based drug delivery platforms provide additional opportunities for optimizing OXT application. Yamaura et al. reported an injectable peptide amphiphile (PA) nanofiber system capable of sustained intra-articular delivery of losartan and demonstrated cartilage-protective effects through controlled drug release, enhanced glycosaminoglycan production, and suppression of inflammatory and degenerative responses[35]. Although direct application of PA nanofiber systems for OXT delivery has not yet been reported, these findings suggest that similar sustained-release platforms could be adapted for OXT-based regenerative strategies.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 39,
+      "text": "Future approaches combining OXT signaling with MSC-based therapies may therefore involve multiple strategies, including ex vivo OXT priming, local OXT delivery, and biomaterial-assisted tissue engineering. In particular, the combination of synovial MSCs with controlled OXT stimulation may represent a future direction for cartilage repair by integrating highly chondrogenic cells with a biological enhancer of MSC function. Nevertheless, several challenges must be addressed before clinical translation. The optimal concentration, timing, and duration of OXT exposure required to enhance MSC function remain unclear. Furthermore, the relationship between OXTR expression and MSC responsiveness, potential differences between healthy and diseased donor-derived MSCs, and long-term effects of OXT stimulation require further investigation. Well-designed in vitro and in vivo studies are necessary to determine whether OXT-mediated enhancement of MSC function translates into durable structural and functional tissue regeneration.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 40,
+      "text": "In conclusion, OXT has emerged as a promising endogenous regulator of MSC fate and regenerative capacity. While its role in osteogenic regulation is most established, increasing evidence demonstrates broader effects on MSC survival, lineage modulation, and cartilage-related processes. Further understanding of OXT/OXTR-mediated mechanisms, optimization of delivery strategies, and investigation of cell source-specific responses may contribute to the development of novel OXT-based approaches for enhancing MSC-mediated musculoskeletal regeneration.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 41,
+      "text": "The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest .",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "10.1016/j.genhosppsych.2026.06.005",
+      "pmid": "42365709",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "42365709",
+        "doi": "10.1016/j.genhosppsych.2026.06.005",
+        "title": "Quetiapine Versus Haloperidol for the Treatment of Delirium in Hospitalized Adults: A Meta-Analysis of Randomized Controlled Trials with Trial Sequential Analysis.",
+        "abstract": "To evaluate the comparative efficacy and safety of quetiapine versus haloperidol for delirium treatment in hospitalized adults.\n\nSystematic search in MEDLINE (via PubMed), Embase, and Cochrane Central Register of Controlled Trials from inception through February 19, 2026.\n\nRCTs directly comparing quetiapine and haloperidol for delirium treatment in adult inpatients.\n\nTwo reviewers independently extracted data and assessed risk of bias using the Cochrane RoB 2 tool. Primary outcome was change in delirium severity (DRS-R-98). Secondary outcomes included ICU and hospital length of stay (LOS), mortality, sleep duration, and extrapyramidal symptoms (EPS).\n\nFour RCTs comprising 292 patients were included. No significant difference was found in delirium severity reduction (MD, -1.99; 95% CI, -4.70 to 0.72; p = 0.15; I 2 = 73.6%), ICU LOS (MD, -0.84 days; 95% CI, -2.30 to 0.62), hospital LOS (MD, -0.06 days; 95% CI, -2.32 to 2.19), or mortality (RR, 0.68; 95% CI, 0.35 to 1.34). Quetiapine showed non-significant trends toward fewer EPS (RR, 0.14; 95% CI, 0.02 to 1.06) and increased sleep duration (MD, 1.59 h; 95% CI, -0.45 to 3.63). TSA indicated the required information size was not reached.\n\nQuetiapine and haloperidol show no statistically significant differences in efficacy or safety for delirium management. GRADE certainty was very low for all outcomes, and TSA confirmed the evidence is inconclusive due to sparse data and imprecision. The absence of statistical significance should not be interpreted as equivalence. Selection should be individualized based on individual patient risk profiles and adverse-effect susceptibility until adequately powered trials are available.",
+        "authors": [
+          "de Oliveira Luiz Gustavo Albuquerque Mello",
+          "Squizzato Frederico Augusto Travi",
+          "da Silva Matos Heloisa Souza",
+          "Maia Alexandre Silva",
+          "Lima-Araújo Isabel",
+          "Cintra Ana Carolina Godinho",
+          "Amaral-Marques Edmur",
+          "da Silva Felipe Pimentel Rodrigues",
+          "de Almeida Ana Beatriz Bomfim",
+          "Fagundes Thales Pardini"
+        ],
+        "journal": "General hospital psychiatry",
+        "year": "2026",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 42,
+      "text": "The Author Contributions section is mandatory for all articles, including articles by sole authors. If an appropriate statement is not provided on submission, a standard one will be inserted during the production process. The Author Contributions statement must describe the contributions of individual authors referred to by their initials and, in doing so, all authors agree to be accountable for the content of the work. Please see here for full authorship criteria.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 43,
+      "text": "Japan Society for the Promotion of Science, Grant in aid for Young Scientists (25K19991)",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 44,
+      "text": "We would like to thank Patrick M. Quinn for the English proofreading.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 45,
+      "text": "All relevant data is contained within the : The original contributions presented in the study are included in the /supplementary material, further inquiries can be directed to the corresponding author/s.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 46,
+      "text": "Table 1. Summary of studies investigating the effects of oxytocin on mesenchymal stem cell differentiation",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 47,
+      "text": "ADSC; adipose-derived stem cells, BMSC; bone marrow derived mesenchymal stem cell, OXT; oxytocin, OXTR; oxytocin receptor, GAG; glycosaminoglycan, SOX9; SRY-box9, ACAN; aggrecan, COL2; type 2 collagen",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 48,
+      "text": "Figure 1. Proposed role of oxytocin/oxytocin receptor signaling in regulating mesenchymal stem cell function and musculoskeletal regeneration.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 49,
+      "text": "Oxytocin (OXT) activates oxytocin receptor (OXTR)-mediated intracellular signaling pathways, including extracellular signal-regulated kinase (ERK), phosphoinositide 3-kinase/protein kinase B (PI3K/Akt), nuclear factor erythroid 2-related factor 2 (Nrf2), and bone morphogenetic protein (BMP)-related signaling pathways. Activation of the OXT/OXTR axis regulates multiple aspects of mesenchymal stem cell (MSC) biology, including lineage differentiation, paracrine activity, and cellular homeostasis. Current evidence indicates that OXT promotes osteogenic differentiation, regulates adipogenic commitment, and enhances chondrogenic differentiation through modulation of MSC fate decisions. In addition, OXT signaling may improve MSC regenerative potential by enhancing resistance to cellular stress and maintaining functional properties. These effects may contribute to improved musculoskeletal regeneration, including increased bone formation, enhanced fracture repair, and further cartilage regeneration. Future strategies involving OXT-mediated MSC priming and biomaterial-based sustained OXT delivery may provide novel approaches for enhancing MSC-based regenerative therapies.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    },
+    {
+      "index": 50,
+      "text": "[1] F.P. Barry, and J.M. Murphy, Mesenchymal stem cells: clinical applications and biological characterization. Int J Biochem Cell Biol 36 (2004) 568-84.",
+      "sourceUrl": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "href": "file:///C:/Users/a2189/uv-envs/llamaindex/web/reference_sets/Frontiers%20Manuscript%20PMQ_v2_HN.html",
+      "doi": "",
+      "pmid": "",
+      "pubmedFound": false,
+      "error": "メタデータが見つかりません"
+    }
+  ]
+}

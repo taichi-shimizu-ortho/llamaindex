@@ -1,4 +1,4 @@
-# GUI for 51_search_rxfp1_abstract.py - RXFP1 Abstract RAG Interactive Tool
+# GUI for RXFP1 RAG - storage_all index only
 import socket
 import tkinter as tk
 import tkinter.font as tkFont
@@ -17,7 +17,6 @@ FONT_SIZE = 12
 DEFAULT_FONT = ("Segoe UI", FONT_SIZE)
 MONO_FONT = ("Consolas", FONT_SIZE)
 
-STORAGE_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_rxfp1_abstract"
 STORAGE_ALL_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex" / "storage_all"
 OUTPUT_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex"
 
@@ -25,10 +24,9 @@ OUTPUT_DIR = Path.home() / "Dropbox" / "obsidian" / "50_coding" / "llamaindex"
 class RxfpAbstractRAGGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("RXFP1 Abstract RAG + All Articles")
+        self.root.title("RXFP1 RAG - All Articles")
         self.root.geometry("1000x820")
 
-        self.index_rxfp1 = None
         self.index_all = None
         self.turn = 1
         self.output_file = None
@@ -43,14 +41,6 @@ class RxfpAbstractRAGGUI:
 
         self.status_label = tk.Label(top_frame, text="インデックス読み込み中...", foreground="orange", font=DEFAULT_FONT)
         self.status_label.pack(side=tk.LEFT, padx=5)
-
-        # インデックス選択
-        tk.Label(top_frame, text="  検索対象:", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=(20, 5))
-        self.search_rxfp1_var = tk.BooleanVar(value=True)
-        self.search_all_var = tk.BooleanVar(value=True)
-
-        tk.Checkbutton(top_frame, text="RXFP1", variable=self.search_rxfp1_var, font=DEFAULT_FONT).pack(side=tk.LEFT, padx=2)
-        tk.Checkbutton(top_frame, text="All Articles", variable=self.search_all_var, font=DEFAULT_FONT).pack(side=tk.LEFT, padx=2)
 
         tk.Label(top_frame, text="  Top-K:", font=DEFAULT_FONT).pack(side=tk.LEFT, padx=(20, 2))
         self.topk_var = tk.IntVar(value=5)
@@ -99,40 +89,27 @@ class RxfpAbstractRAGGUI:
             Settings.llm = OpenAI(model="gpt-4o-mini", temperature=0.1)
             Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
-            # Load RXFP1 Abstract index
-            if not STORAGE_DIR.exists():
+            if not STORAGE_ALL_DIR.exists():
                 messagebox.showerror(
                     "エラー",
-                    f"RXFP1インデックスが見つかりません:\n{STORAGE_DIR}\n\n"
-                    "先に 41_build_rxfp1_abstract_index.py を実行してください"
+                    f"storage_allインデックスが見つかりません:\n{STORAGE_ALL_DIR}\n\n"
+                    "先にインデックスを構築してください"
                 )
                 self.status_label.config(text="インデックスなし", foreground="red")
                 return
 
-            storage_context = StorageContext.from_defaults(persist_dir=str(STORAGE_DIR))
-            self.index_rxfp1 = load_index_from_storage(storage_context)
+            storage_context_all = StorageContext.from_defaults(persist_dir=str(STORAGE_ALL_DIR))
+            self.index_all = load_index_from_storage(storage_context_all)
 
-            # Load All Articles index (optional)
-            if STORAGE_ALL_DIR.exists():
-                storage_context_all = StorageContext.from_defaults(persist_dir=str(STORAGE_ALL_DIR))
-                self.index_all = load_index_from_storage(storage_context_all)
-                status_msg = "準備完了: RXFP1 Abstract + All Articles インデックス"
-                index_info = f"インデックス: {STORAGE_DIR.name}/ + {STORAGE_ALL_DIR.name}/\n"
-            else:
-                self.index_all = None
-                status_msg = "準備完了: RXFP1 Abstract インデックス (storage_all見つかりません)"
-                index_info = f"インデックス: {STORAGE_DIR.name}/\n"
-
-            # 出力ファイルを準備
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             device = socket.gethostname()
-            self.output_file = OUTPUT_DIR / f"{timestamp}_rxfp1_abstract_{device}_gui.md"
+            self.output_file = OUTPUT_DIR / f"{timestamp}_rxfp1_{device}_gui.md"
             self.turn = 1
 
-            self.status_label.config(text=status_msg, foreground="green")
+            self.status_label.config(text="準備完了: All Articles インデックス", foreground="green")
             self.query_button.config(state=tk.NORMAL)
-            self.append_output("=== RXFP1 Abstract RAG 初期化完了 ===\n")
-            self.append_output(index_info)
+            self.append_output("=== RXFP1 RAG 初期化完了 ===\n")
+            self.append_output(f"インデックス: {STORAGE_ALL_DIR.name}/\n")
             self.append_output(f"出力ファイル: {self.output_file.name}\n\n")
 
         except Exception as e:
@@ -152,18 +129,7 @@ class RxfpAbstractRAGGUI:
         return response.choices[0].message.content.strip()
 
     def send_query(self):
-        search_rxfp1 = self.search_rxfp1_var.get()
-        search_all = self.search_all_var.get()
-
-        if not search_rxfp1 and not search_all:
-            messagebox.showwarning("警告", "検索対象を選択してください")
-            return
-
-        if search_rxfp1 and self.index_rxfp1 is None:
-            messagebox.showwarning("警告", "RXFPインデックスが読み込まれていません")
-            return
-
-        if search_all and self.index_all is None:
+        if self.index_all is None:
             messagebox.showwarning("警告", "All Articlesインデックスが読み込まれていません")
             return
 
@@ -177,7 +143,6 @@ class RxfpAbstractRAGGUI:
         self.root.update()
 
         try:
-            # 常に英語に翻訳
             self.append_output(f"[翻訳中...]\n")
             self.root.update()
             query = self._translate_to_english(original_query)
@@ -185,46 +150,15 @@ class RxfpAbstractRAGGUI:
 
             top_k = self.topk_var.get()
 
-            # Search selected indexes
-            source_nodes = []
-            response = None
-
-            # RXFP1 Abstract search
-            if search_rxfp1:
-                query_engine = self.index_rxfp1.as_query_engine(
-                    similarity_top_k=top_k,
-                    response_mode="compact",
-                )
-                response_rxfp1 = query_engine.query(query)
-                source_nodes.extend([(n, "RXFP1") for n in response_rxfp1.source_nodes])
-                if response is None:
-                    response = response_rxfp1
-
-            # All Articles search (if available and selected)
-            if search_all and self.index_all is not None:
-                query_engine_all = self.index_all.as_query_engine(
-                    similarity_top_k=top_k,
-                    response_mode="compact",
-                )
-                response_all = query_engine_all.query(query)
-                source_nodes.extend([(n, "All") for n in response_all.source_nodes])
-                if response is None:
-                    response = response_all
-
-            # Sort by score (descending) and take top-k
-            source_nodes.sort(key=lambda x: x[0].score, reverse=True)
-            source_nodes = source_nodes[:top_k]
-
-            # 出力
-            targets = []
-            if search_rxfp1:
-                targets.append("RXFP1")
-            if search_all:
-                targets.append("All")
-            target_str = " + ".join(targets)
+            query_engine_all = self.index_all.as_query_engine(
+                similarity_top_k=top_k,
+                response_mode="compact",
+            )
+            response = query_engine_all.query(query)
+            source_nodes = [(n, "All") for n in response.source_nodes]
 
             output = f"[Turn {self.turn}] Q: {original_query}\n"
-            output += f"(EN: {query}) [検索対象: {target_str}]\n"
+            output += f"(EN: {query})\n"
             output += f"\nA: {response.response}\n\n"
 
             output += "【引用元】\n"
@@ -277,13 +211,12 @@ class RxfpAbstractRAGGUI:
         if not self.output_file:
             return
 
-        # If source_nodes not provided, use response.source_nodes
         if source_nodes is None:
-            source_nodes = [(n, "RXFP1") for n in response.source_nodes]
+            source_nodes = [(n, "All") for n in response.source_nodes]
 
         with open(self.output_file, "a", encoding="utf-8") as f:
             if self.turn == 1:
-                f.write(f"# RXFP1 Abstract RAG Dialogue (GUI)\n")
+                f.write(f"# RXFP1 RAG Dialogue (GUI)\n")
                 f.write(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
             f.write(f"## Q{self.turn}: {original_query}\n")
