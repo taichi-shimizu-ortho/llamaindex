@@ -1,0 +1,1121 @@
+{
+  "id": "Yao2026",
+  "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+  "title": "Molecular Mechanisms of Rotator Cuff Degeneration Identified by Spatial Transcriptomics and Multiplex Immunofluorescence",
+  "createdAt": "2026-06-29T01:23:00.095Z",
+  "totalReferences": 34,
+  "pubmedFound": 34,
+  "abstractFound": 33,
+  "records": [
+    {
+      "index": 1,
+      "text": "A. Bedi , J. Bishop , J. Keener , et al., “ Rotator Cuff Tears ,” Nature Reviews Disease Primers 10 , no. 1 ( 2024 ): 8 , https:// .org/10.1038/s41572-024-00492-3 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/38332156/",
+      "doi": "10.1038/s41572-024-00492-3",
+      "pmid": "38332156",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "38332156",
+        "doi": "10.1038/s41572-024-00492-3",
+        "title": "Rotator cuff tears.",
+        "abstract": "Rotator cuff tears are the most common upper extremity condition seen by primary care and orthopaedic surgeons, with a spectrum ranging from tendinopathy to full-thickness tears with arthritic change. Some tears are traumatic, but most rotator cuff problems are degenerative. Not all tears are symptomatic and not all progress, and many patients in whom tears become more extensive do not experience symptom worsening. Hence, a standard algorithm for managing patients is challenging. The pathophysiology of rotator cuff tears is complex and encompasses an interplay between the tendon, bone and muscle. Rotator cuff tears begin as degenerative changes within the tendon, with matrix disorganization and inflammatory changes. Subsequently, tears progress to partial-thickness and then full-thickness tears. Muscle quality, as evidenced by the overall size of the muscle and intramuscular fatty infiltration, also influences symptoms, tear progression and the outcomes of surgery. Treatment depends primarily on symptoms, with non-operative management sufficient for most patients with rotator cuff problems. Modern arthroscopic repair techniques have improved recovery, but outcomes are still limited by a lack of understanding of how to improve tendon to bone healing in many patients.",
+        "authors": [
+          "Bedi Asheesh",
+          "Bishop Julie",
+          "Keener Jay",
+          "Lansdown Drew A",
+          "Levy Ofer",
+          "MacDonald Peter",
+          "Maffulli Nicola",
+          "Oh Joo Han",
+          "Sabesan Vani J",
+          "Sanchez-Sotelo Joaquin",
+          "Williams Riley J",
+          "Feeley Brian T"
+        ],
+        "journal": "Nature reviews. Disease primers",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 2,
+      "text": "G. L. Cvetanovich , B. R. Waterman , N. N. Verma , and A. A. Romeo , “ Management of the Irreparable Rotator Cuff Tear ,” Journal of the American Academy of Orthopaedic Surgeons 27 , no. 24 ( 2019 ): 909 – 917 , https:// .org/10.5435/JAAOS-D-18-00199 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/31206436/",
+      "doi": "10.5435/JAAOS-D-18-00199",
+      "pmid": "31206436",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "31206436",
+        "doi": "10.5435/JAAOS-D-18-00199",
+        "title": "Management of the Irreparable Rotator Cuff Tear.",
+        "abstract": "When evaluating patients with irreparable rotator cuff tears, orthopaedic surgeons have an increasingly wide array of surgical options, including both established techniques and emerging technologies. However, significant variability exists in the clinical evaluation and surgical indications in this subset, and definitions for pseudoparalysis and tear irreparability are inconsistent. In older patients with symptomatic rotator cuff arthropathy and relatively sedentary demands, the reverse total shoulder arthroplasty has been established as the preferred treatment option, producing reliable improvements in both pain and function. In younger patients without glenohumeral arthritis or pseudoparalysis, joint-preserving options are preferred, with recent literature highlighting alternative options including partial repair, bridging or interpositional graft placement, tendon transfers (ie, latissimus, trapezius, and pectoralis major), superior capsular reconstruction, and subacromial spacer placement. In this review article, we address the topic of irreparable rotator cuff tears, emphasizing the workup, indications for various treatment options, and clinical outcomes.",
+        "authors": [
+          "Cvetanovich Gregory L",
+          "Waterman Brian R",
+          "Verma Nikhil N",
+          "Romeo Anthony A"
+        ],
+        "journal": "The Journal of the American Academy of Orthopaedic Surgeons",
+        "year": "2019",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 3,
+      "text": "C. A. Kwong , Y. Ono , M. J. Carroll , et al., “ Full-Thickness Rotator Cuff Tears: What is the Rate of Tear Progression? A Systematic Review ,” Arthroscopy: The Journal of Arthroscopic and Related Surgery 35 , no. 1 ( 2019 ): 228 – 234 , https:// .org/10.1016/j.arthro.2018.07.031 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/30472019/",
+      "doi": "10.1016/j.arthro.2018.07.031",
+      "pmid": "30472019",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "30472019",
+        "doi": "10.1016/j.arthro.2018.07.031",
+        "title": "Full-Thickness Rotator Cuff Tears: What Is the Rate of Tear Progression? A Systematic Review.",
+        "abstract": "To systematically review the literature and determine the rate of radiographic tear progression of nonoperatively treated full-thickness rotator cuff tears.\n\nThe PubMed, Embase, and Cochrane Library databases were systematically reviewed to identify all articles related to nonoperatively treated rotator cuff tears. English-language studies of Level I through IV evidence examining chronic, full-thickness rotator cuff tears in adults were included. Partial-thickness tears were excluded. Rotator cuff tears were analyzed according to the presence or absence of symptoms. The primary outcome was radiographic tear progression defined as an increase in tear size of 5 mm or greater on magnetic resonance imaging or ultrasound.\n\nEight studies were included for statistical analysis, and 411 tears were analyzed for progression. No difference in the rate of tear progression was detected between the asymptomatic and symptomatic groups (40.6% at 46.8 months and 34.1% at 37.8 months, respectively; P = .65). Calculation of the number needed to treat showed that for an 8% retear rate at 2-year follow-up, approximately 7 patients with rotator cuff tears would have to undergo operative repair to prevent 1 tear from progressing radiographically.\n\nThis study showed that with the data available, asymptomatic and symptomatic rotator cuff tears carry similar rates of tear progression over time. Most of these tears will not progress significantly over short- to intermediate-term follow-up.\n\nLevel IV, systematic review of Level I through IV evidence.",
+        "authors": [
+          "Kwong Cory A",
+          "Ono Yohei",
+          "Carroll Michael J",
+          "Fruson Lee W",
+          "More Kristie D",
+          "Thornton Gail M",
+          "Lo Ian K Y"
+        ],
+        "journal": "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association",
+        "year": "2019",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't",
+          "Systematic Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 4,
+      "text": "F. H. Savoie Iii , B. P. Delvadia , J. P. Tate , et al., “ Biologics in Rotator Cuff Repair ,” Bone and Joint Journal 106–B , no. 9 ( 2024 ): 978 – 985 , https:// .org/10.1302/0301-620X.106B9.BJJ-2024-0513.R1 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/39216849/",
+      "doi": "10.1302/0301-620X.106B9.BJJ-2024-0513.R1",
+      "pmid": "39216849",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "39216849",
+        "doi": "10.1302/0301-620X.106B9.BJJ-2024-0513.R1",
+        "title": "Biologics in rotator cuff repair.",
+        "abstract": "Rotator cuff tears are common in middle-aged and elderly patients. Despite advances in the surgical repair of rotator cuff tears, the rates of recurrent tear remain high. This may be due to the complexity of the tendons of the rotator cuff, which contributes to an inherently hostile healing environment. During the past 20 years, there has been an increased interest in the use of biologics to complement the healing environment in the shoulder, in order to improve rotator cuff healing and reduce the rate of recurrent tears. The aim of this review is to provide a summary of the current evidence for the use of forms of biological augmentation when repairing rotator cuff tears.",
+        "authors": [
+          "Savoie Iii Felix H",
+          "Delvadia Bela P",
+          "Tate Jackson P",
+          "Winter Julianna E",
+          "Williams Garrett H",
+          "Sherman William F",
+          "O'Brien Michael J"
+        ],
+        "journal": "The bone & joint journal",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 5,
+      "text": "J. Zhao , M. Luo , J. Pan , et al., “ Risk Factors Affecting Rotator Cuff Retear After Arthroscopic Repair: A Meta-Analysis and Systematic Review ,” Journal of Shoulder and Elbow Surgery 30 , no. 11 ( 2021 ): 2660 – 2670 , https:// .org/10.1016/j.jse.2021.05.010 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/34089878/",
+      "doi": "10.1016/j.jse.2021.05.010",
+      "pmid": "34089878",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "34089878",
+        "doi": "10.1016/j.jse.2021.05.010",
+        "title": "Risk factors affecting rotator cuff retear after arthroscopic repair: a meta-analysis and systematic review.",
+        "abstract": "Retear after arthroscopic rotator cuff repair (ARCR) consistently challenges medical staff and patients, and the incidence of retear after surgery is 10%-94%. The purpose of this study was to identify the risk factors that cause retear after ARCR and provide theoretical guidance for clinical intervention to reduce the occurrence of postoperative rotator cuff retear.\n\nThe protocol for this meta-analysis was registered with PROSPERO (CRD42021225088). PubMed, Web of Science, and Embase were searched for observational studies on risk factors for rotator cuff retear after arthroscopic repair. Meta-analytical methods were used to determine the odds ratio or weighted mean difference of potential risk factors related to postoperative rotator cuff retear. Stata 15.1 was used to quantitatively evaluate the publication bias of the statistical results.\n\nFourteen studies from 6 countries with a total of 5693 patients were included. The meta-analysis revealed that the risk factors for retear after rotator cuff repair were age, body mass index, diabetes, subscapularis and infraspinatus fatty infiltration, symptom duration, bone mineral density, tear length, tear width, tear size area, amount of retraction, critical shoulder angle, acromiohumeral interval, distance from the musculotendinous junction to the glenoid, operative duration, biceps procedure, and postoperative University of California Los Angeles shoulder score.\n\nThese findings can help clinical medical staff identify patients who are prone to retear early after arthroscopic repair and develop targeted prevention and treatment strategies for modifiable risk factors, which are of great significance for reducing the occurrence of rotator cuff retear after ARCR.",
+        "authors": [
+          "Zhao Jinlong",
+          "Luo Minghui",
+          "Pan Jianke",
+          "Liang Guihong",
+          "Feng Wenxuan",
+          "Zeng Lingfeng",
+          "Yang Weiyi",
+          "Liu Jun"
+        ],
+        "journal": "Journal of shoulder and elbow surgery",
+        "year": "2021",
+        "publicationTypes": [
+          "Journal Article",
+          "Meta-Analysis",
+          "Systematic Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 6,
+      "text": "J. D. Keener , B. M. Patterson , N. Orvets , and A. M. Chamberlain , “ Degenerative Rotator Cuff Tears: Refining Surgical Indications Based on Natural History Data ,” Journal of the American Academy of Orthopaedic Surgeons 27 , no. 5 ( 2019 ): 156 – 165 , https:// .org/10.5435/JAAOS-D-17-00480 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/30335631/",
+      "doi": "10.5435/JAAOS-D-17-00480",
+      "pmid": "30335631",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "30335631",
+        "doi": "10.5435/JAAOS-D-17-00480",
+        "title": "Degenerative Rotator Cuff Tears: Refining Surgical Indications Based on Natural History Data.",
+        "abstract": "Degenerative rotator cuff tears are the most common cause of shoulder pain and have a strong association with advanced aging. Considerable variation exists in surgeons' perceptions on the recommended treatment of patients with painful rotator cuff tears. Natural history studies have better outlined the risks of tear enlargement, progression of muscle degeneration, and decline in the function over time. This information combined with the known factors potentially influencing the rate of successful tendon healing such as age, tear size, and severity of muscle degenerative changes can be used to better refine appropriate surgical indications. Although conservative treatment can be successful in the management of many of these tears, risks to nonsurgical treatment also exist. The application of natural history data can stratify atraumatic degenerative tears according to the risk of nonsurgical treatment and better identify tears where early surgical intervention should be considered.",
+        "authors": [
+          "Keener Jay D",
+          "Patterson Brendan M",
+          "Orvets Nathan",
+          "Chamberlain Aaron M"
+        ],
+        "journal": "The Journal of the American Academy of Orthopaedic Surgeons",
+        "year": "2019",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 7,
+      "text": "J. Jiang , K. H. Jang , S. Y. Ahn , and C. H. Jo , “ Changes in Gene Expression of the Extracellular Matrix in Patients With Full-Thickness Rotator Cuff Tears of Varying Sizes ,” Clinics in Orthopedic Surgery 17 , no. 1 ( 2025 ): 138 – 147 , https:// .org/10.4055/cios24125 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/39912080/",
+      "doi": "10.4055/cios24125",
+      "pmid": "39912080",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "39912080",
+        "doi": "10.4055/cios24125",
+        "title": "Changes in Gene Expression of the Extracellular Matrix in Patients with Full-Thickness Rotator Cuff Tears of Varying Sizes.",
+        "abstract": "This study aimed to investigate changes in gene expression related to matrix synthesis in individuals with full-thickness rotator cuff tears (RCTs) and normal tendon tissues. The study also aimed to examine the differences in gene expression according to 4 distinct tear sizes.\n\nA total of 12 patients with full-thickness RCTs were included in the study, all of whom underwent arthroscopic rotator cuff repair. The RCTs were stratified by size into small, medium, large, and massive. Tendon samples were harvested from the midpoint between the lateral end of the torn tendon and the musculotendinous junction. Subsequent analysis of the tissue samples revealed the mRNA expression levels of 11 collagen types, 6 proteoglycans, and 8 glycoproteins through real-time polymerase chain reaction techniques. For control purposes, supraspinatus tendon tissue was sourced from 3 patients who had proximal humerus fractures but did not present with RCTs.\n\nAmong the 11 collagens and 14 non-collagenous protein (NCP) genes examined in this study, COL3A1 and COL10A1 showed a significant increase, whereas COL4A1 and COL14A1 showed a tendency to decrease compared to those in the normal group. ACAN significantly increased by 8.92-fold ( p DCN and LUM showed a tendency to decrease. FN1 and TNC increased significantly by 3.47-fold ( p = 0.003) and 5.38-fold ( p = 0.005), respectively, and the genes ELN , LAMA2 , and THBS1 were all significantly reduced compared to those in the normal group. In the NCPs, almost all the genes with increased expression levels had the highest level in small size RCTs, and gene expression decreased as the size increased. The 3 proteoglycans ( ACAN , BGN , and FMOD ) showed the highest levels of expression in small size RCTs compared to those in the normal group, and 5 glycoproteins ( COMP , FBN1 , FN1 , HAPLN1 , and TNC ) also showed the highest expression in small size RCTs.\n\nWe confirmed that most of the detected extracellular matrix gene expression changes were related to the size of the full-thickness RCTs. In NCPs, gene expression was increased in small-size tears, and gene expression levels were significantly reduced when the size increased.",
+        "authors": [
+          "Jiang Jian",
+          "Jang Kwi-Hoon",
+          "Ahn Sung Yong",
+          "Jo Chris Hyunchul"
+        ],
+        "journal": "Clinics in orthopedic surgery",
+        "year": "2025",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 8,
+      "text": "R. Z. Tashjian , S. K. Kim , M. D. Roche , K. B. Jones , and C. C. Teerlink , “ Genetic Variants Associated With Rotator Cuff Tearing Utilizing Multiple Population-Based Genetic Resources ,” Journal of Shoulder and Elbow Surgery 30 , no. 3 ( 2021 ): 520 – 531 , https:// .org/10.1016/j.jse.2020.06.036 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/32663566/",
+      "doi": "10.1016/j.jse.2020.06.036",
+      "pmid": "32663566",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "32663566",
+        "doi": "10.1016/j.jse.2020.06.036",
+        "title": "Genetic variants associated with rotator cuff tearing utilizing multiple population-based genetic resources.",
+        "abstract": "The etiology of rotator cuff tearing is likely multifactorial, including a potential genetic predisposition. The purpose of the study was to identify genetic variants associated with rotator cuff tearing utilizing the UK Biobank (UKB) cohort, confirm variants using a separate genetic database, and evaluate tissue expression of genes with associated variants following rotator cuff tearing using RNA sequencing.\n\nGenome-wide association study (GWAS): A GWAS was performed using data from UKB with 5701 cases of rotator cuff injury. RNA sequencing analyses: rotator cuff biopsies were obtained from 24 patients with full-thickness rotator cuff tears who underwent arthroscopic rotator cuff repair (cases) and 9 patients who underwent open reduction internal fixation for a proximal humerus fracture (controls). Total RNA was extracted and differential gene expression was measured by RNAseq for genes with variants associated with rotator cuff tearing.\n\nThe results of the UKB GWAS identified 3 loci that reached genome-wide statistical significance: 2 loci on chromosome 7 in GLCCI1 (rs4725069; P = 5.0E-09) and THSD7A (rs575224171; P = 5.3E-09), and 1 locus on chromosome 2 in ZNF804A (rs775583810; P = 3.9E-09). The association with rotator cuff injury of the GLCCI1 single-nucleotide polymorphism (SNP; rs4725069) was confirmed in the Kaiser Permanente Research Bank cohort (P = .008). Twenty previously reported SNPs in 12 genes were evaluated using summary statistics from the UKB GWAS, which confirmed 3 SNPs in TNC with rotator cuff injury (rs1138545, rs72758637, and rs7021589; all P < .0024). Of 17 genes with variants associated with rotator cuff injury (14 previously from literature plus 3 new genes from current UKB GWAS), TIMP2, Col5A1, TGFBR1, and TNC were upregulated (P < .001 for all) and THSD7A was downregulated (P = .005) in tears vs. controls in the RNA sequencing data set.\n\nThe UKB GWAS has identified 3 novel loci associated with rotator cuff tearing (ZNF804A, GLCCI1, THSD7A). Expression of the THSD7A gene was significantly downregulated in rotator cuff tears vs. controls supporting a potential functional role. Three previously reported SNPs in the TNC gene were validated in the UKB GWAS, supporting a role for this gene in rotator cuff tearing. Finally, TIMP2, Col5A1, TGFBR1, and TNC genes were found to have significantly upregulated tissue expression in cases vs. controls supporting a biologic role in tearing for these genes.",
+        "authors": [
+          "Tashjian Robert Z",
+          "Kim Stuart K",
+          "Roche Megan D",
+          "Jones Kevin B",
+          "Teerlink Craig C"
+        ],
+        "journal": "Journal of shoulder and elbow surgery",
+        "year": "2021",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 9,
+      "text": "S. Chaudhury , Z. Xia , D. Thakkar , O. Hakimi , and A. J. Carr , “ Gene Expression Profiles of Changes Underlying Different-Sized Human Rotator Cuff Tendon Tears ,” Journal of Shoulder and Elbow Surgery 25 , no. 10 ( 2016 ): 1561 – 1570 , https:// .org/10.1016/j.jse.2016.02.037 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/27131575/",
+      "doi": "10.1016/j.jse.2016.02.037",
+      "pmid": "27131575",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "27131575",
+        "doi": "10.1016/j.jse.2016.02.037",
+        "title": "Gene expression profiles of changes underlying different-sized human rotator cuff tendon tears.",
+        "abstract": "Progressive cellular and extracellular matrix (ECM) changes related to age and disease severity have been demonstrated in rotator cuff tendon tears. Larger rotator cuff tears demonstrate structural abnormalities that potentially adversely influence healing potential. This study aimed to gain greater insight into the relationship of pathologic changes to tear size by analyzing gene expression profiles from normal rotator cuff tendons, small rotator cuff tears, and large rotator cuff tears.\n\nWe analyzed gene expression profiles of 28 human rotator cuff tendons using microarrays representing the entire genome; 11 large and 5 small torn rotator cuff tendon specimens were obtained intraoperatively from tear edges, which we compared with 12 age-matched normal controls. We performed real-time polymerase chain reaction and immunohistochemistry for validation.\n\nTorn rotator cuff tendons demonstrated upregulation of a number of key genes, such as matrix metalloproteinase 3, 10, 12, 13, 15, 21, and 25; a disintegrin and metalloproteinase (ADAM) 12, 15, and 22; and aggrecan. Amyloid was downregulated in all tears. Small tears displayed upregulation of bone morphogenetic protein 5. Chemokines and cytokines that may play a role in chemotaxis were altered; interleukins 3, 10, 13, and 15 were upregulated in tears, whereas interleukins 1, 8, 11, 18, and 27 were downregulated.\n\nThe gene expression profiles of normal controls and small and large rotator cuff tear groups differ significantly. Extracellular matrix remodeling genes were found to contribute to rotator cuff tear pathogenesis. Rotator cuff tears displayed upregulation of a number of matrix metalloproteinase (3, 10, 12, 13, 15, 21, and 25), a disintegrin and metalloproteinase (ADAM 12, 15, and 22) genes, and downregulation of some interleukins (1, 8, and 27), which play important roles in chemotaxis. These gene products may potentially have a role as biomarkers of failure of healing or therapeutic targets to improve tendon healing.",
+        "authors": [
+          "Chaudhury Salma",
+          "Xia Zhidao",
+          "Thakkar Dipti",
+          "Hakimi Osnat",
+          "Carr Andrew J"
+        ],
+        "journal": "Journal of shoulder and elbow surgery",
+        "year": "2016",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 10,
+      "text": "R. Z. Tashjian , I. Lock , E. K. Granger , et al., “ Gene Expression in Torn Rotator Cuff Tendons Determined by RNA Sequencing ,” Orthopaedic Journal of Sports Medicine 8 , no. 6 ( 2020 ): 2325967120927480, https:// .org/10.1177/2325967120927480 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://doi.org/10.1177/2325967120927480",
+      "doi": "10.1177/2325967120927480",
+      "pmid": "32647732",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "32647732",
+        "doi": "10.1177/2325967120927480",
+        "title": "Gene Expression in Torn Rotator Cuff Tendons Determined by RNA Sequencing.",
+        "abstract": "Although the cause of rotator cuff tearing is likely multifactorial and a genetic predisposition has been proposed, the biochemical basis remains unknown.\n\nTo determine gene expression profiles in torn rotator cuff tendon tissue through use of RNA sequencing.\n\nControlled laboratory study.\n\nThe supraspinatus tendon edge was biopsied in 24 patients undergoing arthroscopic rotator cuff repair for full-thickness supraspinatus rotator cuff tears. The supraspinatus tendon was also biopsied in 9 patients undergoing open reduction and internal fixation for a proximal humeral fracture (controls). Total RNA was extracted and sequenced. Differential gene expression was analyzed between the tear and control groups, and a secondary analysis was conducted between groups defined by an unbiased clustering.\n\nTear and control transcriptomes demonstrated significant differential expression in more than 3000 genes. The identified differential genes were highlighted in pathways involved in inflammation in control patients and extracellular matrix generation in patients with tears. Secondary analysis using unsupervised and thus unbiased hierarchical clustering revealed 2 clusters (c2 and c3). Cluster c3 contained smaller ( P P = .018) tears (ie, tears earlier in the progression of rotator cuff disease) with increased expression of hypoxia target genes. Cluster c2 contained larger, more retracted tears (ie, tears further in the progression of rotator cuff disease) with increased expression of endothelial cell markers and chronic inflammation target genes. Tears in c2 had significantly worse healing rates compared with tears in c3 (0% vs 89%; P = .007).\n\nSmaller, less retracted tears had increased expression of hypoxia target genes and improved healing, whereas larger, more retracted tears were associated with endothelial cell markers and worse healing. Thus, hypoxia may be the inciting event for tear development, whereas with tear enlargement, a chronic, inflammatory, angiogenic process may predominate.\n\nIdentification of differential gene expression in rotator cuff tears may be a reliable tool to predict repair healing in the future.",
+        "authors": [
+          "Tashjian Robert Z",
+          "Lock Ian",
+          "Granger Erin K",
+          "Wang Yangliang",
+          "Lee Younghee",
+          "Chalmers Peter N",
+          "Jones Kevin B"
+        ],
+        "journal": "Orthopaedic journal of sports medicine",
+        "year": "2020",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 11,
+      "text": "W. Fu , R. Yang , and J. Li , “ Single-Cell and Spatial Transcriptomics Reveal Changes in Cell Heterogeneity During Progression of Human Tendinopathy ,” BMC Biology 21 , no. 1 ( 2023 ): 132 , https:// .org/10.1186/s12915-023-01613-2 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/37280595/",
+      "doi": "10.1186/s12915-023-01613-2",
+      "pmid": "37280595",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "37280595",
+        "doi": "10.1186/s12915-023-01613-2",
+        "title": "Single-cell and spatial transcriptomics reveal changes in cell heterogeneity during progression of human tendinopathy.",
+        "abstract": "Musculoskeletal tissue degeneration impairs the life quality and motor function of many people, especially seniors and athletes. Tendinopathy is one of the most common diseases associated with musculoskeletal tissue degeneration, representing a major global healthcare burden that affects both athletes and the general population, with the clinical presentation of long-term recurring chronic pain and decreased tolerance to activity. The cellular and molecular mechanisms at the basis of the disease process remain elusive. Here, we use a single-cell and spatial RNA sequencing approach to provide a further understanding of cellular heterogeneity and molecular mechanisms underlying tendinopathy progression.\n\nTo explore the changes in tendon homeostasis during the tendinopathy process, we built a cell atlas of healthy and diseased human tendons using single-cell RNA sequencing of approximately 35,000 cells and explored the variations of cell subtypes' spatial distributions using spatial RNA sequencing. We identified and localized different tenocyte subpopulations in normal and lesioned tendons, found different differentiation trajectories of tendon stem/progenitor cells in normal/diseased tendons, and revealed the spatial location relationship between stromal cells and diseased tenocytes. We deciphered the progression of tendinopathy at a single-cell level, which is characterized by inflammatory infiltration, followed by chondrogenesis and finally endochondral ossification. We found diseased tissue-specific endothelial cell subsets and macrophages as potential therapeutic targets.\n\nThis cell atlas provides the molecular foundation for investigating how tendon cell identities, biochemical functions, and interactions contributed to the tendinopathy process. The discoveries revealed the pathogenesis of tendinopathy at single-cell and spatial levels, which is characterized by inflammatory infiltration, followed by chondrogenesis, and finally endochondral ossification. Our results provide new insights into the control of tendinopathy and potential clues to developing novel diagnostic and therapeutic strategies.",
+        "authors": [
+          "Fu Weili",
+          "Yang Runze",
+          "Li Jian"
+        ],
+        "journal": "BMC biology",
+        "year": "2023",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 12,
+      "text": "C. R. Merritt , G. T. Ong , S. E. Church , et al., “ Multiplex Digital Spatial Profiling of Proteins and RNA in Fixed Tissue ,” Nature Biotechnology 38 , no. 5 ( 2020 ): 586 – 599 , https:// .org/10.1038/s41587-020-0472-9 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/32393914/",
+      "doi": "10.1038/s41587-020-0472-9",
+      "pmid": "32393914",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "32393914",
+        "doi": "10.1038/s41587-020-0472-9",
+        "title": "Multiplex digital spatial profiling of proteins and RNA in fixed tissue.",
+        "abstract": "Digital Spatial Profiling (DSP) is a method for highly multiplex spatial profiling of proteins or RNAs suitable for use on formalin-fixed, paraffin-embedded (FFPE) samples. The approach relies on (1) multiplexed readout of proteins or RNAs using oligonucleotide tags; (2) oligonucleotide tags attached to affinity reagents (antibodies or RNA probes) through a photocleavable (PC) linker; and (3) photocleaving light projected onto the tissue sample to release PC oligonucleotides in any spatial pattern across a region of interest (ROI) covering 1 to ~5,000 cells. DSP is capable of single-cell sensitivity within an ROI using the antibody readout, with RNA detection feasible down to ~600 individual mRNA transcripts. We show spatial profiling of up to 44 proteins and 96 genes (928 RNA probes) in lymphoid, colorectal tumor and autoimmune tissues by using the nCounter system and 1,412 genes (4,998 RNA probes) by using next-generation sequencing (NGS). DSP may be used to profile not only proteins and RNAs in biobanked samples but also immune markers in patient samples, with potential prognostic and predictive potential for clinical decision-making.",
+        "authors": [
+          "Merritt Christopher R",
+          "Ong Giang T",
+          "Church Sarah E",
+          "Barker Kristi",
+          "Danaher Patrick",
+          "Geiss Gary",
+          "Hoang Margaret",
+          "Jung Jaemyeong",
+          "Liang Yan",
+          "McKay-Fleisch Jill",
+          "Nguyen Karen",
+          "Norgaard Zach",
+          "Sorg Kristina",
+          "Sprague Isaac",
+          "Warren Charles",
+          "Warren Sarah",
+          "Webster Philippa J",
+          "Zhou Zoey",
+          "Zollinger Daniel R",
+          "Dunaway Dwayne L",
+          "Mills Gordon B",
+          "Beechem Joseph M"
+        ],
+        "journal": "Nature biotechnology",
+        "year": "2020",
+        "publicationTypes": [
+          "Letter"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 13,
+      "text": "L. Brady , M. Kriner , I. Coleman , et al., “ Inter- and Intra-Tumor Heterogeneity of Metastatic Prostate Cancer Determined by Digital Spatial Gene Expression Profiling ,” Nature Communications 12 , no. 1 ( 2021 ): 1426 , https:// .org/10.1038/s41467-021-21615-4 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/33658518/",
+      "doi": "10.1038/s41467-021-21615-4",
+      "pmid": "33658518",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "33658518",
+        "doi": "10.1038/s41467-021-21615-4",
+        "title": "Inter- and intra-tumor heterogeneity of metastatic prostate cancer determined by digital spatial gene expression profiling.",
+        "abstract": "Metastatic prostate cancer (mPC) comprises a spectrum of diverse phenotypes. However, the extent of inter- and intra-tumor heterogeneity is not established. Here we use digital spatial profiling (DSP) technology to quantitate transcript and protein abundance in spatially-distinct regions of mPCs. By assessing multiple discrete areas across multiple metastases, we find a high level of intra-patient homogeneity with respect to tumor phenotype. However, there are notable exceptions including tumors comprised of regions with high and low androgen receptor (AR) and neuroendocrine activity. While the vast majority of metastases examined are devoid of significant inflammatory infiltrates and lack PD1, PD-L1 and CTLA4, the B7-H3/CD276 immune checkpoint protein is highly expressed, particularly in mPCs with high AR activity. Our results demonstrate the utility of DSP for accurately classifying tumor phenotype, assessing tumor heterogeneity, and identifying aspects of tumor biology involving the immunological composition of metastases.",
+        "authors": [
+          "Brady Lauren",
+          "Kriner Michelle",
+          "Coleman Ilsa",
+          "Morrissey Colm",
+          "Roudier Martine",
+          "True Lawrence D",
+          "Gulati Roman",
+          "Plymate Stephen R",
+          "Zhou Zoey",
+          "Birditt Brian",
+          "Meredith Rhonda",
+          "Geiss Gary",
+          "Hoang Margaret",
+          "Beechem Joseph",
+          "Nelson Peter S"
+        ],
+        "journal": "Nature communications",
+        "year": "2021",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, N.I.H., Extramural",
+          "Research Support, Non-U.S. Gov't",
+          "Research Support, U.S. Gov't, Non-P.H.S."
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 14,
+      "text": "J. P. Väyrynen , “ Multiplex Immunofluorescence for Tumour Immune Biomarker Discovery ,” Lancet Oncology 25 , no. 2 ( 2024 ): 151 – 152 , https:// .org/10.1016/S1470-2045(23)00583-1 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/38301684/",
+      "doi": "10.1016/S1470-2045(23)00583-1",
+      "pmid": "38301684",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "38301684",
+        "doi": "10.1016/S1470-2045(23)00583-1",
+        "title": "Multiplex immunofluorescence for tumour immune biomarker discovery.",
+        "abstract": "",
+        "authors": [
+          "Väyrynen Juha P"
+        ],
+        "journal": "The Lancet. Oncology",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article",
+          "Comment"
+        ],
+        "source": "pubmed"
+      },
+      "error": "Abstract not found"
+    },
+    {
+      "index": 15,
+      "text": "W. C. C. Tan , S. N. Nerurkar , H. Y. Cai , et al., “ Overview of Multiplex Immunohistochemistry/Immunofluorescence Techniques in the Era of Cancer Immunotherapy ,” Cancer Communications 40 , no. 4 ( 2020 ): 135 – 153 , https:// .org/10.1002/cac2.12023 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/32301585/",
+      "doi": "10.1002/cac2.12023",
+      "pmid": "32301585",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "32301585",
+        "doi": "10.1002/cac2.12023",
+        "title": "Overview of multiplex immunohistochemistry/immunofluorescence techniques in the era of cancer immunotherapy.",
+        "abstract": "Conventional immunohistochemistry (IHC) is a widely used diagnostic technique in tissue pathology. However, this technique is associated with a number of limitations, including high inter-observer variability and the capacity to label only one marker per tissue section. This review details various highly multiplexed techniques that have emerged to circumvent these constraints, allowing simultaneous detection of multiple markers on a single tissue section and the comprehensive study of cell composition, cellular functional and cell-cell interactions. Among these techniques, multiplex Immunohistochemistry/Immunofluorescence (mIHC/IF) has emerged to be particularly promising. mIHC/IF provides high-throughput multiplex staining and standardized quantitative analysis for highly reproducible, efficient and cost-effective tissue studies. This technique has immediate potential for translational research and clinical practice, particularly in the era of cancer immunotherapy.",
+        "authors": [
+          "Tan Wei Chang Colin",
+          "Nerurkar Sanjna Nilesh",
+          "Cai Hai Yun",
+          "Ng Harry Ho Man",
+          "Wu Duoduo",
+          "Wee Yu Ting Felicia",
+          "Lim Jeffrey Chun Tatt",
+          "Yeong Joe",
+          "Lim Tony Kiat Hon"
+        ],
+        "journal": "Cancer communications (London, England)",
+        "year": "2020",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 16,
+      "text": "M. D. Robinson and A. Oshlack , “ A Scaling Normalization Method for Differential Expression Analysis of RNA-Seq Data ,” Genome Biology 11 , no. 3 ( 2010 ): R25, https:// .org/10.1186/gb-2010-11-3-r25 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/20196867/",
+      "doi": "10.1186/gb-2010-11-3-r25",
+      "pmid": "20196867",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "20196867",
+        "doi": "10.1186/gb-2010-11-3-r25",
+        "title": "A scaling normalization method for differential expression analysis of RNA-seq data.",
+        "abstract": "The fine detail provided by sequencing-based transcriptome surveys suggests that RNA-seq is likely to become the platform of choice for interrogating steady state RNA. In order to discover biologically important changes in expression, we show that normalization continues to be an essential step in the analysis. We outline a simple and effective method for performing normalization and show dramatically improved results for inferring differential expression in simulated and publicly available data sets.",
+        "authors": [
+          "Robinson Mark D",
+          "Oshlack Alicia"
+        ],
+        "journal": "Genome biology",
+        "year": "2010",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 17,
+      "text": "C. Li , N. Wang , A. A. Schäffer , et al., “ Mutations in COMP Cause Familial Carpal Tunnel Syndrome ,” Nature Communications 11 , no. 1 ( 2020 ): 3642 , https:// .org/10.1038/s41467-020-17378-z .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/32686688/",
+      "doi": "10.1038/s41467-020-17378-z",
+      "pmid": "32686688",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "32686688",
+        "doi": "10.1038/s41467-020-17378-z",
+        "title": "Mutations in COMP cause familial carpal tunnel syndrome.",
+        "abstract": "Carpal tunnel syndrome (CTS) is the most common peripheral nerve entrapment syndrome, affecting a large proportion of the general population. Genetic susceptibility has been implicated in CTS, but the causative genes remain elusive. Here, we report the identification of two mutations in cartilage oligomeric matrix protein (COMP) that segregate with CTS in two large families with or without multiple epiphyseal dysplasia (MED). Both mutations impair the secretion of COMP by tenocytes, but the mutation associated with MED also perturbs its secretion in chondrocytes. Further functional characterization of the CTS-specific mutation reveals similar histological and molecular changes of tendons/ligaments in patients' biopsies and the mouse models. The mutant COMP fails to oligomerize properly and is trapped in the ER, resulting in ER stress-induced unfolded protein response and cell death, leading to inflammation, progressive fibrosis and cell composition change in tendons/ligaments. The extracellular matrix (ECM) organization is also altered. Our studies uncover a previously unrecognized mechanism in CTS pathogenesis.",
+        "authors": [
+          "Li Chunyu",
+          "Wang Ni",
+          "Schäffer Alejandro A",
+          "Liu Xilin",
+          "Zhao Zhuo",
+          "Elliott Gene",
+          "Garrett Lisa",
+          "Choi Nga Ting",
+          "Wang Yueshu",
+          "Wang Yufa",
+          "Wang Cheng",
+          "Wang Jin",
+          "Chan Danny",
+          "Su Peiqiang",
+          "Cui Shusen",
+          "Yang Yingzi",
+          "Gao Bo"
+        ],
+        "journal": "Nature communications",
+        "year": "2020",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, N.I.H., Extramural",
+          "Research Support, N.I.H., Intramural",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 18,
+      "text": "M. López-Franco , O. López-Franco , M. A. Murciano-Antón , et al., “ Meniscal Degeneration in Human Knee Osteoarthritis: In Situ Hybridization and Immunohistochemistry Study ,” Archives of Orthopaedic and Trauma Surgery 136 , no. 2 ( 2016 ): 175 – 183 , https:// .org/10.1007/s00402-015-2378-4 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/26667622/",
+      "doi": "10.1007/s00402-015-2378-4",
+      "pmid": "26667622",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "26667622",
+        "doi": "10.1007/s00402-015-2378-4",
+        "title": "Meniscal degeneration in human knee osteoarthritis: in situ hybridization and immunohistochemistry study.",
+        "abstract": "Meniscus injury is one of the causes of secondary osteoarthritis (OA). However, the role of meniscus is still unclear. Human meniscal distribution of cells and cartilage oligomeric matrix protein (COMP) and their changes in advanced OA were analyzed.\n\nThirty-one medial menisci from patients with knee OA that underwent a total knee arthroplasty were studied. Normal meniscal tissue was obtained from partial arthroscopic meniscectomy. Meniscal samples were processed for histology, immunohistochemistry and in situ hybridization, for cell assessment including density, active divisions, apoptosis, COMP distribution and proteoglycan content.\n\nOsteoarthritic menisci demonstrated areas of cell depletion and significant decrease in COMP immunostaining. Actively dividing cells were only found in the meniscectomy group, but not in the osteoarthritic group. Proteoglycan staining was less prominent in menisci from the osteoarthritis group.\n\nOur results show a decreased cell population, with low COMP and altered matrix organization in osteoarthritis menisci that suggest an altered meniscal scaffold and potential impairment of meniscal function. These meniscal changes may be associated with the development of knee osteoarthritis.",
+        "authors": [
+          "López-Franco Mariano",
+          "López-Franco O",
+          "Murciano-Antón M A",
+          "Cañamero-Vaquero M",
+          "Fernández-Aceñero M J",
+          "Herrero-Beaumont G",
+          "Gómez-Barrena E"
+        ],
+        "journal": "Archives of orthopaedic and trauma surgery",
+        "year": "2016",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 19,
+      "text": "K. L. Posey , F. Coustry , and J. T. Hecht , “ Cartilage Oligomeric Matrix Protein: Compopathies and Beyond ,” Matrix Biology 71–72 ( 2018 ): 161 – 173 , https:// .org/10.1016/j.matbio.2018.02.023 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/29530484/",
+      "doi": "10.1016/j.matbio.2018.02.023",
+      "pmid": "29530484",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "29530484",
+        "doi": "10.1016/j.matbio.2018.02.023",
+        "title": "Cartilage oligomeric matrix protein: COMPopathies and beyond.",
+        "abstract": "Cartilage oligomeric matrix protein (COMP) is a large pentameric glycoprotein that interacts with multiple extracellular matrix proteins in cartilage and other tissues. While, COMP is known to play a role in collagen secretion and fibrillogenesis, chondrocyte proliferation and mechanical strength of tendons, the complete range of COMP functions remains to be defined. COMPopathies describe pseudoachondroplasia (PSACH) and multiple epiphyseal dysplasia (MED), two skeletal dysplasias caused by autosomal dominant COMP mutations. The majority of the mutations are in the calcium binding domains and compromise protein folding. COMPopathies are ER storage disorders in which the retention of COMP in the chondrocyte ER stimulates overwhelming cellular stress. The retention causes oxidative and inflammation processes leading to chondrocyte death and loss of long bone growth. In contrast, dysregulation of wild-type COMP expression is found in numerous diseases including: fibrosis, cardiomyopathy and breast and prostate cancers. The most exciting clinical application is the use of COMP as a biomarker for idiopathic pulmonary fibrosis and cartilage degeneration associated osteoarthritis and rheumatoid and, as a prognostic marker for joint injury. The ever expanding roles of COMP in single gene disorders and multifactorial diseases will lead to a better understanding of its functions in ECM and tissue homeostasis towards the goal of developing new therapeutic avenues.",
+        "authors": [
+          "Posey Karen L",
+          "Coustry Francoise",
+          "Hecht Jacqueline T"
+        ],
+        "journal": "Matrix biology : journal of the International Society for Matrix Biology",
+        "year": "2018",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, N.I.H., Extramural",
+          "Research Support, Non-U.S. Gov't",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 20,
+      "text": "Y. Xiong , X. Li , B. Sun , J. Zhang , X. Wu , and F. Guo , “ Abnormal Collagen Deposition Mediated by Cartilage Oligomeric Matrix Protein in the Pathogenesis of Oral Submucous Fibrosis ,” International Journal of Oral Science 17 , no. 1 ( 2025 ): 25 , https:// .org/10.1038/s41368-025-00355-x .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/40148275/",
+      "doi": "10.1038/s41368-025-00355-x",
+      "pmid": "40148275",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "40148275",
+        "doi": "10.1038/s41368-025-00355-x",
+        "title": "Abnormal collagen deposition mediated by cartilage oligomeric matrix protein in the pathogenesis of oral submucous fibrosis.",
+        "abstract": "Abnormal accumulation of collagen fibrils is a hallmark feature of oral submucous fibrosis (OSF). However, the precise characteristics and underlying mechanisms remain unclear, impeding the advancement of potential therapeutic approaches. Here, we observed that collagen I, the main component of the extracellular matrix, first accumulated in the lamina propria and subsequently in the submucosa of OSF specimens as the disease progressed. Using RNA-seq and Immunofluorescence in OSF specimens, we screened the cartilage oligomeric matrix protein (COMP) responsible for the abnormal collagen accumulation. Genetic COMP deficiency reduced arecoline-stimulated collagen I deposition significantly in vivo. In comparison, both COMP and collagen I were upregulated under arecoline stimulation in wild-type mice. Human oral buccal mucosal fibroblasts (hBMFs) also exhibited increased secretion of COMP and collagen I after stimulation in vitro. COMP knockdown in hBMFs downregulates arecoline-stimulated collagen I secretion. We further demonstrated that hBMFs present heterogeneous responses to arecoline stimulation, of which COMP-positive fibroblasts secrete more collagen I. Since COMP is a molecular bridge with Fibril-associated collagens with Interrupted Triple helices (FACIT) in the collagen network, we further screened and identified collagen XIV, a FACIT member, co-localizing with both COMP and collagen I. Collagen XIV expression increased under arecoline stimulation in wild-type mice, whereas it was hardly expressed in the Comp -/- mice, even with under stimulation. In summary, we found that COMP may mediates abnormal collagen I deposition by functions with collagen XIV during the progression of OSF, suggesting its potential to be targeted in treating OSF.",
+        "authors": [
+          "Xiong Yafei",
+          "Li Xuechun",
+          "Sun Bincan",
+          "Zhang Jie",
+          "Wu Xiaoshan",
+          "Guo Feng"
+        ],
+        "journal": "International journal of oral science",
+        "year": "2025",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 21,
+      "text": "L. Li , K. Wei , Y. Ding , et al., “ M2a Macrophage-Secreted CHI3L1 Promotes Extracellular Matrix Metabolic Imbalances via Activation of IL-13Ralpha2/MAPK Pathway in Rat Intervertebral Disc Degeneration ,” Frontiers in Immunology 12 ( 2021 ): 666361, https:// .org/10.3389/fimmu.2021.666361 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/34168643/",
+      "doi": "10.3389/fimmu.2021.666361",
+      "pmid": "34168643",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "34168643",
+        "doi": "10.3389/fimmu.2021.666361",
+        "title": "M2a Macrophage-Secreted CHI3L1 Promotes Extracellular Matrix Metabolic Imbalances via Activation of IL-13Rα2/MAPK Pathway in Rat Intervertebral Disc Degeneration.",
+        "abstract": "The accumulation of macrophages in degenerated discs is a common phenomenon. However, the roles and mechanisms of M2a macrophages in intervertebral disc degeneration (IDD) have not been illuminated. This study investigated the expression of the M2a macrophage marker (CD206) in human and rat intervertebral disc tissues by immunohistochemistry. To explore the roles of M2a macrophages in IDD, nucleus pulposus (NP) cells were co-cultured with M2a macrophages in vitro . To clarify whether the CHI3L1 protein mediates the effect of M2a macrophages on NP cells, siRNA was used to knock down CHI3L1 transcription. To elucidate the underlying mechanisms, NP cells were incubated with recombinant CHI3L1 proteins, then subjected to western blotting analysis of the IL-13Rα2 receptor and MAPK pathway. CD206-positive cells were detected in degenerated human and rat intervertebral disc tissues. Notably, M2a macrophages promoted the expression of catabolism genes (MMP-3 and MMP-9) and suppressed the expression of anabolism genes (aggrecan and collagen II) in NP cells. These effects were abrogated by CHI3L1 knockdown in M2a macrophages. Exposure to recombinant CHI3L1 promoted an extracellular matrix metabolic imbalance in NP cells via the IL-13Rα2 receptor, along with activation of the ERK and JNK MAPK signaling pathways. This study elucidated the roles of M2a macrophages in IDD and identified potential mechanisms for these effects.",
+        "authors": [
+          "Li Long",
+          "Wei Kang",
+          "Ding Yifan",
+          "Ahati Paerxiati",
+          "Xu Haoran",
+          "Fang Huang",
+          "Wang Huan"
+        ],
+        "journal": "Frontiers in immunology",
+        "year": "2021",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 22,
+      "text": "J. Li , C. Fan , Z. Lv , et al., “ Microtubule Stabilization Targeting Regenerative Chondrocyte Cluster for Cartilage Regeneration ,” Theranostics 13 , no. 10 ( 2023 ): 3480 – 3496 , https:// .org/10.7150/thno.85077 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/37351173/",
+      "doi": "10.7150/thno.85077",
+      "pmid": "37351173",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "37351173",
+        "doi": "10.7150/thno.85077",
+        "title": "Microtubule stabilization targeting regenerative chondrocyte cluster for cartilage regeneration.",
+        "abstract": "Purpose: Chondrocytes (CHs) in cartilage undergo several detrimental events during the development of osteoarthritis (OA). However, the mechanism underlying CHs regeneration involved in pathogenesis is largely unknown. The aim of this study was to explore the underlying mechanism of regeneration of CHs involved in the pathological condition and the potential therapeutic strategies of cartilage repair. Methods and Materials: CHs were isolated from human cartilage in different OA stages and the high-resolution cellular architecture of human osteoarthritis was examined by applying single-cell RNA sequencing. The analysis of gene differential expression and gene set enrichment was utilized to reveal the relationship of cartilage regeneration and microtubule stabilization. Microtubule destabilizer (nocodazole) and microtubule stabilizer (docetaxel) treated-human primary CHs and rats cartilage defect model were used to investing the effects and downstream signaling pathway of microtubule stabilization on cartilage regeneration. Results: CHs subpopulations were identified on the basis of their gene markers and the data indicated an imbalance caused by an increase in the degeneration and disruption of CHs regeneration in OA samples. Interestingly, the CHs subpopulation namely CHI3L1 + CHs, was characterized by the cell regenerative capacity, stem cell potency and the activated microtubule (MT) process. Furthermore, the data indicated that MT stabilization was effective in promoting cartilage regeneration in rats with cartilage injury model by inhibiting YAP activity. Conclusion: These findings lead to a new understanding of CHs regeneration in the OA pathophysiology context and suggest that MT stabilization is a promising therapeutic target for OA and cartilage injury.",
+        "authors": [
+          "Li Jiawei",
+          "Fan Chunmei",
+          "Lv Zhongyang",
+          "Sun Ziying",
+          "Han Jie",
+          "Wang Maochun",
+          "Jiang Huiming",
+          "Sun Kuoyang",
+          "Tan Guihua",
+          "Guo Hu",
+          "Liu Anlong",
+          "Sun Heng",
+          "Xu Xingquan",
+          "Wu Rui",
+          "Yan Wenjin",
+          "Jiang Qing",
+          "Ikegawa Shiro",
+          "Chen Xiao",
+          "Shi Dongquan"
+        ],
+        "journal": "Theranostics",
+        "year": "2023",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 23,
+      "text": "R. Giacconi , L. Costarelli , F. Piacenza , et al., “ Zinc-Induced Metallothionein in Centenarian Offspring From a Large European Population: The MARK-AGE Project ,” Journals of Gerontology: Series A 73 , no. 6 ( 2018 ): 745 – 753 , https:// .org/10.1093/gerona/glx192 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/29045571/",
+      "doi": "10.1093/gerona/glx192",
+      "pmid": "29045571",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "29045571",
+        "doi": "10.1093/gerona/glx192",
+        "title": "Zinc-Induced Metallothionein in Centenarian Offspring From a Large European Population: The MARK-AGE Project.",
+        "abstract": "Metallothionein (MT) family are cysteine-rich proteins that regulate zinc (Zn) homeostasis and protect against oxidative damage. Studies in transgenic mice have shown that MT favorably influence longevity, although their role in human aging is not completely understood. Within the European multicenter study MARK-AGE, we analyzed MT induction after Zn treatment in peripheral blood mononuclear cells (PBMCs) and its relation with redox biomarkers in 2,936 age-stratified subjects (35-75 years) including the general population (RASIG), centenarian offspring (GO), and their spouses (SGO). We found that the lymphocyte capability to induce MT in response to Zn is not affected by aging. However, GO participants showed lower Zn-induced MT and increased basal expression of MT1A, MT1X, and ZnT-1 genes than RASIG subjects. Moreover, Zn-induced MT levels were found to be inversely related with oxidative stress markers (plasma protein carbonyls, 3-nitrotyrosine, and malondialdehyde) in the whole population, but not in GO subjects. In conclusion, our results support the hypothesis that the response to Zn is attenuated in PBMCs of centenarian offspring compared to the general population as a consequence of a tighter control of Zn homeostasis which is likely to provide them constant protection against stress stimuli over the whole lifespan.",
+        "authors": [
+          "Giacconi Robertina",
+          "Costarelli Laura",
+          "Piacenza Francesco",
+          "Basso Andrea",
+          "Bürkle Alexander",
+          "Moreno-Villanueva Maria",
+          "Grune Tilman",
+          "Weber Daniela",
+          "Stuetz Wolfgang",
+          "Gonos Efstathios S",
+          "Schön Christiane",
+          "Grubeck-Loebenstein Beatrix",
+          "Sikora Ewa",
+          "Toussaint Olivier",
+          "Debacq-Chainiaux Florence",
+          "Franceschi Claudio",
+          "Hervonen Antti",
+          "Slagboom Eline",
+          "Ciccarone Fabio",
+          "Zampieri Michele",
+          "Caiafa Paola",
+          "Jansen Eugène",
+          "Dollé Martijn E T",
+          "Breusing Nicolle",
+          "Mocchegiani Eugenio",
+          "Malavolta Marco"
+        ],
+        "journal": "The journals of gerontology. Series A, Biological sciences and medical sciences",
+        "year": "2018",
+        "publicationTypes": [
+          "Journal Article",
+          "Multicenter Study",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 24,
+      "text": "Y. Liu , X. Li , L. Jiang , and J. Ma , “ Identification of Age-Related Genes in Rotator Cuff Tendon ,” Bone and Joint Research 13 , no. 9 ( 2024 ): 474 – 484 , https:// .org/10.1302/2046-3758.139.BJR-2023-0398.R1 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/39253760/",
+      "doi": "10.1302/2046-3758.139.BJR-2023-0398.R1",
+      "pmid": "39253760",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "39253760",
+        "doi": "10.1302/2046-3758.139.BJR-2023-0398.R1",
+        "title": "Identification of age-related genes in rotator cuff tendon.",
+        "abstract": "Rotator cuff tear (RCT) is the leading cause of shoulder pain, primarily associated with age-related tendon degeneration. This study aimed to elucidate the potential differential gene expressions in tendons across different age groups, and to investigate their roles in tendon degeneration.\n\nLinear regression and differential expression (DE) analyses were performed on two transcriptome profiling datasets of torn supraspinatus tendons to identify age-related genes. Subsequent functional analyses were conducted on these candidate genes to explore their potential roles in tendon ageing. Additionally, a secondary DE analysis was performed on candidate genes by comparing their expressions between lesioned and normal tendons to explore their correlations with RCTs.\n\nWe identified 49 genes in torn supraspinatus tendons associated with advancing age. Among them, five age-related genes showed DE in lesioned tendons compared to normal tendons. Functional analyses and previous studies have highlighted their specific enrichments in biological functions, such as muscle development (e.g. myosin heavy chain 3 ( MYH3 )), transcription regulation (e.g. CCAAT enhancer binding brotein delta ( CEBPD )), and metal ion homeostasis (e.g. metallothionein 1X ( MT1X )).\n\nThis study uncovered molecular aspects of tendon ageing and their potential links to RCT development, offering insights for targeted interventions. These findings enhance our understanding of the mechanisms of tendon degeneration, allowing potential strategies to be made for reducing the incidence of RCT.",
+        "authors": [
+          "Liu Yibin",
+          "Li Xing",
+          "Jiang Lei",
+          "Ma Jinjin"
+        ],
+        "journal": "Bone & joint research",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 25,
+      "text": "X. Xu , Y. Zhang , P. Ha , et al., “ A Novel Injectable Fibromodulin-Releasing Granular Hydrogel for Tendon Healing and Functional Recovery ,” Bioengineering and Translational Medicine 8 , no. 1 ( 2023 ): e10355, https:// .org/10.1002/btm2.10355 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/36684085/",
+      "doi": "10.1002/btm2.10355",
+      "pmid": "36684085",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "36684085",
+        "doi": "10.1002/btm2.10355",
+        "title": "A novel injectable fibromodulin-releasing granular hydrogel for tendon healing and functional recovery.",
+        "abstract": "A crucial component of the musculoskeletal system, the tendon is one of the most commonly injured tissues in the body. In severe cases, the ruptured tendon leads to permanent dysfunction. Although many efforts have been devoted to seeking a safe and efficient treatment for enhancing tendon healing, currently existing treatments have not yet achieved a major clinical improvement. Here, an injectable granular hyaluronic acid (gHA)-hydrogel is engineered to deliver fibromodulin (FMOD)-a bioactive extracellular matrix (ECM) that enhances tenocyte mobility and optimizes the surrounding ECM assembly for tendon healing. The FMOD-releasing granular HA (FMOD/gHA)-hydrogel exhibits unique characteristics that are desired for both patients and health providers, such as permitting a microinvasive application and displaying a burst-to-sustained two-phase release of FMOD, which leads to a prompt FMOD delivery followed by a constant dose-maintaining period. Importantly, the generated FMOD-releasing granular HA hydrogel significantly augmented tendon-healing in a fully-ruptured rat's Achilles tendon model histologically, mechanically, and functionally. Particularly, the breaking strength of the wounded tendon and the gait performance of treated rats returns to the same normal level as the healthy controls. In summary, a novel effective FMOD/gHA-hydrogel is developed in response to the urgent demand for promoting tendon healing.",
+        "authors": [
+          "Xu Xue",
+          "Zhang Yulong",
+          "Ha Pin",
+          "Chen Yao",
+          "Li Chenshuang",
+          "Yen Emily",
+          "Bai Yuxing",
+          "Chen Renji",
+          "Wu Benjamin M",
+          "Da Lio Andrew",
+          "Ting Kang",
+          "Soo Chia",
+          "Zheng Zhong"
+        ],
+        "journal": "Bioengineering & translational medicine",
+        "year": "2023",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 26,
+      "text": "T. Tu , Y. Shi , B. Zhou , et al., “ Type I Collagen and Fibromodulin Enhance the Tenogenic Phenotype of hASCs and Their Potential for Tendon Regeneration ,” NPJ Regenerative Medicine 8 , no. 1 ( 2023 ): 67 , https:// .org/10.1038/s41536-023-00341-z .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/38092758/",
+      "doi": "10.1038/s41536-023-00341-z",
+      "pmid": "38092758",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "38092758",
+        "doi": "10.1038/s41536-023-00341-z",
+        "title": "Type I collagen and fibromodulin enhance the tenogenic phenotype of hASCs and their potential for tendon regeneration.",
+        "abstract": "Our previous work demonstrated the tendon-derived extracellular matrix (ECM) extracts as vital niches to specifically direct mesenchymal stem cells towards tenogenic differentiation. This study aims to further define the effective ECM molecules capable of teno-lineage induction on human adipose-derived stem cells (hASCs) and test their function for tendon engineering. By detecting the teno-markers expression levels in hASCs exposed to various substrate coatings, collagen I (COL1) and fibromodulin (FMOD) were identified to be the key molecules as a combination and further employed to the modification of poly(L-lactide-co-ε-caprolactone) electrospun nanoyarns, which showed advantages in inducting seeded hASCs for teno-lineage specific differentiation. Under dynamic mechanical loading, modified scaffold seeded with hASCs formed neo-tendon in vitro at the histological level and formed better tendon tissue in vivo with mature histology and enhanced mechanical properties. Primary mechanistic investigation with RNA sequencing demonstrated that the inductive mechanism of these two molecules for hASCs tenogenic differentiation was directly correlated with positive regulation of peptidase activity, regulation of cell-substrate adhesion and regulation of cytoskeletal organization. These biological processes were potentially affected by LOC101929398/has-miR-197-3p/TENM4 ceRNA regulation axis. In summary, COL1 and FMOD in combination are the major bioactive molecules in tendon ECM for likely directing tenogenic phenotype of hASCs and certainly valuable for hASCs-based tendon engineering.",
+        "authors": [
+          "Tu Tian",
+          "Shi Yuan",
+          "Zhou Boya",
+          "Wang Xiaoyu",
+          "Zhang Wenjie",
+          "Zhou Guangdong",
+          "Mo Xiumei",
+          "Wang Wenbo",
+          "Wu Jinglei",
+          "Liu Wei"
+        ],
+        "journal": "NPJ Regenerative medicine",
+        "year": "2023",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 27,
+      "text": "Z. Zhang , Y. Zhang , H. Wang , et al., “ Curcumin Improves Functional Recovery of Ruptured Tendon by Promoting Tenogenesis via PI3K/Akt Signaling ,” Stem Cells Translational Medicine 13 , no. 5 ( 2024 ): 477 – 489 , https:// .org/10.1093/stcltm/szae007 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/38387017/",
+      "doi": "10.1093/stcltm/szae007",
+      "pmid": "38387017",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "38387017",
+        "doi": "10.1093/stcltm/szae007",
+        "title": "Curcumin Improves Functional Recovery of Ruptured Tendon by Promoting Tenogenesis via PI3K/Akt Signaling.",
+        "abstract": "In our previous study, we found that local release of curcumin from nanomicelles prevents peritendinous adhesion during Achilles tendon healing. The aim of this study is to further investigate the signaling integrated by curcumin to direct the tenogenetic program of tendon stem cells contributing to tendon healing.\n\nA surgical model of tendon rupture and repair (TRR) was established in rats. Peritendinous adhesion and inflammation, biomechanical function, and expression of β-catenin and epithelial cellular adhesion molecule (EpCAM) were determined. A dataset was analyzed to investigate differentially expressed genes and enriched genes related to the signaling pathways. Tendon stem cells were treated with curcumin to investigate the cellular and molecular events as well as the signaling pathway.\n\nIn rat TRR model, curcumin treatment resulted in not only significantly decreased peritendinous inflammatory but also improved tendon functional recovery along with significantly increased expressions of EpCAM and β-catenin. Analysis of the dataset indicated that the enriched genes were positively related to differentiation pathways but negatively related to proliferation pathways. In rat tendon stem cells, curcumin treatment inhibited proliferation but promoted differentiation. Curcumin's antioxidative activity was associated with tenogenesis. The upregulated expression of tendon lineage-specific markers was dependent on phosphatidylinositol 3'-kinase/Akt (PI3K/Akt) pathway which could be a potential mechanism of tenogenesis of curcumin treatment.\n\nCurcumin could improve tendon functional recovery via promoting tenogenesis in addition to its antioxidant and anti-inflammatory activities. Curcumin induced differentiation of tendon stem/progenitor cell into tenocytes via PI3K/Akt signaling pathway. This finding provided evidence for the application of curcumin to prevent adhesion during tendon repair.",
+        "authors": [
+          "Zhang Zhan",
+          "Zhang Yiqun",
+          "Wang Han",
+          "Li Baolong",
+          "Cao Rangjuan",
+          "Li Yan",
+          "Cui Shusen",
+          "Zhang Weizhong"
+        ],
+        "journal": "Stem cells translational medicine",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 28,
+      "text": "A. Goto , S. Komura , K. Kato , et al., “ PI3K-Akt Signalling Regulates Scx-Lineage Tenocytes and Tppp3-lineage Paratenon Sheath Cells in Neonatal Tendon Regeneration ,” Nature Communications 16 , no. 1 ( 2025 ): 3734 , https:// .org/10.1038/s41467-025-59010-y .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/40254618/",
+      "doi": "10.1038/s41467-025-59010-y",
+      "pmid": "40254618",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "40254618",
+        "doi": "10.1038/s41467-025-59010-y",
+        "title": "PI3K-Akt signalling regulates Scx-lineage tenocytes and Tppp3-lineage paratenon sheath cells in neonatal tendon regeneration.",
+        "abstract": "Tendon injuries are frequently occurring disorders; it is clinically important to enhance tendon regeneration and prevent functional impairment post-injury. While tendon injuries in children heal quickly with minimal scarring, those in adults heal slowly and are accompanied by fibrotic scarring. Therefore, investigating the healing mechanisms after tendon injury, and identifying the factors that regulate the inherent regenerative capacity of tendons are promising approaches to promoting tendon regeneration. Here, we identify that the PI3K-Akt signalling pathway is preferentially upregulated in injured neonatal murine Achilles tendons. Inhibition of PI3K-Akt signalling in a neonatal murine Achilles tendon rupture model decreases cell proliferation and migration in both Scx-lineage intrinsic tenocytes and Tppp3-lineage extrinsic paratenon sheath cells. Moreover, the inhibition of PI3K-Akt signalling decreases stemness and promotes mature tenogenic differentiation in both Scx- and Tppp3-lineage cells. Collectively, these results suggest that PI3K-Akt signalling plays a pivotal role in neonatal tendon regeneration.",
+        "authors": [
+          "Goto Atsushi",
+          "Komura Shingo",
+          "Kato Koki",
+          "Maki Rie",
+          "Hirakawa Akihiro",
+          "Aoki Hitomi",
+          "Tomita Hiroyuki",
+          "Taguchi Jumpei",
+          "Ozawa Manabu",
+          "Matsushima Takahide",
+          "Kishida Akio",
+          "Kimura Tsuyoshi",
+          "Asahara Hiroshi",
+          "Imai Yuuki",
+          "Yamada Yasuhiro",
+          "Akiyama Haruhiko"
+        ],
+        "journal": "Nature communications",
+        "year": "2025",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 29,
+      "text": "K. Xu , Y. Shao , Y. Xia , et al., “ Tenascin-Cregulates Migration of SOX10 Tendon Stem Cells via Integrin-α9 for Promoting Patellar Tendon Remodeling ,” Biofactors 47 , no. 5 ( 2021 ): 768 – 777 , https:// .org/10.1002/biof.1759 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/34058037/",
+      "doi": "10.1002/biof.1759",
+      "pmid": "34058037",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "34058037",
+        "doi": "10.1002/biof.1759",
+        "title": "Tenascin-C regulates migration of SOX10 tendon stem cells via integrin-α9 for promoting patellar tendon remodeling.",
+        "abstract": "Insufficient attention has been focused on the directional migration of SOX10+ tendon stem cells (STSCs) during tendon remodeling. Here, we investigate whether tenascin-C (TNC) promotes STSC motility and migration. Based on the hypothesis that TNCs induce STSC migration, RNA-sequencing (RNA-seq) was conducted, identifying 2107 differentially expressed genes (DEGs), of which 1272 were up-regulated and 835 down-regulated following treatment with TNC versus the control. The DEGs were principally involved in cell adhesion and cell membrane signal transduction. Highly enriched-related signaling included the PI3K-Akt, focal adhesion, and ECM-receptor interaction pathways. Protein interaction analysis established that TNC was positively correlated with ITGA9 (integrin-α9). Furthermore, TNC activated the phosphorylation levels of FAK and Akt, and knockdown of ITGA9 with siRNA revealed that TNC contributes to STSC migration via the targeting of ITGA9. In addition, in vivo administration of TNC promoted tissue regeneration of injured tendons. In conclusion, TNC regulated the migration of STSCs via ITGA9, thereby promoting the regeneration of tendon injuries.",
+        "authors": [
+          "Xu Kang",
+          "Shao Yibo",
+          "Xia Yi",
+          "Qian Yuna",
+          "Jiang Nan",
+          "Liu Xianqiong",
+          "Yang Li",
+          "Wang Chunli"
+        ],
+        "journal": "BioFactors (Oxford, England)",
+        "year": "2021",
+        "publicationTypes": [
+          "Journal Article"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 30,
+      "text": "A. S. Yatsenko and H. R. Shcherbata , “ Drosophila miR-9a Targets the ECM Receptor Dystroglycan to Canalize Myotendinous Junction Formation ,” Developmental Cell 28 , no. 3 ( 2014 ): 335 – 348 , https:// .org/10.1016/j.devcel.2014.01.004 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/24525189/",
+      "doi": "10.1016/j.devcel.2014.01.004",
+      "pmid": "24525189",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "24525189",
+        "doi": "10.1016/j.devcel.2014.01.004",
+        "title": "Drosophila miR-9a targets the ECM receptor Dystroglycan to canalize myotendinous junction formation.",
+        "abstract": "Establishment of intercellular interactions between various cell types of different origin is vital for organism development and tissue maintenance. Therefore, precise timing, expression pattern, and amounts of extracellular matrix (ECM) proteins must be tightly regulated. Particularly, the ECM is important for the development and function of myotendinous junctions (MTJs). We find that precise levels of the ECM receptor Dystroglycan (Dg) are required for MTJ formation in Drosophila and that Dg levels in this process are controlled by miR-9a. In the embryo, Dg is enriched at the termini of the growing muscles facing the tendon matrix and absent from miR-9a-expressing tendons. This gradient of Dg expression is crucial for proper muscle-tendon attachments and is adjusted by miR-9a. In addition to Dg, miR-9a regulates the expression of several other critical muscle genes, and we therefore propose that during embryogenesis, miR-9a specifically controls the expression of mesodermal genes to canalize MTJ morphogenesis.",
+        "authors": [
+          "Yatsenko Andriy S",
+          "Shcherbata Halyna R"
+        ],
+        "journal": "Developmental cell",
+        "year": "2014",
+        "publicationTypes": [
+          "Journal Article",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 31,
+      "text": "Z. Chen , P. Chen , M. Zheng , et al., “ Challenges and Perspectives of Tendon-Derived Cell Therapy for Tendinopathy: From Bench to Bedside ,” Stem Cell Research and Therapy 13 , no. 1 ( 2022 ): 444 , https:// .org/10.1186/s13287-022-03113-6 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/36056395/",
+      "doi": "10.1186/s13287-022-03113-6",
+      "pmid": "36056395",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "36056395",
+        "doi": "10.1186/s13287-022-03113-6",
+        "title": "Challenges and perspectives of tendon-derived cell therapy for tendinopathy: from bench to bedside.",
+        "abstract": "Tendon is composed of dense fibrous connective tissues, connecting muscle at the myotendinous junction (MTJ) to bone at the enthesis and allowing mechanical force to transmit from muscle to bone. Tendon diseases occur at different zones of the tendon, including enthesis, MTJ and midsubstance of the tendon, due to a variety of environmental and genetic factors which consequently result in different frequencies and recovery rates. Self-healing properties of tendons are limited, and cell therapeutic approaches in which injured tendon tissues are renewed by cell replenishment are highly sought after. Homologous use of individual's tendon-derived cells, predominantly differentiated tenocytes and tendon-derived stem cells, is emerging as a treatment for tendinopathy through achieving minimal cell manipulation for clinical use. This is the first review summarizing the progress of tendon-derived cell therapy in clinical use and its challenges due to the structural complexity of tendons, heterogeneous composition of extracellular cell matrix and cells and unsuitable cell sources. Further to that, novel future perspectives to improve therapeutic effect in tendon-derived cell therapy based on current basic knowledge are discussed.",
+        "authors": [
+          "Chen Ziming",
+          "Chen Peilin",
+          "Zheng Monica",
+          "Gao Junjie",
+          "Liu Delin",
+          "Wang Allan",
+          "Zheng Qiujian",
+          "Leys Toby",
+          "Tai Andrew",
+          "Zheng Minghao"
+        ],
+        "journal": "Stem cell research & therapy",
+        "year": "2022",
+        "publicationTypes": [
+          "Journal Article",
+          "Review",
+          "Research Support, Non-U.S. Gov't"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 32,
+      "text": "Z. Wang , Y. Liao , C. Wang , et al., “ Stem Cell-Based Therapeutic Strategies for Rotator Cuff Tendinopathy ,” Journal of Orthopaedic Translation 42 ( 2023 ): 73 – 81 , https:// .org/10.1016/j.jot.2023.07.006 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/37664079/",
+      "doi": "10.1016/j.jot.2023.07.006",
+      "pmid": "37664079",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "37664079",
+        "doi": "10.1016/j.jot.2023.07.006",
+        "title": "Stem cell-based therapeutic strategies for rotator cuff tendinopathy.",
+        "abstract": "Rotator cuff tendinopathy is a common musculoskeletal disorder that imposes significant health and economic burden. Stem cell therapy has brought hope for tendon healing in patients with final stage rotator cuff tendinopathy. Some clinical trials have confirmed the effectiveness of stem cell therapy for rotator cuff tendinopathy, but its application has not been promoted and approved. There are still many issues that should be solved prior to using stem cell therapy in clinical applications. The optimal source and dose of stem cells for rotator cuff tendinopathy should be determined. We also proposed novel prospective approaches that can overcome cell population heterogeneity and standardize patient types for stem cell applications.\n\nThis review explores the optimal sources of stem cells for rotator cuff tendinopathy and the principles for selecting stem cell dosages. Key strategies are provided for stem cell population standardization and recipient selection.",
+        "authors": [
+          "Wang Zetao",
+          "Liao Youguo",
+          "Wang Canlong",
+          "Tang Chenqi",
+          "Fang Cailian",
+          "Luo Junchao",
+          "Liu Hengzhi",
+          "Mo Xianan",
+          "Wang Zicheng",
+          "Shen Lingfang",
+          "Wang Junjuan",
+          "Chen Xiao",
+          "Yin Zi",
+          "Li Jianyou",
+          "Shen Weiliang"
+        ],
+        "journal": "Journal of orthopaedic translation",
+        "year": "2023",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 33,
+      "text": "S. Shen , Y. Lin , J. Sun , Y. Liu , Y. Chen , and J. Lu , “ A New Tissue Engineering Strategy to Promote Tendon-Bone Healing: Regulation of Osteogenic and Chondrogenic Differentiation of Tendon-Derived Stem Cells ,” Orthopaedic Surgery 16 , no. 10 ( 2024 ): 2311 – 2325 , https:// .org/10.1111/os.14152 .",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/39043618/",
+      "doi": "10.1111/os.14152",
+      "pmid": "39043618",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "39043618",
+        "doi": "10.1111/os.14152",
+        "title": "A New Tissue Engineering Strategy to Promote Tendon-bone Healing: Regulation of Osteogenic and Chondrogenic Differentiation of Tendon-derived Stem Cells.",
+        "abstract": "In the field of sports medicine, repair surgery for anterior cruciate ligament (ACL) and rotator cuff (RC) injuries are remarkably common. Despite the availability of relatively effective treatment modalities, outcomes often fall short of expectations. This comprehensive review aims to thoroughly examine current strategies employed to promote tendon-bone healing and analyze pertinent preclinical and clinical research. Amidst ongoing investigations, tendon-derived stem cells (TDSCs), which have comparatively limited prior exploration, have garnered increasing attention in the context of tendon-bone healing, emerging as a promising cell type for regenerative therapies. This review article delves into the potential of combining TDSCs with tissue engineering methods, with ACL reconstruction as the main focus. It comprehensively reviews relevant research on ACL and RC healing to address the issues of graft healing and bone tunnel integration. To optimize tendon-bone healing outcomes, our emphasis lies in not only reconstructing the original microstructure of the tendon-bone interface but also achieving proper bone tunnel integration, encompassing both cartilage and bone formation. In this endeavor, we thoroughly analyze the transcriptional and molecular regulatory variables governing TDSCs differentiation, incorporating a retrospective analysis utilizing single-cell sequencing, with the aim of unearthing relevant signaling pathways and processes. By presenting a novel strategy rooted in TDSCs-driven osteogenic and chondrogenic differentiation for tendon-bone healing, this study paves the way for potential future research avenues and promising therapeutic applications. It is anticipated that the findings herein will contribute to advancing the field of tendon-bone healing and foster the exploration of TDSCs as a viable option for regenerative therapies in the future.",
+        "authors": [
+          "Shen Sinuo",
+          "Lin Yucheng",
+          "Sun Jiachen",
+          "Liu Yuanhao",
+          "Chen Yuzhi",
+          "Lu Jun"
+        ],
+        "journal": "Orthopaedic surgery",
+        "year": "2024",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    },
+    {
+      "index": 34,
+      "text": "J. Zhang , J. Pan , and W. Jing , “ Motivating Role of Type H Vessels in Bone Regeneration ,” Cell Proliferation 53 , no. 9 ( 2020 ): e12874, https:// .org/10.1111/cpr.12874 . Volume 44 , Issue 3 March 2026 e70163 Figures References Related Information Recommended Subacromial contact after acromioplasty in the rotator cuff deficient shoulder Laura Gatto , Ashen Fernando , Minoo Patel , Angus Yeung , David C. Ackland<",
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1002/jor.70163",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/33448495/",
+      "doi": "10.1111/cpr.12874",
+      "pmid": "33448495",
+      "pubmedFound": true,
+      "pubmed": {
+        "pmid": "33448495",
+        "doi": "10.1111/cpr.12874",
+        "title": "Motivating role of type H vessels in bone regeneration.",
+        "abstract": "Coupling between angiogenesis and osteogenesis has an important role in both normal bone injury repair and successful application of tissue-engineered bone for bone defect repair. Type H blood vessels are specialized microvascular components that are closely related to the speed of bone healing. Interactions between type H endothelial cells and osteoblasts, and high expression of CD31 and EMCN render the environment surrounding these blood vessels rich in factors conducive to osteogenesis and promote the coupling of angiogenesis and osteogenesis. Type H vessels are mainly distributed in the metaphysis of bone and densely surrounded by Runx2 + and Osterix + osteoprogenitors. Several other factors, including hypoxia-inducible factor-1α, Notch, platelet-derived growth factor type BB, and slit guidance ligand 3 are involved in the coupling of type H vessel formation and osteogenesis. In this review, we summarize the identification and distribution of type H vessels and describe the mechanism for type H vessel-mediated modulation of osteogenesis. Type H vessels provide new insights for detection of the molecular and cellular mechanisms that underlie the crosstalk between angiogenesis and osteogenesis. As a result, more feasible therapeutic approaches for treatment of bone defects by targeting type H vessels may be applied in the future.",
+        "authors": [
+          "Zhang Jiankang",
+          "Pan Jian",
+          "Jing Wei"
+        ],
+        "journal": "Cell proliferation",
+        "year": "2020",
+        "publicationTypes": [
+          "Journal Article",
+          "Review"
+        ],
+        "source": "pubmed"
+      }
+    }
+  ]
+}
