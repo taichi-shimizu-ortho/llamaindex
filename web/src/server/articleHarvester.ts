@@ -3,7 +3,7 @@ import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 
-const BODY_SECTION_TYPES = new Set(["intro", "materials|methods", "results", "discussion", "conclusion"]);
+const EXCLUDED_SECTION_TYPES = new Set(["references", "acknowledgements"]);
 
 export interface ArticleSubsection {
   title: string;
@@ -137,17 +137,92 @@ function inferMeta(html: string, sourceUrl: string) {
   };
 }
 
-function bodyMatter(html: string): string {
-  const bodyStart = html.search(/<section\b[^>]*(?:id=["']bodymatter["']|property=["']articleBody["'])/i);
-  if (bodyStart >= 0) {
-    const rest = html.slice(bodyStart);
-    const end = rest.search(/<h2\b[^>]*>\s*(?:Acknowledg|Competing Interests|ORCID|Footnote|References|Supplementary Material)\b/i);
-    return rest.slice(0, end > 0 ? end : undefined);
+function inferAbstractParagraphs(html: string): string[] {
+  const metaAbstract =
+    stripTags(
+      html.match(/<meta[^>]+name=["'](?:citation_abstract|dc\.description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
+    );
+  if (metaAbstract) return [metaAbstract];
+
+  const blocks = Array.from(html.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi)).map((m) => ({
+    tag: (m[1] ?? "").toLowerCase(),
+    html: m[0] ?? "",
+    text: stripTags(m[2] ?? ""),
+    start: m.index ?? 0,
+    end: (m.index ?? 0) + (m[0] ?? "").length,
+  }));
+  const marker = blocks.find((block) => /^abstract:?$/i.test(block.text));
+  if (!marker) return [];
+
+  const rest = html.slice(marker.end);
+  const paragraphs: string[] = [];
+  for (const match of rest.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+    const tag = (match[1] ?? "").toLowerCase();
+    const text = stripTags(match[2] ?? "");
+    if (!text) continue;
+    if (/^h[1-4]$/.test(tag)) break;
+    if (/^(?:keywords?|key words?|mini review|article type|introduction|background|references?)\b/i.test(text)) break;
+    paragraphs.push(text);
   }
 
-  const abstractEnd = html.search(/<\/section>\s*<\/section>[\s\S]{0,200}<section\b[^>]*id=["']bodymatter/i);
-  if (abstractEnd >= 0) return html.slice(abstractEnd);
-  return html;
+  return paragraphs;
+}
+
+function inferFigureSections(html: string): ArticleSection[] {
+  const marker = html.match(/<p\b[^>]*>\s*(?:<(?:strong|b)\b[^>]*>\s*)?Figure\s+legends?(?:\s*<\/(?:strong|b)>)?\s*<\/p>/i);
+  if (!marker || marker.index == null) return [];
+
+  const rest = html.slice(marker.index + marker[0].length);
+  const blocks = Array.from(rest.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi))
+    .map((m) => ({
+      tag: (m[1] ?? "").toLowerCase(),
+      text: stripTags(m[2] ?? ""),
+    }))
+    .filter((block) => block.text);
+
+  const sections: ArticleSection[] = [];
+  let current: ArticleSection | null = null;
+
+  for (const block of blocks) {
+    if (/^h[1-4]$/.test(block.tag) || /^(?:References?|Acknowledg|Funding|Conflict)\b/i.test(block.text)) break;
+    const figureTitle = block.text.match(/^(Figure\s+\d+[A-Za-z]?\.?\s*)(.*)/i);
+
+    if (figureTitle) {
+      if (current) sections.push(current);
+      const title = figureTitle[1].replace(/[.\s]+$/g, "").trim();
+      const firstLegend = figureTitle[2]?.trim();
+      current = {
+        title,
+        type: "figure",
+        content: firstLegend,
+        paragraphs: firstLegend ? [firstLegend] : [],
+        subsections: [],
+      };
+      continue;
+    }
+
+    if (current) {
+      current.paragraphs.push(block.text);
+      current.content = current.paragraphs.join("\n\n");
+    }
+  }
+
+  if (current) sections.push(current);
+  return sections;
+}
+
+function bodyMatter(html: string): string {
+  let rest = html;
+  const bodyStart = html.search(/<section\b[^>]*(?:id=["']bodymatter["']|property=["']articleBody["'])/i);
+  if (bodyStart >= 0) {
+    rest = html.slice(bodyStart);
+  } else {
+    const abstractEnd = html.search(/<\/section>\s*<\/section>[\s\S]{0,200}<section\b[^>]*id=["']bodymatter/i);
+    if (abstractEnd >= 0) rest = html.slice(abstractEnd);
+  }
+
+  const end = rest.search(/<h2\b[^>]*>(?:<[^>]+>|\s)*(?:Acknowledg|Competing\s+Interests|Conflict\s+of\s+Interest|Funding|Author\s+Contributions|Data\s+Availability|ORCID|Footnote|References|Supplementary\s+Material)\b/i);
+  return rest.slice(0, end > 0 ? end : undefined);
 }
 
 function headingMarkers(html: string) {
@@ -167,8 +242,10 @@ function isBoilerplateParagraph(text: string): boolean {
 }
 
 function paragraphTexts(html: string): string[] {
-  const paragraphs = Array.from(html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>/gi))
-    .map((m) => stripTags(m[1] ?? ""))
+  const paragraphs = Array.from(
+    html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
+  )
+    .map((m) => stripTags(m[1] || m[2] || ""))
     .filter((text) => text && !isBoilerplateParagraph(text));
 
   if (paragraphs.length) return paragraphs;
@@ -185,10 +262,22 @@ export function buildSections(html: string): ArticleSection[] {
   const body = bodyMatter(html);
   const headings = headingMarkers(body);
   const h2s = headings.filter((h) => h.level === 2);
-  const top = headings.filter((h) => h.level === 2 && BODY_SECTION_TYPES.has(classifySection(h.title)));
+  const top = headings.filter((h) => h.level === 2 && !EXCLUDED_SECTION_TYPES.has(classifySection(h.title)));
   const methods = top.find((h) => classifySection(h.title) === "materials|methods");
   const hasIntroHeading = top.some((h) => classifySection(h.title) === "intro");
   const sections: ArticleSection[] = [];
+  const abstractParas = inferAbstractParagraphs(html);
+  const figureSections = inferFigureSections(html);
+
+  if (abstractParas.length && !top.some((h) => classifySection(h.title) === "abstract")) {
+    sections.push({
+      title: "Abstract",
+      type: "abstract",
+      content: abstractParas.join("\n\n"),
+      paragraphs: abstractParas,
+      subsections: [],
+    });
+  }
 
   if (!hasIntroHeading && methods && methods.start > 0) {
     const introHtml = body.slice(0, methods.start);
@@ -240,6 +329,8 @@ export function buildSections(html: string): ArticleSection[] {
       subsections,
     });
   }
+
+  sections.push(...figureSections);
 
   return sections.filter((section) => section.paragraphs.length || section.subsections.some((sub) => sub.paragraphs.length));
 }

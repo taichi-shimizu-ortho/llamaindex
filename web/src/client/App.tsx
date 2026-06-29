@@ -206,28 +206,48 @@ function ScoreBar({ score }: { score: number }) {
 function ReferenceRow({ record }: { record: ReferenceRecord }) {
   const abstract = record.pubmed?.abstract ?? "";
   return (
-    <div className={abstract ? "ref-row" : "ref-row muted-row"}>
-      <div className="ref-index">{record.index}</div>
-      <div className="ref-main">
-        <div className="ref-title">{record.pubmed?.title || record.text}</div>
-        <div className="ref-meta">
-          {record.pubmed?.journal && <span>{record.pubmed.journal}</span>}
-          {record.pubmed?.year && <span>{record.pubmed.year}</span>}
-          {record.pmid && (
-            <a href={`https://pubmed.ncbi.nlm.nih.gov/${record.pmid}`} target="_blank" rel="noreferrer">
-              PMID {record.pmid}
-            </a>
-          )}
-          {record.doi && (
-            <a href={`https://doi.org/${record.doi}`} target="_blank" rel="noreferrer">
-              DOI
-            </a>
-          )}
-          {record.error && <span className="warn-text">{record.error}</span>}
+    <details className={abstract ? "ref-details" : "ref-details muted-row"}>
+      <summary>
+        <div className="ref-row ref-row-summary">
+          <div className="ref-index">{record.index}</div>
+          <div className="ref-main">
+            <div className="ref-title">{record.pubmed?.title || record.text}</div>
+            <div className="ref-meta">
+              {record.pubmed?.authors?.[0] && (
+                <span>
+                  {record.pubmed.authors[0]}
+                  {record.pubmed.authors.length > 1 ? " et al." : ""}
+                </span>
+              )}
+              {record.pubmed?.journal && <span>{record.pubmed.journal}</span>}
+              {record.pubmed?.year && <span>{record.pubmed.year}</span>}
+              {record.pmid && (
+                <a href={`https://pubmed.ncbi.nlm.nih.gov/${record.pmid}`} target="_blank" rel="noreferrer">
+                  PMID {record.pmid}
+                </a>
+              )}
+              {record.doi && (
+                <a href={`https://doi.org/${record.doi}`} target="_blank" rel="noreferrer">
+                  DOI
+                </a>
+              )}
+              {record.error && <span className="warn-text">{record.error}</span>}
+            </div>
+          </div>
+          <span className={abstract ? "pill ok" : "pill warn"}>{abstract ? "Abstract" : "No abstract"}</span>
         </div>
+      </summary>
+      <div className="ref-abstract-body">
+        {abstract ? (
+          <p>{abstract}</p>
+        ) : (
+          <>
+            <p className="muted-text">{record.text}</p>
+            {record.error && <p className="warn-text">{record.error}</p>}
+          </>
+        )}
       </div>
-      <span className={abstract ? "pill ok" : "pill warn"}>{abstract ? "Abstract" : "No abstract"}</span>
-    </div>
+    </details>
   );
 }
 
@@ -420,6 +440,183 @@ function AnswerBlock({ title, text, cite = false }: { title: string; text: strin
       <h3>{title}</h3>
       <MarkdownText className="answer-text" text={text} cite={cite} />
     </div>
+  );
+}
+
+type ArticleSectionItem = ArticleSet["sections"][number];
+type ArticleSubsectionItem = ArticleSectionItem["subsections"][number];
+type FigureItem = {
+  title: string;
+  content: string;
+  imageUrl: string;
+  legend: string;
+};
+
+function isFigureLike(item: { title: string; type?: string; content?: string }): boolean {
+  return item.type === "figure" || /^figure\s+\d+/i.test(item.title) || /\[Image URL:/i.test(item.content ?? "");
+}
+
+function figureFromItem(item: { title: string; content: string; paragraphs?: string[] }): FigureItem {
+  const content = item.content || item.paragraphs?.join("\n\n") || "";
+  const imageUrl = content.match(/\[Image URL:\s*(.*?)\]/i)?.[1]?.trim() ?? "";
+  const legend = content.replace(/\[Image URL:\s*.*?\]/gi, "").trim();
+  return {
+    title: item.title,
+    content,
+    imageUrl,
+    legend,
+  };
+}
+
+function collectFigures(article: ArticleSet): FigureItem[] {
+  const figures: FigureItem[] = [];
+
+  for (const section of article.sections) {
+    if (isFigureLike(section)) figures.push(figureFromItem(section));
+    for (const subsection of section.subsections) {
+      if (isFigureLike(subsection)) figures.push(figureFromItem(subsection));
+    }
+  }
+
+  const seen = new Set<string>();
+  return figures.filter((figure) => {
+    const key = `${figure.title}|${figure.legend.slice(0, 100)}|${figure.imageUrl}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function sectionParagraphCount(section: ArticleSectionItem): number {
+  return section.paragraphs.length + section.subsections.filter((sub) => !isFigureLike(sub)).reduce((n, sub) => n + sub.paragraphs.length, 0);
+}
+
+function ParagraphList({ paragraphs }: { paragraphs: string[] }) {
+  return (
+    <div className="article-paragraphs">
+      {paragraphs.map((paragraph, idx) => (
+        <div className="article-paragraph" key={`${idx}-${paragraph.slice(0, 24)}`}>
+          <span className="paragraph-index">{idx + 1}</span>
+          <CitedText text={paragraph} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SubsectionDropdown({ subsection }: { subsection: ArticleSubsectionItem }) {
+  return (
+    <details className="article-details article-details-nested">
+      <summary>
+        <span className="article-summary-main">{subsection.title}</span>
+        <span className="article-summary-meta">{subsection.paragraphs.length} paragraphs</span>
+      </summary>
+      <ParagraphList paragraphs={subsection.paragraphs} />
+    </details>
+  );
+}
+
+function SectionDropdown({ section }: { section: ArticleSectionItem }) {
+  const count = sectionParagraphCount(section);
+  return (
+    <details className="article-details">
+      <summary>
+        <span className="article-summary-main">{section.title}</span>
+        <span className="article-summary-meta">
+          {section.type} · {count} paragraphs
+        </span>
+      </summary>
+
+      <div className="article-section-body">
+        {section.paragraphs.length > 0 && (
+          <details className="article-details article-details-nested">
+            <summary>
+              <span className="article-summary-main">Section text</span>
+              <span className="article-summary-meta">{section.paragraphs.length} paragraphs</span>
+            </summary>
+            <ParagraphList paragraphs={section.paragraphs} />
+          </details>
+        )}
+
+        {section.subsections.length > 0 && (
+          <div className="subsection-stack">
+            {section.subsections.filter((subsection) => !isFigureLike(subsection)).map((subsection) => (
+              <SubsectionDropdown key={subsection.title} subsection={subsection} />
+            ))}
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function FigureBrowser({ figures }: { figures: FigureItem[] }) {
+  if (!figures.length) return null;
+
+  return (
+    <div className="figure-browser">
+      <div className="article-browser-subhead">
+        <h3>Figures</h3>
+        <span>{figures.length} figures</span>
+      </div>
+      <div className="figure-stack">
+        {figures.map((figure, idx) => (
+          <details className="article-details figure-details" key={`${figure.title}-${idx}`}>
+            <summary>
+              <span className="article-summary-main">{figure.title}</span>
+              <span className="article-summary-meta">{figure.imageUrl ? "image + legend" : "legend"}</span>
+            </summary>
+            <div className="figure-body">
+              {figure.imageUrl && (
+                <a className="figure-image-link" href={figure.imageUrl} target="_blank" rel="noreferrer">
+                  <img src={figure.imageUrl} alt={figure.title} />
+                </a>
+              )}
+              {figure.legend && <p>{figure.legend}</p>}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ArticleContentBrowser({ article }: { article: ArticleSet }) {
+  const abstractSections = article.sections.filter((section) => section.type === "abstract");
+  const figures = collectFigures(article);
+  const mainSections = article.sections.filter((section) => section.type !== "abstract" && !isFigureLike(section));
+
+  return (
+    <section className="article-browser">
+      <div className="sources-head article-browser-head">
+        <h2>Article Content</h2>
+        <span className="panel-note">Abstract and main text preview</span>
+      </div>
+
+      {abstractSections.map((section) => (
+        <details className="article-details article-details-abstract" key={section.title} open>
+          <summary>
+            <span className="article-summary-main">Abstract</span>
+            <span className="article-summary-meta">{section.paragraphs.length} paragraphs</span>
+          </summary>
+          <ParagraphList paragraphs={section.paragraphs} />
+        </details>
+      ))}
+
+      <FigureBrowser figures={figures} />
+
+      <div className="main-text-browser">
+        <div className="article-browser-subhead">
+          <h3>Main Text</h3>
+          <span>{mainSections.length} sections</span>
+        </div>
+        <div className="section-stack">
+          {mainSections.map((section) => (
+            <SectionDropdown key={`${section.type}-${section.title}`} section={section} />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -718,38 +915,7 @@ export function App() {
                 </div>
               </section>
 
-              {currentArticle && (
-                <section className="article-quick-view" style={{ margin: "1rem 0", padding: "1rem", background: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)" }}>
-                  {currentArticle.sections.filter((s) => s.type === "abstract").map((sec, i) => (
-                    <div key={`abstract-${i}`} className="quick-abstract" style={{ marginBottom: "1.5rem" }}>
-                      <h3 style={{ marginTop: 0, color: "var(--primary)", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem" }}>Abstract</h3>
-                      <MarkdownText text={sec.paragraphs.join("\n\n")} />
-                    </div>
-                  ))}
-                  
-                  <div className="quick-figures" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                    {currentArticle.sections
-                      .flatMap((s) => s.subsections)
-                      .filter((sub) => (sub as any).type === "figure" || sub.title.startsWith("Figure "))
-                      .map((fig, i) => {
-                        const urlMatch = fig.content.match(/\[Image URL:\s*(.*?)\]/);
-                        const url = urlMatch ? urlMatch[1] : "";
-                        const legend = fig.content.replace(/\[Image URL:.*?\]/g, "").trim();
-                        return (
-                          <div key={`fig-${i}`} className="quick-figure" style={{ background: "var(--bg)", padding: "1rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
-                            <h4 style={{ marginTop: 0, color: "var(--primary)" }}>{fig.title}</h4>
-                            {url && (
-                              <div style={{ textAlign: "center", margin: "1rem 0" }}>
-                                <img src={url} alt={fig.title} style={{ maxWidth: "100%", maxHeight: "500px", objectFit: "contain", borderRadius: "4px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} />
-                              </div>
-                            )}
-                            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>{legend}</p>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </section>
-              )}
+              {currentArticle && <ArticleContentBrowser article={currentArticle} />}
 
               {result && (
                 <section className="result">
@@ -787,31 +953,6 @@ export function App() {
                     </>
                   )}
                 </section>
-              )}
-
-              {currentArticle && (
-                <>
-                  <div className="sources-head">
-                    <h2>Main Article ({currentArticle.chunkCount})</h2>
-                  </div>
-                  <div className="ref-list">
-                    {currentArticle.sections.map((section) => (
-                      <div key={`${section.type}-${section.title}`} className="ref-row">
-                        <div className="ref-index">{section.paragraphs.length + section.subsections.reduce((n, sub) => n + sub.paragraphs.length, 0)}</div>
-                        <div className="ref-main">
-                          <div className="ref-title">{section.title}</div>
-                          <div className="ref-meta">
-                            <span>{section.type}</span>
-                            {section.subsections.map((sub) => (
-                              <span key={sub.title}>{sub.title}</span>
-                            ))}
-                          </div>
-                        </div>
-                        <span className="pill ok">JSON</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
               )}
 
               {currentSet && (

@@ -504,6 +504,175 @@ body {
 
 .source-text { margin: 6px 0 0; font-size: 14px; }
 
+/* ---- article content browser ---- */
+.article-browser {
+  margin: 18px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px;
+}
+
+.article-browser-head {
+  margin: 0 0 12px;
+}
+
+.main-text-browser {
+  margin-top: 12px;
+}
+
+.article-browser-subhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.article-browser-subhead h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.section-stack,
+.subsection-stack,
+.figure-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.article-details {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel-2);
+  overflow: clip;
+}
+
+.article-details-abstract {
+  border-left: 3px solid var(--accent);
+}
+
+.article-details-nested {
+  background: var(--panel);
+}
+
+.article-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 9px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.article-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.article-details summary::before {
+  content: ">";
+  flex: none;
+  color: var(--accent);
+  font-size: 12px;
+  transition: transform 0.15s;
+}
+
+.article-details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.article-summary-main {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.article-summary-meta {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.article-section-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.article-paragraphs {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.article-paragraph {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  font-size: 14px;
+}
+
+.paragraph-index {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.figure-browser {
+  margin-top: 12px;
+}
+
+.figure-details {
+  border-left: 3px solid var(--accent-2);
+}
+
+.figure-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.figure-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.figure-image-link {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.figure-image-link img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
 /* 引用番号ホバー */
 .cite-group { white-space: nowrap; }
 .cite {
@@ -552,9 +721,57 @@ body {
   gap: 8px;
 }
 
+.ref-details {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel-2);
+  overflow: clip;
+}
+
+.ref-details summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.ref-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ref-details .ref-row-summary {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ref-details .ref-row-summary::before {
+  content: ">";
+  color: var(--accent);
+  font-size: 12px;
+  transition: transform 0.15s;
+}
+
+.ref-details[open] .ref-row-summary::before {
+  transform: rotate(90deg);
+}
+
+.ref-abstract-body {
+  border-top: 1px solid var(--border);
+  padding: 11px 14px 13px 56px;
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+}
+
+.ref-abstract-body p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.muted-text {
+  color: var(--muted);
+}
+
 .ref-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 14px 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border: 1px solid var(--border);
@@ -644,10 +861,13 @@ body {
     margin-left: 0;
   }
   .ref-row {
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 14px 30px minmax(0, 1fr);
   }
   .ref-row .pill {
-    grid-column: 2;
+    grid-column: 3;
     justify-self: start;
+  }
+  .ref-abstract-body {
+    padding-left: 44px;
   }
 }

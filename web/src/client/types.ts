@@ -69,7 +69,7 @@ export interface ArticleSection {
   type: string;
   content: string;
   paragraphs: string[];
-  subsections: { title: string; content: string; paragraphs: string[] }[];
+  subsections: { title: string; type?: string; content: string; paragraphs: string[] }[];
 }
 
 export interface ArticleSet {

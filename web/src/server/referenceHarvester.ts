@@ -438,17 +438,71 @@ function extractMetaReferences(html: string, sourceUrl: string): ReferenceRecord
   return dedupeRecords(records);
 }
 
+// Manuscript exports from Word/Google Docs often contain a plain reference list:
+// <p><strong>Reference</strong></p><p>[1] Author, Title. Journal ...</p>
+// These entries may not include DOI/PMID links, so the generic link-oriented
+// extractor would otherwise fall back to unrelated paragraphs from the body.
+function extractPlainNumberedReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const markerRe =
+    /<(h[1-4]|p)\b[^>]*>\s*(?:<(?:strong|b)\b[^>]*>\s*)?(?:References?|Bibliography|Cited Literature)(?:\s*<\/(?:strong|b)>)?\s*<\/\1>/gi;
+  let best: ReferenceRecord[] = [];
+
+  for (const marker of html.matchAll(markerRe)) {
+    const rest = html.slice((marker.index ?? 0) + marker[0].length);
+    const records: ReferenceRecord[] = [];
+    let started = false;
+
+    for (const paragraph of rest.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+      const rawText = stripTags(paragraph[1] ?? "");
+      const text = cleanReferenceText(rawText);
+      if (!text) continue;
+
+      const numbered = text.match(/^\s*(?:\[(\d{1,4})\]|(\d{1,4})[.)])\s+(.+)/);
+      if (numbered) {
+        started = true;
+        const n = Number(numbered[1] ?? numbered[2]);
+        records.push({
+          index: Number.isFinite(n) ? n : records.length + 1,
+          text,
+          sourceUrl,
+          href: sourceUrl,
+          doi: extractDoi(text),
+          pmid: extractPmid(text),
+          pubmedFound: false,
+        });
+        continue;
+      }
+
+      if (started) {
+        if (/^(?:Acknowledg|Funding|Author Contributions|Conflict|Supplementary|Figure|Table)\b/i.test(text)) break;
+        if (records.length) {
+          const last = records[records.length - 1];
+          records[records.length - 1] = {
+            ...last,
+            text: cleanReferenceText(`${last.text} ${text}`),
+          };
+        }
+      }
+    }
+
+    const deduped = dedupeRecords(records);
+    if (deduped.length > best.length) best = deduped;
+  }
+
+  return best;
+}
+
 export function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceRecord[] {
   const generic = () => extractGenericReferences(html, sourceUrl);
   const publisher = detectPublisher(html, sourceUrl);
   const extractors =
     publisher === "sage"
-      ? [extractBibrReferences, extractMetaReferences, generic]
+      ? [extractBibrReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
       : publisher === "wiley"
-        ? [extractWileyBibReferences, extractMetaReferences, generic]
+        ? [extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
         : publisher === "metadata"
-          ? [extractMetaReferences, extractBibrReferences, extractWileyBibReferences, generic]
-          : [extractBibrReferences, extractWileyBibReferences, extractMetaReferences, generic];
+          ? [extractMetaReferences, extractBibrReferences, extractWileyBibReferences, extractPlainNumberedReferences, generic]
+          : [extractBibrReferences, extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic];
 
   for (const extractor of extractors) {
     const records = extractor(html, sourceUrl);
@@ -511,7 +565,16 @@ function extractGenericReferences(html: string, sourceUrl: string): ReferenceRec
     });
   }
 
-  return dedupeRecords(candidates);
+  if (candidates.length > 1) return dedupeRecords(candidates);
+
+  const textRecords: ReferenceRecord[] = [];
+  for (const match of region.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const text = stripTags(match[1]);
+    const record = recordFromText(text, sourceUrl, textRecords.length + 1);
+    if (record) textRecords.push(record);
+  }
+
+  return dedupeRecords(textRecords);
 }
 
 async function fetchText(url: string, params: Record<string, string>): Promise<string> {
@@ -679,11 +742,74 @@ async function fetchAbstractByDoi(doi: string): Promise<ReferenceRecord["pubmed"
   return undefined;
 }
 
+function parseReference(ref: string): { author: string; year: string } | null {
+  const cleanRef = cleanReferenceText(ref);
+  
+  // Try to find the year first
+  let year = "";
+  const yearMatch = cleanRef.match(/(?:\b|\()((?:19|20)\d{2})(?:\b|\))/);
+  if (yearMatch) {
+    year = yearMatch[1];
+  } else {
+    return null; // No year, can't search author/year
+  }
+
+  // Strip leading brackets like [1] or 1.
+  let authorStr = cleanRef.replace(/^\[?\d+\]?\.?\s*/, "");
+  // Get just the first author part (up to a comma, or ' and ', or if neither, just the first 3 words)
+  let firstAuthorPart = authorStr.split(/,| and /i)[0];
+  if (!firstAuthorPart.includes(" ")) {
+     firstAuthorPart = authorStr.split(/\s+/).slice(0, 3).join(" ");
+  }
+
+  // Now extract surname from firstAuthorPart
+  // Ignore common prefixes/suffixes
+  let words = firstAuthorPart.split(/[\s.]+/).filter(w => w.length > 0 && !/^(MD|PhD|MSc|Jr|Sr)$/i.test(w));
+  if (words.length >= 2) {
+    // If the first word is initials (e.g. R, R.S.Y, AB), then the last word is the surname
+    let surname = "";
+    let initials = "";
+    if (/^[A-Z]{1,4}$/.test(words[0])) {
+       surname = words[words.length - 1];
+       initials = words[0];
+    } else {
+       // Typically Surname Initials
+       surname = words[0];
+       initials = words[1];
+    }
+    // Remove non-word chars from surname
+    surname = surname.replace(/[^\w\-]/g, "");
+    return { author: `${surname} ${initials[0]}`, year };
+  }
+
+  return null;
+}
+
+async function searchByAuthorYear(author: string, year: string): Promise<string> {
+  const query = `${author}[1au] AND ${year}[dp]`;
+  const raw = await fetchText(`${ENTREZ_BASE}/esearch.fcgi`, {
+    db: "pubmed",
+    term: query,
+    retmode: "json",
+    retmax: "1",
+    tool: TOOL,
+    email: EMAIL,
+  });
+  const data = JSON.parse(raw);
+  return data?.esearchresult?.idlist?.[0] ?? "";
+}
+
 async function enrichRecord(record: ReferenceRecord): Promise<ReferenceRecord> {
   try {
     let pmid = record.pmid;
     if (!pmid && record.doi) pmid = await doiToPmid(record.doi);
-    if (!pmid) pmid = await titleToPmid(record.text);
+    if (!pmid) {
+      const parsed = parseReference(record.text);
+      if (parsed?.author && parsed?.year) {
+        pmid = await searchByAuthorYear(parsed.author, parsed.year);
+      }
+      if (!pmid) pmid = await titleToPmid(record.text);
+    }
 
     let pubmed = pmid ? await fetchPubmedRecord(pmid) : undefined;
     if (pubmed) pubmed = { ...pubmed, source: "pubmed" };
