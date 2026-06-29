@@ -718,6 +718,39 @@ export function App() {
                 </div>
               </section>
 
+              {currentArticle && (
+                <section className="article-quick-view" style={{ margin: "1rem 0", padding: "1rem", background: "var(--bg-card)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                  {currentArticle.sections.filter((s) => s.type === "abstract").map((sec, i) => (
+                    <div key={`abstract-${i}`} className="quick-abstract" style={{ marginBottom: "1.5rem" }}>
+                      <h3 style={{ marginTop: 0, color: "var(--primary)", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem" }}>Abstract</h3>
+                      <MarkdownText text={sec.paragraphs.join("\n\n")} />
+                    </div>
+                  ))}
+                  
+                  <div className="quick-figures" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    {currentArticle.sections
+                      .flatMap((s) => s.subsections)
+                      .filter((sub) => (sub as any).type === "figure" || sub.title.startsWith("Figure "))
+                      .map((fig, i) => {
+                        const urlMatch = fig.content.match(/\[Image URL:\s*(.*?)\]/);
+                        const url = urlMatch ? urlMatch[1] : "";
+                        const legend = fig.content.replace(/\[Image URL:.*?\]/g, "").trim();
+                        return (
+                          <div key={`fig-${i}`} className="quick-figure" style={{ background: "var(--bg)", padding: "1rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                            <h4 style={{ marginTop: 0, color: "var(--primary)" }}>{fig.title}</h4>
+                            {url && (
+                              <div style={{ textAlign: "center", margin: "1rem 0" }}>
+                                <img src={url} alt={fig.title} style={{ maxWidth: "100%", maxHeight: "500px", objectFit: "contain", borderRadius: "4px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }} />
+                              </div>
+                            )}
+                            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--fg-muted)", lineHeight: 1.5 }}>{legend}</p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </section>
+              )}
+
               {result && (
                 <section className="result">
                   <div className="answer-card">
