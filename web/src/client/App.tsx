@@ -19,8 +19,8 @@ type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQu
 // 本文中の引用番号 [83] / [ 1 , 2 ] を参照文献メタデータに紐付けるための索引。
 const ReferenceMapContext = createContext<Map<number, ReferenceRecord>>(new Map());
 
-// 数字・空白・カンマ・ダッシュのみで構成された角括弧（[14/167 patients] のような非引用は除外）。
-const CITATION_GROUP = /\[\s*\d[\d\s,–-]*\]/g;
+// 数字・空白・カンマ・セミコロン・ダッシュのみで構成された角括弧（[14/167 patients] のような非引用は除外）。
+const CITATION_GROUP = /\[\s*\d[\d\s,;–—-]*\]/g;
 
 function Citation({ n, record }: { n: number; record?: ReferenceRecord }) {
   if (!record) return <>{n}</>;
@@ -47,20 +47,47 @@ function Citation({ n, record }: { n: number; record?: ReferenceRecord }) {
   );
 }
 
+// 引用グループ内の番号を個別に展開する。
+// カンマ/セミコロン/空白区切りに加え、範囲指定（14-17, 14–17）も 14,15,16,17 に展開する。
+function expandCitationNumbers(inner: string): number[] {
+  const out: number[] = [];
+  const seen = new Set<number>();
+  const push = (n: number) => {
+    if (!seen.has(n)) {
+      seen.add(n);
+      out.push(n);
+    }
+  };
+  const tokens = inner.match(/\d+\s*[–—-]\s*\d+|\d+/g) ?? [];
+  for (const token of tokens) {
+    const range = token.match(/^(\d+)\s*[–—-]\s*(\d+)$/);
+    if (range) {
+      const a = Number(range[1]);
+      const b = Number(range[2]);
+      if (a <= b && b - a <= 200) {
+        for (let n = a; n <= b; n++) push(n);
+      } else {
+        push(a);
+        push(b);
+      }
+    } else {
+      push(Number(token));
+    }
+  }
+  return out;
+}
+
+// [14; 15; 16; 17] や [14-17] のような複数・範囲指定は [14][15][16][17] と1件ずつに分けて表示する。
 function renderCitationGroup(group: string, refMap: Map<number, ReferenceRecord>, keyBase: string): ReactNode {
-  const inner = group.slice(1, -1);
+  const numbers = expandCitationNumbers(group.slice(1, -1));
+  if (!numbers.length) return <Fragment key={keyBase}>{group}</Fragment>;
   return (
     <span className="cite-group" key={keyBase}>
-      [
-      {inner.split(/(\d+)/).map((part, idx) => {
-        if (/^\d+$/.test(part)) {
-          const n = Number(part);
-          return <Citation key={idx} n={n} record={refMap.get(n)} />;
-        }
-        const sep = part.replace(/\s+/g, "").replace(/,/g, ", ");
-        return <Fragment key={idx}>{sep}</Fragment>;
-      })}
-      ]
+      {numbers.map((n, idx) => (
+        <span className="cite-item" key={idx}>
+          [<Citation n={n} record={refMap.get(n)} />]
+        </span>
+      ))}
     </span>
   );
 }

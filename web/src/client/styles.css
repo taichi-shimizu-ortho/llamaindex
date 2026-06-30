@@ -675,7 +675,8 @@ body {
 }
 
 /* 引用番号ホバー */
-.cite-group { white-space: nowrap; }
+.cite-group { white-space: normal; }
+.cite-item { white-space: nowrap; }
 .cite {
   position: relative;
   cursor: help;
