@@ -26,18 +26,17 @@ function resolveObsidianDir(): string {
 const OBSIDIAN = resolveObsidianDir();
 const CODING = path.join(OBSIDIAN, "50_coding");
 const BASE = path.join(CODING, "llamaindex");
-// 文献データ（reference_sets / article_sets / raw_html）は pubmed_mcp 配下に集約する。
-// gitリポジトリ外（Dropbox同期）に置くことで、コードと文献データを分離する。
-const PUBMED = path.join(CODING, "pubmed_mcp");
+// 文献データ（reference_sets / article_sets / raw_html）は llamaindex 配下に集約する。
+// Dropbox同期されるObsidianルート配下に置くことで、複数端末で共有する。
 
 export const PATHS = {
   mdSourceDir: path.join(OBSIDIAN, "10_article", "RXFP1"),
   articlesJson: path.join(BASE, "articles_all3.json"),
   storageAll: path.join(BASE, "storage_all_ts"),
   outputDir: BASE,
-  referenceOutputDir: path.join(PUBMED, "reference_sets"),
-  articleOutputDir: path.join(PUBMED, "article_sets"),
-  rawHtmlDir: path.join(PUBMED, "raw_html"),
+  referenceOutputDir: path.join(BASE, "reference_sets"),
+  articleOutputDir: path.join(BASE, "article_sets"),
+  rawHtmlDir: path.join(BASE, "raw_html"),
 };
 
 export const MODELS = {

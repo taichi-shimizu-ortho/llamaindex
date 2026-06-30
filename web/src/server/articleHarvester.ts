@@ -61,8 +61,22 @@ function decodeHtmlEntities(s: string): string {
     .replace(/&([a-z]+);/gi, (match, name: string) => named[name.toLowerCase()] ?? match);
 }
 
+// <sub> はタグ除去でスペース化されると "H 2 O 2" のように壊れるため、
+// 先にUnicodeの下付き文字へ変換する。<sup> は本文中の引用上付き番号なので除去する。
+const SUBSCRIPT_MAP: Record<string, string> = {
+  "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
+  "+": "₊", "-": "₋", "−": "₋", "=": "₌", "(": "₍", ")": "₎",
+};
+function convertSub(s: string): string {
+  return s.replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_m, inner: string) =>
+    Array.from(inner.replace(/<[^>]+>/g, ""))
+      .map((ch) => SUBSCRIPT_MAP[ch] ?? ch)
+      .join(""),
+  );
+}
+
 function stripTags(s: string): string {
-  return decodeHtmlEntities(s)
+  return convertSub(decodeHtmlEntities(s))
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<sup\b[\s\S]*?<\/sup>/gi, " ")

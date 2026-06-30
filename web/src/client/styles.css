@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap");
+
 :root {
   --bg: #14130f;
   --bg-grad: linear-gradient(180deg, #171611 0%, #111315 100%);
@@ -502,7 +504,7 @@ body {
 .meta-doi { color: var(--accent); text-decoration: none; }
 .meta-doi:hover { text-decoration: underline; }
 
-.source-text { margin: 6px 0 0; font-size: 14px; }
+.source-text { margin: 6px 0 0; font-family: "Open Sans", -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif; font-size: 16px; line-height: 1.75; }
 
 /* ---- article content browser ---- */
 .article-browser {
@@ -622,7 +624,10 @@ body {
   border: 1px solid var(--border);
   border-radius: 7px;
   background: color-mix(in srgb, var(--panel) 82%, transparent);
-  font-size: 14px;
+  /* SAGE誌（Altschuler2026 raw）の本文タイポに合わせる: Open Sans / 16px / 1.75 */
+  font-family: "Open Sans", -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
 }
 
 .paragraph-index {
@@ -813,7 +818,9 @@ body {
 
 .ref-abstract-body p {
   margin: 0;
-  font-size: 14px;
+  font-family: "Open Sans", -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
 }
 
 .muted-text {

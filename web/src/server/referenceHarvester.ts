@@ -84,8 +84,33 @@ function decodeHtmlEntities(s: string): string {
     .replace(/&([a-z]+);/gi, (match, name: string) => named[name.toLowerCase()] ?? match);
 }
 
+// <sub>/<sup> はタグ除去でスペース化されると "H 2 O 2" のように壊れるため、
+// 先にUnicodeの下付き/上付き文字へ変換する（化学式・指数表記の維持）。
+const SUBSCRIPT_MAP: Record<string, string> = {
+  "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
+  "+": "₊", "-": "₋", "−": "₋", "=": "₌", "(": "₍", ")": "₎",
+};
+const SUPERSCRIPT_MAP: Record<string, string> = {
+  "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+  "+": "⁺", "-": "⁻", "−": "⁻", "=": "⁼", "(": "⁽", ")": "⁾", n: "ⁿ", i: "ⁱ",
+};
+function mapChars(text: string, map: Record<string, string>): string {
+  return Array.from(text)
+    .map((ch) => map[ch] ?? ch)
+    .join("");
+}
+function convertSubSup(s: string): string {
+  return s
+    .replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_m, inner: string) =>
+      mapChars(inner.replace(/<[^>]+>/g, ""), SUBSCRIPT_MAP),
+    )
+    .replace(/<sup\b[^>]*>([\s\S]*?)<\/sup>/gi, (_m, inner: string) =>
+      mapChars(inner.replace(/<[^>]+>/g, ""), SUPERSCRIPT_MAP),
+    );
+}
+
 function stripTags(s: string): string {
-  return decodeHtmlEntities(s)
+  return convertSubSup(decodeHtmlEntities(s))
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
