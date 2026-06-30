@@ -84,7 +84,7 @@ async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
   const documents = set.records
     .map((record) => recordToDocument(set, record))
     .filter((doc): doc is Document => Boolean(doc));
-  if (!documents.length) throw new Error("abstract付き参考文献がありません");
+  if (!documents.length) throw new Error("No references with an abstract");
   const index = await VectorStoreIndex.init({ nodes: documents });
   return { set, index };
 }

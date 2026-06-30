@@ -363,13 +363,13 @@ export function listArticleSets() {
 }
 
 export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
-  if (!options.sourceUrl && !options.html) throw new Error("URLまたはHTMLを入力してください");
+  if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   const html = options.html ?? (await fetchText(sourceUrl));
   const title = options.title?.trim() || inferTitle(html, sourceUrl);
   const meta = inferMeta(html, sourceUrl);
   const sections = buildSections(html);
-  if (!sections.length) throw new Error("本文セクションを抽出できませんでした");
+  if (!sections.length) throw new Error("Could not extract body sections");
 
   const id = uniqueJsonId(PATHS.articleOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
   const set: ArticleSet = {

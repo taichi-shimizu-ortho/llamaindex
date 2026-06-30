@@ -205,8 +205,8 @@ function ScoreBar({ score }: { score: number }) {
 
 const ARTICLE_TYPE_LABEL: Record<NonNullable<NonNullable<ReferenceRecord["pubmed"]>["articleType"]>, string> = {
   review: "Review",
-  original: "原著論文",
-  other: "その他",
+  original: "Original",
+  other: "Other",
 };
 
 function ReferenceRow({ record }: { record: ReferenceRecord }) {
@@ -308,7 +308,7 @@ function ResultSource({ source, idx }: { source: ReferenceQueryResult["sources"]
       <p className="source-text">{open ? source.abstract : preview}</p>
       {source.abstract.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
-          {open ? "閉じる" : "Abstractを表示"}
+          {open ? "Close" : "Show abstract"}
         </button>
       )}
     </div>
@@ -345,7 +345,7 @@ function ArticleResultSource({ source, idx }: { source: ArticleQueryResult["sour
       <CitedText className="source-text" text={open ? source.text : preview} />
       {source.text.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
-          {open ? "閉じる" : "段落を表示"}
+          {open ? "Close" : "Show paragraph"}
         </button>
       )}
     </div>
@@ -417,7 +417,7 @@ function IntegratedResultSource({ source, idx }: { source: IntegratedQueryResult
 
       {source.text.length > 360 && (
         <button className="link-btn" onClick={() => setOpen((v) => !v)}>
-          {open ? "閉じる" : "本文を表示"}
+          {open ? "Close" : "Show text"}
         </button>
       )}
     </div>
@@ -666,7 +666,7 @@ export function App() {
   async function fetchReferenceSetSummaries(): Promise<ReferenceSetSummary[]> {
     const res = await fetch("/api/reference/sets");
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "データセット一覧を取得できませんでした");
+    if (!res.ok) throw new Error(data.error ?? "Failed to load dataset list");
     const nextSets = data.sets ?? [];
     setSets(nextSets);
     return nextSets;
@@ -675,7 +675,7 @@ export function App() {
   async function fetchArticleSetSummaries(): Promise<ArticleSetSummary[]> {
     const res = await fetch("/api/article/sets");
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "主論文JSON一覧を取得できませんでした");
+    if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON list");
     const nextSets = data.sets ?? [];
     setArticleSets(nextSets);
     return nextSets;
@@ -716,7 +716,7 @@ export function App() {
   async function loadSet(id: string) {
     const res = await fetch(`/api/reference/sets/${encodeURIComponent(id)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "JSONを読み込めませんでした");
+    if (!res.ok) throw new Error(data.error ?? "Failed to load JSON");
     setCurrentSet(data);
     setResult(null);
   }
@@ -724,7 +724,7 @@ export function App() {
   async function loadArticleSet(id: string) {
     const res = await fetch(`/api/article/sets/${encodeURIComponent(id)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "主論文JSONを読み込めませんでした");
+    if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON");
     setCurrentArticle(data);
     setResult(null);
   }
@@ -744,7 +744,7 @@ export function App() {
       body: JSON.stringify({ sessionId, result: nextResult }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "Markdown保存に失敗しました");
+    if (!res.ok) throw new Error(data.error ?? "Failed to save Markdown");
     setSavedFile(data.file ?? "");
   }
 
@@ -753,7 +753,7 @@ export function App() {
     if (searchMode === "reference" && !currentSet) return;
     if (searchMode === "article" && !currentArticle) return;
     if (searchMode === "integrated" && (!currentArticle || !currentSet)) return;
-    setBusy(translate ? "翻訳してRAG検索中..." : "RAG検索中...");
+    setBusy(translate ? "Translating & searching..." : "Searching...");
     setError("");
     try {
       const endpoint =
@@ -774,7 +774,7 @@ export function App() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "検索に失敗しました");
+      if (!res.ok) throw new Error(data.error ?? "Search failed");
       setResult(data);
       await saveResult(data);
     } catch (e: any) {
@@ -806,8 +806,8 @@ export function App() {
           <button
             className="theme-toggle"
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-            title={theme === "dark" ? "ライトテーマに切替" : "ダークテーマに切替"}
-            aria-label="テーマ切替"
+            title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? "Light" : "Dark"}
           </button>
@@ -824,7 +824,7 @@ export function App() {
 
           <div className="dataset-picker">
             <label className="field">
-              <span>主論文JSON</span>
+              <span>Article JSON</span>
               <select
                 value={selectedArticleId}
                 onChange={(e) => {
@@ -842,7 +842,7 @@ export function App() {
                   }
                 }}
               >
-                <option value="">未選択</option>
+                <option value="">None</option>
                 {articleSets.map((set) => (
                   <option key={set.id} value={set.id}>
                     {datasetLabel(set.id)}
@@ -853,11 +853,11 @@ export function App() {
             <label className="field">
               <span>Reference JSON</span>
               <div className={selectedId ? "dataset-value" : "dataset-value muted-dataset-value"}>
-                {selectedId ? datasetLabel(selectedId) : "対応するJSONなし"}
+                {selectedId ? datasetLabel(selectedId) : "No matching JSON"}
               </div>
             </label>
             <button className="ghost refresh-btn" onClick={() => { loadArticleSets().catch((err) => setError(String(err?.message ?? err))); }}>
-              一覧を更新
+              Refresh list
             </button>
           </div>
         </section>
@@ -889,7 +889,7 @@ export function App() {
               <section className="query-panel embedded-query">
                 <textarea
                   className="query-input"
-                  placeholder="質問を入力"
+                  placeholder="Enter your question"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onQueryKey}
@@ -897,16 +897,16 @@ export function App() {
                 />
                 <div className="controls">
                   <label className="ctrl">
-                    対象
+                    Scope
                     <select value={searchMode} onChange={(e) => setSearchMode(e.target.value as SearchMode)}>
-                      <option value="integrated">統合</option>
-                      <option value="article">主論文</option>
+                      <option value="integrated">Integrated</option>
+                      <option value="article">Article</option>
                       <option value="reference">Abstract</option>
                     </select>
                   </label>
                   <label className="ctrl">
                     <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
-                    日本語→英語
+                    JA→EN
                   </label>
                   <label className="ctrl">
                     Top-K
@@ -923,7 +923,7 @@ export function App() {
                       (searchMode === "integrated" && (!currentArticle || !currentSet))
                     }
                   >
-                    検索
+                    Search
                   </button>
                 </div>
               </section>
@@ -983,8 +983,8 @@ export function App() {
             </>
           ) : (
             <div className="empty-state">
-              <h2>JSON未選択</h2>
-              <p>論文ページのURLを入力するか、保存済みJSONを選択してください。</p>
+              <h2>No JSON selected</h2>
+              <p>Enter an article page URL, or select a saved JSON.</p>
             </div>
           )}
         </section>

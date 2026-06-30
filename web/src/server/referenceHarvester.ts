@@ -931,7 +931,7 @@ async function enrichRecord(record: ReferenceRecord): Promise<ReferenceRecord> {
       }
     }
 
-    if (!pubmed) return { ...record, pubmedFound: false, error: "メタデータが見つかりません" };
+    if (!pubmed) return { ...record, pubmedFound: false, error: "metadata was not available" };
 
     return {
       ...record,
@@ -982,7 +982,7 @@ export function listReferenceSets() {
 }
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
-  if (!options.sourceUrl && !options.html) throw new Error("URLまたはHTMLを入力してください");
+  if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   const html = options.html ?? (await fetchText(sourceUrl, {}));
   const title = options.title?.trim() || inferTitle(html, sourceUrl);

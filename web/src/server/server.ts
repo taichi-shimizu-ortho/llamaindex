@@ -59,7 +59,7 @@ app.post("/api/reference/harvest", async (req, res) => {
 
 app.post("/api/reference/query", async (req, res) => {
   const { setId, query, topK, translate } = req.body ?? {};
-  if (!setId || !query) return res.status(400).json({ error: "データセットとクエリを指定してください" });
+  if (!setId || !query) return res.status(400).json({ error: "Specify a dataset and a query" });
   try {
     const result = await runReferenceQuery(String(setId), String(query).trim(), { topK, translate });
     res.json(result);
@@ -96,7 +96,7 @@ function referenceSummary(reference: Awaited<ReturnType<typeof harvestReferences
 
 app.post("/api/import/ors", async (req, res) => {
   const { sourceUrl, html, title, limit } = req.body ?? {};
-  if (!sourceUrl && !html) return res.status(400).json({ error: "URLまたはHTMLを入力してください" });
+  if (!sourceUrl && !html) return res.status(400).json({ error: "Enter a URL or HTML" });
 
   const result: {
     ok: boolean;
@@ -122,7 +122,7 @@ app.post("/api/import/ors", async (req, res) => {
   if (!result.ok) {
     return res.status(500).json({
       ...result,
-      error: [result.articleError, result.referenceError].filter(Boolean).join(" / ") || "インポートに失敗しました",
+      error: [result.articleError, result.referenceError].filter(Boolean).join(" / ") || "Import failed",
     });
   }
   res.json(result);
@@ -157,7 +157,7 @@ app.post("/api/article/harvest", async (req, res) => {
 
 app.post("/api/article/query", async (req, res) => {
   const { articleId, query, topK, translate } = req.body ?? {};
-  if (!articleId || !query) return res.status(400).json({ error: "主論文JSONとクエリを指定してください" });
+  if (!articleId || !query) return res.status(400).json({ error: "Specify an article JSON and a query" });
   try {
     const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate });
     res.json(result);
@@ -170,7 +170,7 @@ app.post("/api/article/query", async (req, res) => {
 app.post("/api/integrated/query", async (req, res) => {
   const { articleId, referenceSetId, query, topK, translate } = req.body ?? {};
   if (!articleId || !referenceSetId || !query) {
-    return res.status(400).json({ error: "主論文JSON、reference set、クエリを指定してください" });
+    return res.status(400).json({ error: "Specify an article JSON, a reference set, and a query" });
   }
   try {
     const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate });
@@ -268,7 +268,7 @@ function resultMarkdown(result: any): string {
 
 app.post("/api/session/save", (req, res) => {
   const { sessionId, result } = req.body ?? {};
-  if (!result) return res.status(400).json({ error: "保存する検索結果がありません" });
+  if (!result) return res.status(400).json({ error: "No search result to save" });
   try {
     fs.mkdirSync(PATHS.outputDir, { recursive: true });
     const id = safeSessionId(sessionId);
