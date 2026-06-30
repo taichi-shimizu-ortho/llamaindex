@@ -548,7 +548,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 7px;
   background: var(--panel-2);
-  overflow: clip;
+  /* overflow: clip だと上方向に出る引用フローティング(.cite-pop)が枠でクリップされるため visible にする */
+  overflow: visible;
 }
 
 .article-details-abstract {
