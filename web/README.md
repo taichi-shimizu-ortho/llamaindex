@@ -28,11 +28,16 @@
 | `src/server/server.ts` | Express API |
 | `src/client/App.tsx` | React UI |
 
-保存先:
+保存先（gitリポジトリ外。Dropbox同期で他端末と共有する）:
 
 ```text
-~/Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/reference_sets
+<Obsidian>/50_coding/pubmed_mcp/reference_sets   # 参考文献セット JSON
+<Obsidian>/50_coding/pubmed_mcp/article_sets     # 主論文セット JSON
+<Obsidian>/50_coding/pubmed_mcp/raw_html         # 取り込み時の入力HTML（再現性確保・パーサ検証用）
 ```
+
+`<Obsidian>` は `config.ts` が自動解決する（Windows: `~/Dropbox/obsidian`、Mac: `~/Library/CloudStorage/Dropbox/obsidian`）。
+環境変数 `OBSIDIAN_DIR` で明示指定も可能。
 
 ## 実行
 

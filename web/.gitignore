@@ -2,3 +2,9 @@ node_modules/
 dist/
 .env
 *.log
+
+# 文献データは Dropbox(obsidian)/50_coding/pubmed_mcp 配下に保存する。
+# 万一ローカルに生成されてもコミットしない。
+reference_sets/
+article_sets/
+raw_html/

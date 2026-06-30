@@ -50,6 +50,7 @@ export interface HarvestOptions {
 
 function ensureOutputDir() {
   fs.mkdirSync(PATHS.referenceOutputDir, { recursive: true });
+  fs.mkdirSync(PATHS.rawHtmlDir, { recursive: true });
 }
 
 function decodeHtmlEntities(s: string): string {
@@ -845,7 +846,7 @@ export function referenceSetPath(id: string): string {
 }
 
 export function referenceHtmlPath(id: string): string {
-  return path.join(PATHS.referenceOutputDir, `${id}.source.html`);
+  return path.join(PATHS.rawHtmlDir, `${id}.source.html`);
 }
 
 export function loadReferenceSet(id: string): ReferenceSet {
