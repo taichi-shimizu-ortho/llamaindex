@@ -549,15 +549,7 @@ function SectionDropdown({ section }: { section: ArticleSectionItem }) {
       </summary>
 
       <div className="article-section-body">
-        {section.paragraphs.length > 0 && (
-          <details className="article-details article-details-nested">
-            <summary>
-              <span className="article-summary-main">Section text</span>
-              <span className="article-summary-meta">{section.paragraphs.length} paragraphs</span>
-            </summary>
-            <ParagraphList paragraphs={section.paragraphs} />
-          </details>
-        )}
+        {section.paragraphs.length > 0 && <ParagraphList paragraphs={section.paragraphs} />}
 
         {section.subsections.length > 0 && (
           <div className="subsection-stack">
@@ -948,10 +940,10 @@ export function App() {
                     {"articleAnswer" in result ? (
                       <div className="answer-split">
                         <AnswerBlock title="Main Article" text={result.articleAnswer} cite />
-                        <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} />
+                        <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} cite />
                       </div>
                     ) : (
-                      <MarkdownText className="answer-text" text={result.answer} cite={"articleId" in result} />
+                      <MarkdownText className="answer-text" text={result.answer} cite />
                     )}
                     {savedFile && <div className="saved-note">Saved: {savedFile}</div>}
                   </div>

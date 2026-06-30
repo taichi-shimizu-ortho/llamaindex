@@ -126,13 +126,12 @@ async function synthesizeAnswerWithCitations(
 ): Promise<string> {
   const client = new OpenAIClient();
   const context = sources
-    .map((source, i) => {
-      const citation = source.citationLabel;
+    .map((source) => {
       const title = source.title ? `Title: ${source.title}` : "";
       const journal = [source.journal, source.year].filter(Boolean).join(", ");
       const journalLine = journal ? `Journal: ${journal}` : "";
       return [
-        `Source ${i + 1} (${citation})`,
+        `Reference [${source.refIndex}] (${source.citationLabel})`,
         title,
         source.authors ? `Authors: ${source.authors}` : "",
         journalLine,
@@ -149,10 +148,10 @@ async function synthesizeAnswerWithCitations(
         role: "system",
         content: [
           "You answer questions using only the provided PubMed reference abstracts.",
-          "Every substantive answer sentence must end with one or more citations in parentheses, using the exact citation labels shown for the sources, for example (Smith2020) or (Smith2020; Lee2022).",
-          "If a sentence combines evidence from multiple abstracts, cite every abstract used for that sentence.",
-          "Do not cite sources that do not support the sentence.",
-          "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant abstract if applicable.",
+          "Every substantive answer sentence must end with one or more citations in square brackets, using the exact reference numbers shown in brackets for each source, for example [2] or [2, 5].",
+          "If a sentence combines evidence from multiple abstracts, cite every reference used for that sentence.",
+          "Do not cite references that do not support the sentence.",
+          "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant reference if applicable.",
           "Always answer in English, regardless of the language of the user's query.",
         ].join(" "),
       },
