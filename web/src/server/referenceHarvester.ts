@@ -25,9 +25,21 @@ export interface ReferenceRecord {
     journal: string;
     year: string;
     publicationTypes: string[];
+    meshTerms?: string[];
+    articleType?: ArticleType;
     source?: string;
   };
   error?: string;
+}
+
+// 論文種別: review（review/systematic review/scoping review をまとめる）/ original（原著論文）/ other
+export type ArticleType = "review" | "original" | "other";
+
+export function classifyArticleType(publicationTypes: string[]): ArticleType {
+  const types = publicationTypes.map((p) => p.toLowerCase().replace(/-/g, " "));
+  if (types.some((p) => p.includes("review"))) return "review";
+  if (types.some((p) => p.includes("journal article"))) return "original";
+  return "other";
 }
 
 export interface ReferenceSet {
@@ -658,6 +670,12 @@ async function fetchPubmedRecord(pmid: string): Promise<ReferenceRecord["pubmed"
     xml.match(/<ArticleDate[^>]*>[\s\S]*?<Year>(\d{4})<\/Year>/i)?.[1] ??
     "";
 
+  // MeSHヘディングのDescriptorName（主標目）を取得する
+  const meshTerms = Array.from(xml.matchAll(/<MeshHeading>([\s\S]*?)<\/MeshHeading>/gi))
+    .map((m) => xmlText(m[1] ?? "", "DescriptorName"))
+    .filter(Boolean);
+  const publicationTypes = xmlTexts(xml, "PublicationType");
+
   return {
     pmid,
     doi,
@@ -666,7 +684,9 @@ async function fetchPubmedRecord(pmid: string): Promise<ReferenceRecord["pubmed"
     authors,
     journal: xmlText(xml, "Title"),
     year,
-    publicationTypes: xmlTexts(xml, "PublicationType"),
+    publicationTypes,
+    meshTerms,
+    articleType: classifyArticleType(publicationTypes),
   };
 }
 
@@ -700,6 +720,7 @@ async function fetchCrossrefMeta(doi: string): Promise<ReferenceRecord["pubmed"]
       journal: Array.isArray(msg["container-title"]) ? msg["container-title"][0] ?? "" : "",
       year,
       publicationTypes: msg.type ? [msg.type] : [],
+      articleType: classifyArticleType(msg.type ? [msg.type] : []),
       source: "crossref",
     };
   } catch {
@@ -727,6 +748,10 @@ async function fetchEuropePmcMeta(doi: string): Promise<ReferenceRecord["pubmed"
       journal: r.journalInfo?.journal?.title ?? "",
       year: String(r.pubYear ?? ""),
       publicationTypes: r.pubTypeList?.pubType ?? [],
+      meshTerms: Array.isArray(r.meshHeadingList?.meshHeading)
+        ? r.meshHeadingList.meshHeading.map((h: any) => h.descriptorName).filter(Boolean)
+        : [],
+      articleType: classifyArticleType(r.pubTypeList?.pubType ?? []),
       source: "europepmc",
     };
   } catch {
@@ -786,18 +811,98 @@ function parseReference(ref: string): { author: string; year: string } | null {
   return null;
 }
 
-async function searchByAuthorYear(author: string, year: string): Promise<string> {
-  const query = `${author}[1au] AND ${year}[dp]`;
+async function esearchIds(term: string, retmax: number): Promise<string[]> {
   const raw = await fetchText(`${ENTREZ_BASE}/esearch.fcgi`, {
     db: "pubmed",
-    term: query,
+    term,
     retmode: "json",
-    retmax: "1",
+    retmax: String(retmax),
     tool: TOOL,
     email: EMAIL,
   });
-  const data = JSON.parse(raw);
-  return data?.esearchresult?.idlist?.[0] ?? "";
+  return JSON.parse(raw)?.esearchresult?.idlist ?? [];
+}
+
+const TITLE_STOPWORDS = new Set([
+  "the", "and", "for", "with", "from", "into", "that", "this", "using", "based",
+  "study", "analysis", "review", "clinical", "patients", "versus", "after", "among",
+]);
+
+function titleTokens(s: string): string[] {
+  return (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+    (w) => w.length >= 4 && !TITLE_STOPWORDS.has(w),
+  );
+}
+
+// 引用文から論文タイトル部分を抽出する（"著者, Title. Journal vol (year) pages." 形式想定）
+function extractCitationTitle(text: string): string {
+  const s = cleanReferenceText(text).replace(/^\[?\d+\]?\.?\s*/, "").trim();
+  // 末尾の "… . Journal vol (year) pages." を外して 著者+タイトル を取り出す
+  const tail = s.match(/^(.*?)\.\s+[^.]*\(\d{4}\)[^.]*\.?\s*$/);
+  let head = tail ? tail[1] : s;
+  // 先頭から著者トークン（イニシャル+姓）を順に除去すると、残りがタイトルになる
+  const authorTok = /^\s*(?:and\s+)?(?:[A-Z]\.[- ]?){1,4}[A-Z][A-Za-z'’.\-]+\s*,\s*/;
+  let prev = "";
+  while (head !== prev) {
+    prev = head;
+    head = head.replace(authorTok, "");
+  }
+  return head.trim();
+}
+
+async function fetchTitlesByIds(ids: string[]): Promise<Record<string, string>> {
+  if (!ids.length) return {};
+  const raw = await fetchText(`${ENTREZ_BASE}/esummary.fcgi`, {
+    db: "pubmed",
+    id: ids.join(","),
+    retmode: "json",
+    tool: TOOL,
+    email: EMAIL,
+  });
+  const result = JSON.parse(raw)?.result ?? {};
+  const out: Record<string, string> = {};
+  for (const id of ids) if (result[id]?.title) out[id] = result[id].title as string;
+  return out;
+}
+
+// 著者名+発行年でPMID候補を複数検索し、複数ヒット時はタイトルで絞り込む。
+// 同一著者が同年に複数論文を出している場合、[dp] は epub 年も拾うため
+// retmax=1 の単純採用では誤マッチする（例: Saltzman 2016）。
+async function searchByAuthorYear(author: string, year: string, refText: string): Promise<string> {
+  const ids = await esearchIds(`${author}[1au] AND ${year}[dp]`, 20);
+  if (ids.length === 0) return "";
+  if (ids.length === 1) return ids[0];
+
+  // 複数ヒット → 引用文のタイトルで絞り込む
+  const title = extractCitationTitle(refText);
+  const titleToks = titleTokens(title);
+
+  // 1) タイトル検索（著者で限定）して候補集合と突き合わせる
+  if (titleToks.length >= 3) {
+    const titleIds = await esearchIds(`${author}[1au] AND ${title.slice(0, 200)}[Title]`, 5);
+    const inSet = titleIds.find((id) => ids.includes(id));
+    if (inSet) return inSet;
+    if (titleIds.length) return titleIds[0];
+  }
+
+  // 2) 候補のタイトルを取得し、引用文に含まれる語の割合で一致度を評価する
+  const titles = await fetchTitlesByIds(ids);
+  const refLower = ` ${refText.toLowerCase()} `;
+  let best = "";
+  let bestScore = 0;
+  for (const id of ids) {
+    const cand = titleTokens(titles[id] ?? "");
+    if (!cand.length) continue;
+    const score = cand.filter((t) => refLower.includes(t)).length / cand.length;
+    if (score > bestScore) {
+      bestScore = score;
+      best = id;
+    }
+  }
+  if (bestScore >= 0.6) return best;
+
+  // 絞り込めない場合は呼び出し側の titleToPmid フォールバックに委ねる
+  return "";
 }
 
 async function enrichRecord(record: ReferenceRecord): Promise<ReferenceRecord> {
@@ -807,7 +912,7 @@ async function enrichRecord(record: ReferenceRecord): Promise<ReferenceRecord> {
     if (!pmid) {
       const parsed = parseReference(record.text);
       if (parsed?.author && parsed?.year) {
-        pmid = await searchByAuthorYear(parsed.author, parsed.year);
+        pmid = await searchByAuthorYear(parsed.author, parsed.year, record.text);
       }
       if (!pmid) pmid = await titleToPmid(record.text);
     }

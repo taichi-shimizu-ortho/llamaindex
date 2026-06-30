@@ -203,8 +203,16 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
+const ARTICLE_TYPE_LABEL: Record<NonNullable<NonNullable<ReferenceRecord["pubmed"]>["articleType"]>, string> = {
+  review: "Review",
+  original: "原著論文",
+  other: "その他",
+};
+
 function ReferenceRow({ record }: { record: ReferenceRecord }) {
   const abstract = record.pubmed?.abstract ?? "";
+  const articleType = record.pubmed?.articleType;
+  const meshTerms = record.pubmed?.meshTerms ?? [];
   return (
     <details className={abstract ? "ref-details" : "ref-details muted-row"}>
       <summary>
@@ -213,6 +221,9 @@ function ReferenceRow({ record }: { record: ReferenceRecord }) {
           <div className="ref-main">
             <div className="ref-title">{record.pubmed?.title || record.text}</div>
             <div className="ref-meta">
+              {articleType && (
+                <span className={`ref-type ref-type-${articleType}`}>{ARTICLE_TYPE_LABEL[articleType]}</span>
+              )}
               {record.pubmed?.authors?.[0] && (
                 <span>
                   {record.pubmed.authors[0]}
@@ -245,6 +256,16 @@ function ReferenceRow({ record }: { record: ReferenceRecord }) {
             <p className="muted-text">{record.text}</p>
             {record.error && <p className="warn-text">{record.error}</p>}
           </>
+        )}
+        {meshTerms.length > 0 && (
+          <div className="ref-mesh">
+            <span className="ref-mesh-label">MeSH</span>
+            {meshTerms.map((term) => (
+              <span key={term} className="mesh-tag">
+                {term}
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </details>

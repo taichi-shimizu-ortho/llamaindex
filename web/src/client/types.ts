@@ -19,6 +19,8 @@ export interface ReferenceRecord {
     journal: string;
     year: string;
     publicationTypes: string[];
+    meshTerms?: string[];
+    articleType?: "review" | "original" | "other";
   };
   error?: string;
 }

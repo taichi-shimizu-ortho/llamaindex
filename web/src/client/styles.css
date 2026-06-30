@@ -716,6 +716,55 @@ body {
 .link-btn { margin-top: 8px; }
 .source-mesh { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
+/* 論文種別バッジ（Review / 原著論文 / その他） */
+.ref-type {
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+.ref-type-review {
+  color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-2) 40%, var(--border));
+}
+.ref-type-original {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.ref-type-other {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+/* MeSHタームのタグ表示 */
+.ref-mesh {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.ref-mesh-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.mesh-tag {
+  font-size: 11.5px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 7px;
+}
+
 .ref-list {
   display: grid;
   gap: 8px;
