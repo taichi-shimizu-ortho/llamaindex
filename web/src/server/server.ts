@@ -285,6 +285,9 @@ app.post("/api/session/save", (req, res) => {
 });
 
 
+// 図の画像など raw_html 配下のファイルを配信（<img src="/raw_html/..."> 用）
+app.use("/raw_html", express.static(PATHS.rawHtmlDir));
+
 // 本番: ビルド済みクライアントを配信
 const clientDist = path.resolve(import.meta.dirname, "../../dist");
 if (fs.existsSync(clientDist)) {
