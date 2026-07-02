@@ -1,4 +1,4 @@
-import { Document, Settings, VectorStoreIndex } from "llamaindex";
+import { Document, SentenceSplitter, Settings, VectorStoreIndex } from "llamaindex";
 import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
 import OpenAIClient from "openai";
 import { MODELS } from "./config.js";
@@ -7,7 +7,13 @@ import { loadReferenceSet, type ReferenceRecord, type ReferenceSet } from "./ref
 interface CachedReferenceIndex {
   set: ReferenceSet;
   index: VectorStoreIndex;
+  // ref_index -> 元レコード（アブストラクト全文の復元用）
+  recordByRef: Map<string, ReferenceRecord>;
 }
+
+// アブストラクトを文単位の小チャンクへ分割する（検索精度向上のため）。
+// 表示・LLM提示はアブストラクト全文を使うので、ここは検索専用の細分化。
+const abstractSplitter = new SentenceSplitter({ chunkSize: 128, chunkOverlap: 24 });
 
 const cache = new Map<string, Promise<CachedReferenceIndex>>();
 
@@ -52,57 +58,66 @@ async function translateToEnglish(text: string): Promise<string> {
   return res.choices[0].message.content?.trim() ?? text;
 }
 
-function recordToDocument(set: ReferenceSet, record: ReferenceRecord): Document | null {
-  const abstract = record.pubmed?.abstract?.trim();
-  if (!abstract) return null;
+function recordMetadata(set: ReferenceSet, record: ReferenceRecord): Record<string, unknown> {
   const authors = record.pubmed?.authors?.join(", ") || "";
   const year = record.pubmed?.year || "";
-  return new Document({
-    text: abstract,
-    metadata: {
-      set_id: set.id,
-      source_url: set.sourceUrl,
-      ref_index: record.index,
-      reference_text: record.text,
-      href: record.href,
-      pmid: record.pubmed?.pmid || record.pmid,
-      doi: record.pubmed?.doi || record.doi,
-      title: record.pubmed?.title || "",
-      authors,
-      journal: record.pubmed?.journal || "",
-      year,
-      publication_types: record.pubmed?.publicationTypes?.join(", ") || "",
-      citation_label: citationLabel(authors, year, record.index),
-      metadata_source: record.pubmed?.source || "pubmed",
-    },
-  });
+  return {
+    set_id: set.id,
+    source_url: set.sourceUrl,
+    ref_index: record.index,
+    reference_text: record.text,
+    href: record.href,
+    pmid: record.pubmed?.pmid || record.pmid,
+    doi: record.pubmed?.doi || record.doi,
+    title: record.pubmed?.title || "",
+    authors,
+    journal: record.pubmed?.journal || "",
+    year,
+    publication_types: record.pubmed?.publicationTypes?.join(", ") || "",
+    citation_label: citationLabel(authors, year, record.index),
+    metadata_source: record.pubmed?.source || "pubmed",
+  };
+}
+
+// アブストラクトを文単位の小チャンクへ分割し、各チャンクに文献メタデータを付与する。
+// メタデータは埋め込み・LLM本文から除外し、「文そのもの」だけをベクトル化する
+// （ref_index などがembedに混ざるとチャンク細分化の意味が薄れるため）。
+function recordToNodes(set: ReferenceSet, record: ReferenceRecord): Document[] {
+  const abstract = record.pubmed?.abstract?.trim();
+  if (!abstract) return [];
+  const metadata = recordMetadata(set, record);
+  const excluded = Object.keys(metadata);
+  return abstractSplitter.splitText(abstract).map(
+    (text) =>
+      new Document({
+        text,
+        metadata,
+        excludedEmbedMetadataKeys: excluded,
+        excludedLlmMetadataKeys: excluded,
+      }),
+  );
 }
 
 async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
   ensureSettings();
   const set = loadReferenceSet(id);
-  const documents = set.records
-    .map((record) => recordToDocument(set, record))
-    .filter((doc): doc is Document => Boolean(doc));
-  if (!documents.length) throw new Error("No references with an abstract");
-  const index = await VectorStoreIndex.init({ nodes: documents });
-  return { set, index };
+  const recordByRef = new Map<string, ReferenceRecord>();
+  const nodes: Document[] = [];
+  for (const record of set.records) {
+    const chunks = recordToNodes(set, record);
+    if (chunks.length) {
+      recordByRef.set(String(record.index), record);
+      nodes.push(...chunks);
+    }
+  }
+  if (!nodes.length) throw new Error("No references with an abstract");
+  const index = await VectorStoreIndex.init({ nodes });
+  return { set, index, recordByRef };
 }
 
 async function getReferenceIndex(id: string): Promise<CachedReferenceIndex> {
   if (!cache.has(id)) cache.set(id, buildReferenceIndex(id));
   return cache.get(id)!;
-}
-
-function nodeText(n: any): string {
-  if (typeof n.getContent === "function") {
-    try {
-      return n.getContent();
-    } catch {
-      /* fallthrough */
-    }
-  }
-  return n.text ?? "";
 }
 
 type ReferenceSource = {
@@ -119,6 +134,27 @@ type ReferenceSource = {
   abstract: string;
   citationLabel: string;
 };
+
+// 文チャンクのヒットから、文献（アブストラクト全文）単位のソースを組み立てる。
+// abstract は元レコードから復元するため、表示・synthesis は常に全文になる。
+function recordToSource(record: ReferenceRecord, score: number): ReferenceSource {
+  const authors = record.pubmed?.authors?.join(", ") || "";
+  const year = record.pubmed?.year || "";
+  return {
+    score,
+    refIndex: record.index,
+    title: record.pubmed?.title || "",
+    authors,
+    journal: record.pubmed?.journal || "",
+    year,
+    doi: record.pubmed?.doi || record.doi || "",
+    pmid: record.pubmed?.pmid || record.pmid || "",
+    href: record.href || "",
+    referenceText: record.text || "",
+    abstract: record.pubmed?.abstract?.trim() || "",
+    citationLabel: citationLabel(authors, year, record.index),
+  };
+}
 
 async function synthesizeAnswerWithCitations(
   enQuery: string,
@@ -197,34 +233,32 @@ export async function runReferenceQuery(
   opts: { topK?: number; translate?: boolean; enQuery?: string } = {},
 ): Promise<ReferenceQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
-  const { index } = await getReferenceIndex(setId);
+  const { index, recordByRef } = await getReferenceIndex(setId);
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
-  const retriever = index.asRetriever({ similarityTopK: topK });
+  // 文チャンク単位で検索するため、topK文献を確保できるよう多めに取得する。
+  const retrieveK = Math.min(80, topK * 8);
+  const retriever = index.asRetriever({ similarityTopK: retrieveK });
   const rawNodes: any[] = await retriever.retrieve(enQuery);
-  const sources = rawNodes
-    .map((nws): ReferenceSource => {
-      const node = nws.node ?? nws;
-      const meta = node.metadata ?? {};
-      const refIndex = meta.ref_index ?? "";
-      const authors = meta.authors ?? "";
-      const year = meta.year ?? "";
-      return {
-        score: typeof nws.score === "number" ? nws.score : 0,
-        refIndex,
-        title: meta.title ?? "",
-        authors,
-        journal: meta.journal ?? "",
-        year,
-        doi: meta.doi ?? "",
-        pmid: meta.pmid ?? "",
-        href: meta.href ?? "",
-        referenceText: meta.reference_text ?? "",
-        abstract: nodeText(node),
-        citationLabel: meta.citation_label ?? citationLabel(authors, year, refIndex),
-      };
+
+  // ref_index でグループ化し、各文献の最高スコア（＝最も刺さった文）を採用する。
+  const bestByRef = new Map<string, number>();
+  for (const nws of rawNodes) {
+    const node = nws.node ?? nws;
+    const refIndex = node.metadata?.ref_index;
+    if (refIndex === undefined || refIndex === null) continue;
+    const key = String(refIndex);
+    const score = typeof nws.score === "number" ? nws.score : 0;
+    if (!bestByRef.has(key) || score > bestByRef.get(key)!) bestByRef.set(key, score);
+  }
+
+  const sources = [...bestByRef.entries()]
+    .map(([key, score]) => {
+      const record = recordByRef.get(key);
+      return record ? recordToSource(record, score) : null;
     })
+    .filter((s): s is ReferenceSource => s !== null)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 

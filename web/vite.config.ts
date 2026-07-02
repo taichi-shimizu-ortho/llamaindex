@@ -8,6 +8,8 @@ export default defineConfig({
     open: true, // 起動時にデフォルトブラウザで自動的に開く
     proxy: {
       "/api": `http://localhost:${process.env.PORT ?? 5174}`,
+      // 図の画像(raw_html配下)もバックエンドへ中継する
+      "/raw_html": `http://localhost:${process.env.PORT ?? 5174}`,
     },
   },
   build: {
