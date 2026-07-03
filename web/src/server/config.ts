@@ -37,11 +37,14 @@ export const PATHS = {
   referenceOutputDir: path.join(BASE, "reference_sets"),
   articleOutputDir: path.join(BASE, "article_sets"),
   rawHtmlDir: path.join(BASE, "raw_html"),
+  // 埋め込みベクトルのキャッシュ（再起動時の再埋め込みを避ける）。
+  // Dropbox同期のBASE配下に置くことで複数端末でも再埋め込み不要。
+  embeddingCacheDir: path.join(BASE, "embeddings_cache"),
 };
 
 export const MODELS = {
   llm: "gpt-5.4-mini",
-  embed: "text-embedding-3-large",
+  embed: "text-embedding-3-small",
   translate: "gpt-4o-mini",
 };
 

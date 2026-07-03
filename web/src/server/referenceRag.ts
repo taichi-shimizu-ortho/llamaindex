@@ -1,26 +1,28 @@
-import { Document, SentenceSplitter, Settings, VectorStoreIndex } from "llamaindex";
-import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
+import { SentenceSplitter } from "llamaindex";
 import OpenAIClient from "openai";
 import { MODELS } from "./config.js";
+import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { loadReferenceSet, type ReferenceRecord, type ReferenceSet } from "./referenceHarvester.js";
-
-interface CachedReferenceIndex {
-  set: ReferenceSet;
-  index: VectorStoreIndex;
-  // ref_index -> 元レコード（アブストラクト全文の復元用）
-  recordByRef: Map<string, ReferenceRecord>;
-}
 
 // アブストラクトを文単位の小チャンクへ分割する（検索精度向上のため）。
 // 表示・LLM提示はアブストラクト全文を使うので、ここは検索専用の細分化。
 const abstractSplitter = new SentenceSplitter({ chunkSize: 128, chunkOverlap: 24 });
 
-const cache = new Map<string, Promise<CachedReferenceIndex>>();
-
-function ensureSettings() {
-  Settings.llm = new OpenAI({ model: MODELS.llm, temperature: 0.1 });
-  Settings.embedModel = new OpenAIEmbedding({ model: MODELS.embed });
+// 1チャンク = 埋め込みベクトル + 所属文献(ref_index)。テキストは保持しない
+// （表示・提示はレコードのアブストラクト全文を使うため）。
+interface Chunk {
+  refIndex: string;
+  embedding: number[];
 }
+
+interface CachedReferenceIndex {
+  set: ReferenceSet;
+  // ref_index -> 元レコード（アブストラクト全文の復元用）
+  recordByRef: Map<string, ReferenceRecord>;
+  chunks: Chunk[];
+}
+
+const cache = new Map<string, Promise<CachedReferenceIndex>>();
 
 function hasJapanese(s: string): boolean {
   return /[぀-ヿ㐀-鿿]/.test(s);
@@ -58,61 +60,27 @@ async function translateToEnglish(text: string): Promise<string> {
   return res.choices[0].message.content?.trim() ?? text;
 }
 
-function recordMetadata(set: ReferenceSet, record: ReferenceRecord): Record<string, unknown> {
-  const authors = record.pubmed?.authors?.join(", ") || "";
-  const year = record.pubmed?.year || "";
-  return {
-    set_id: set.id,
-    source_url: set.sourceUrl,
-    ref_index: record.index,
-    reference_text: record.text,
-    href: record.href,
-    pmid: record.pubmed?.pmid || record.pmid,
-    doi: record.pubmed?.doi || record.doi,
-    title: record.pubmed?.title || "",
-    authors,
-    journal: record.pubmed?.journal || "",
-    year,
-    publication_types: record.pubmed?.publicationTypes?.join(", ") || "",
-    citation_label: citationLabel(authors, year, record.index),
-    metadata_source: record.pubmed?.source || "pubmed",
-  };
-}
-
-// アブストラクトを文単位の小チャンクへ分割し、各チャンクに文献メタデータを付与する。
-// メタデータは埋め込み・LLM本文から除外し、「文そのもの」だけをベクトル化する
-// （ref_index などがembedに混ざるとチャンク細分化の意味が薄れるため）。
-function recordToNodes(set: ReferenceSet, record: ReferenceRecord): Document[] {
-  const abstract = record.pubmed?.abstract?.trim();
-  if (!abstract) return [];
-  const metadata = recordMetadata(set, record);
-  const excluded = Object.keys(metadata);
-  return abstractSplitter.splitText(abstract).map(
-    (text) =>
-      new Document({
-        text,
-        metadata,
-        excludedEmbedMetadataKeys: excluded,
-        excludedLlmMetadataKeys: excluded,
-      }),
-  );
-}
-
 async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
-  ensureSettings();
   const set = loadReferenceSet(id);
   const recordByRef = new Map<string, ReferenceRecord>();
-  const nodes: Document[] = [];
   for (const record of set.records) {
-    const chunks = recordToNodes(set, record);
-    if (chunks.length) {
-      recordByRef.set(String(record.index), record);
-      nodes.push(...chunks);
+    if (record.pubmed?.abstract?.trim()) recordByRef.set(String(record.index), record);
+  }
+  if (!recordByRef.size) throw new Error("No references with an abstract");
+
+  // アブストラクトを文チャンクに分割。ref_index との対応を texts/refs で並列保持。
+  const texts: string[] = [];
+  const refs: string[] = [];
+  for (const [key, record] of recordByRef) {
+    for (const text of abstractSplitter.splitText(record.pubmed!.abstract!.trim())) {
+      texts.push(text);
+      refs.push(key);
     }
   }
-  if (!nodes.length) throw new Error("No references with an abstract");
-  const index = await VectorStoreIndex.init({ nodes });
-  return { set, index, recordByRef };
+  // 埋め込みはディスクキャッシュ経由（再起動時は再埋め込みしない）。
+  const embeddings = await getEmbeddings("reference", id, texts);
+  const chunks: Chunk[] = embeddings.map((embedding, i) => ({ refIndex: refs[i], embedding }));
+  return { set, recordByRef, chunks };
 }
 
 async function getReferenceIndex(id: string): Promise<CachedReferenceIndex> {
@@ -233,24 +201,18 @@ export async function runReferenceQuery(
   opts: { topK?: number; translate?: boolean; enQuery?: string } = {},
 ): Promise<ReferenceQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
-  const { index, recordByRef } = await getReferenceIndex(setId);
+  const { recordByRef, chunks } = await getReferenceIndex(setId);
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
-  // 文チャンク単位で検索するため、topK文献を確保できるよう多めに取得する。
-  const retrieveK = Math.min(80, topK * 8);
-  const retriever = index.asRetriever({ similarityTopK: retrieveK });
-  const rawNodes: any[] = await retriever.retrieve(enQuery);
-
+  // クエリを埋め込み、各チャンクとのコサイン類似度を算出。
   // ref_index でグループ化し、各文献の最高スコア（＝最も刺さった文）を採用する。
+  const queryVec = await embedModel().getTextEmbedding(enQuery);
   const bestByRef = new Map<string, number>();
-  for (const nws of rawNodes) {
-    const node = nws.node ?? nws;
-    const refIndex = node.metadata?.ref_index;
-    if (refIndex === undefined || refIndex === null) continue;
-    const key = String(refIndex);
-    const score = typeof nws.score === "number" ? nws.score : 0;
-    if (!bestByRef.has(key) || score > bestByRef.get(key)!) bestByRef.set(key, score);
+  for (const chunk of chunks) {
+    const score = cosineSimilarity(queryVec, chunk.embedding);
+    const prev = bestByRef.get(chunk.refIndex);
+    if (prev === undefined || score > prev) bestByRef.set(chunk.refIndex, score);
   }
 
   const sources = [...bestByRef.entries()]
