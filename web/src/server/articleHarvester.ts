@@ -232,6 +232,15 @@ function inferFigureSections(html: string): ArticleSection[] {
       if (!title) {
         title = id ? `Figure ${id}` : "Figure";
       }
+
+      // Skip figure elements that actually represent tables
+      const isTableFigure = 
+        /\btable\b/i.test(attrs) ||
+        /^T\d+/i.test(id) ||
+        /^table\b/i.test(title) ||
+        /<table\b/i.test(content);
+      if (isTableFigure) continue;
+
       // Normalize "Fig. 1" to "Figure 1" for consistent frontend matching
       title = title.replace(/^fig\b\.?/i, "Figure").trim();
       
@@ -365,6 +374,7 @@ function convertTableToMarkdown(tableHtml: string): string {
 
 function paragraphTexts(html: string): string[] {
   const items: { index: number; text: string }[] = [];
+  const processedRanges: [number, number][] = [];
 
   const paraMatches = Array.from(
     html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
@@ -376,11 +386,40 @@ function paragraphTexts(html: string): string[] {
     }
   }
 
+  // Extract <figure> elements that represent tables (including their <figcaption>)
+  const figTableMatches = Array.from(html.matchAll(/<figure\b([^>]*?)>([\s\S]*?)<\/figure>/gi));
+  for (const m of figTableMatches) {
+    const attrs = m[1];
+    const content = m[2];
+    const isTable = /\btable\b/i.test(attrs) || /<table\b/i.test(content) || /^T\d+/i.test(attrs);
+    if (!isTable) continue;
+
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    processedRanges.push([start, end]);
+
+    const tableMatch = content.match(/<table\b[^>]*>([\s\S]*?)<\/table>/i);
+    const figcaptionMatch = content.match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i);
+
+    const captionText = figcaptionMatch ? stripTagsNoTable(figcaptionMatch[1]) : "";
+    const tableMd = tableMatch ? convertTableToMarkdown(tableMatch[0]) : "";
+
+    if (tableMd) {
+      const fullText = captionText ? `**${captionText}**\n\n${tableMd}` : tableMd;
+      items.push({ index: start, text: fullText });
+    }
+  }
+
+  // Extract any remaining standalone <table> elements
   const tableMatches = Array.from(html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi));
   for (const m of tableMatches) {
+    const start = m.index ?? 0;
+    if (processedRanges.some(([rStart, rEnd]) => start >= rStart && start <= rEnd)) {
+      continue;
+    }
     const md = convertTableToMarkdown(m[0]);
     if (md) {
-      items.push({ index: m.index ?? 0, text: md });
+      items.push({ index: start, text: md });
     }
   }
 
