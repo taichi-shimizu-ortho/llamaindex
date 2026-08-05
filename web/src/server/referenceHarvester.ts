@@ -516,9 +516,11 @@ function extractScienceReferences(html: string, sourceUrl: string): ReferenceRec
     records.push({
       index: marks[i].n,
       pmid,
-      doi,
+      doi: doi || "",
       href,
       text: rawText,
+      sourceUrl,
+      pubmedFound: false,
     });
   }
 

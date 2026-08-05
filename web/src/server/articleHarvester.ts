@@ -325,14 +325,69 @@ function isBoilerplateParagraph(text: string): boolean {
   return /^https?:\/\/(?:dx\.)?doi\.org\/10\.\d{4,9}\/\S+\s+Digital Object Identifier \(DOI\)$/i.test(t);
 }
 
-function paragraphTexts(html: string): string[] {
-  const paragraphs = Array.from(
-    html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
-  )
-    .map((m) => stripTags(m[1] || m[2] || ""))
-    .filter((text) => text && !isBoilerplateParagraph(text));
+function stripTagsNoTable(s: string): string {
+  return convertSub(decodeHtmlEntities(s))
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<sup\b[\s\S]*?<\/sup>/gi, " ")
+    .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-  if (paragraphs.length) return paragraphs;
+function convertTableToMarkdown(tableHtml: string): string {
+  const rows = Array.from(tableHtml.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi));
+  if (rows.length === 0) return "";
+
+  const markdownRows: string[] = [];
+  let colCount = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowContent = rows[i][1];
+    const cells = Array.from(rowContent.matchAll(/<(td|th)\b[^>]*>([\s\S]*?)<\/\1>/gi))
+      .map(m => stripTagsNoTable(m[2]));
+    
+    if (cells.length === 0) continue;
+    if (cells.length > colCount) colCount = cells.length;
+
+    const mdLine = "| " + cells.join(" | ") + " |";
+    markdownRows.push(mdLine);
+
+    if (i === 0) {
+      const sep = "| " + Array(cells.length).fill("---").join(" | ") + " |";
+      markdownRows.push(sep);
+    }
+  }
+
+  return markdownRows.join("\n");
+}
+
+function paragraphTexts(html: string): string[] {
+  const items: { index: number; text: string }[] = [];
+
+  const paraMatches = Array.from(
+    html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
+  );
+  for (const m of paraMatches) {
+    const text = stripTags(m[1] || m[2] || "");
+    if (text && !isBoilerplateParagraph(text)) {
+      items.push({ index: m.index ?? 0, text });
+    }
+  }
+
+  const tableMatches = Array.from(html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi));
+  for (const m of tableMatches) {
+    const md = convertTableToMarkdown(m[0]);
+    if (md) {
+      items.push({ index: m.index ?? 0, text: md });
+    }
+  }
+
+  items.sort((a, b) => a.index - b.index);
+  const results = items.map(item => item.text);
+
+  if (results.length) return results;
 
   const fallback = stripTags(html);
   return fallback && !isBoilerplateParagraph(fallback) ? [fallback] : [];

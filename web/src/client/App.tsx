@@ -140,6 +140,9 @@ function renderMarkdownLine(text: string, refMap: Map<number, ReferenceRecord>, 
 
 // 本文段落（ソース表示）向け: 引用番号のみをリンク化する軽量レンダラー。
 function CitedText({ className, text }: { className?: string; text: string }) {
+  if (text.trim().startsWith("|")) {
+    return <MarkdownText className={className} text={text} cite />;
+  }
   const refMap = useContext(ReferenceMapContext);
   return <span className={className}>{renderCitations(text, refMap, "ct")}</span>;
 }
@@ -149,6 +152,8 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
   const blocks: ReactNode[] = [];
   let paragraph: string[] = [];
   let listItems: string[] = [];
+  let tableRows: string[][] = [];
+  let hasHeader = false;
 
   function flushParagraph() {
     if (!paragraph.length) return;
@@ -172,22 +177,74 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
     listItems = [];
   }
 
+  function flushTable() {
+    if (!tableRows.length) return;
+    const rowsToRender = [...tableRows];
+    tableRows = [];
+    
+    let headerRow: string[] | null = null;
+    if (hasHeader && rowsToRender.length > 0) {
+      headerRow = rowsToRender.shift()!;
+    }
+    hasHeader = false;
+
+    blocks.push(
+      <div className="table-container" key={`table-${blocks.length}`}>
+        <table className="markdown-table">
+          {headerRow && (
+            <thead>
+              <tr>
+                {headerRow.map((cell, idx) => (
+                  <th key={`th-${idx}`}>{renderInline(cell, refMap, cite, `th-${idx}`)}</th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {rowsToRender.map((row, rIdx) => (
+              <tr key={`tr-${rIdx}`}>
+                {row.map((cell, cIdx) => (
+                  <td key={`td-${cIdx}`}>{renderInline(cell, refMap, cite, `td-${rIdx}-${cIdx}`)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trimEnd();
     const listMatch = line.match(/^\s*[-*]\s+(.+)$/);
+    const isTableLine = line.trim().startsWith("|");
+
     if (!line.trim()) {
       flushParagraph();
       flushList();
+      flushTable();
+    } else if (isTableLine) {
+      flushParagraph();
+      flushList();
+      if (line.replace(/[\s:|:-]/g, "") === "") {
+        hasHeader = true;
+      } else {
+        const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+        tableRows.push(cells);
+      }
     } else if (listMatch) {
       flushParagraph();
+      flushTable();
       listItems.push(listMatch[1]);
     } else {
       flushList();
+      flushTable();
       paragraph.push(line);
     }
   }
   flushParagraph();
   flushList();
+  flushTable();
 
   return <div className={className}>{blocks}</div>;
 }
