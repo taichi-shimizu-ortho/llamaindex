@@ -19,8 +19,8 @@ type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQu
 // 本文中の引用番号 [83] / [ 1 , 2 ] を参照文献メタデータに紐付けるための索引。
 const ReferenceMapContext = createContext<Map<number, ReferenceRecord>>(new Map());
 
-// 数字・空白・カンマ・セミコロン・ダッシュのみで構成された角括弧（[14/167 patients] のような非引用は除外）。
-const CITATION_GROUP = /\[\s*\d[\d\s,;–—-]*\]/g;
+// 数字・空白・カンマ・セミコロン・ダッシュのみで構成された角括弧/丸括弧（[14/167 patients] のような非引用は除外）。
+const CITATION_GROUP = /(?:\[\s*\d[\d\s,;–—-]*\]|\(\s*\d[\d\s,;–—-]*\))/g;
 
 function Citation({ n, record }: { n: number; record?: ReferenceRecord }) {
   if (!record) return <>{n}</>;
@@ -77,15 +77,27 @@ function expandCitationNumbers(inner: string): number[] {
   return out;
 }
 
-// [14; 15; 16; 17] や [14-17] のような複数・範囲指定は [14][15][16][17] と1件ずつに分けて表示する。
+// [14; 15; 16; 17] や [14-17] / (14-17) のような複数・範囲指定は 1件ずつに分けて表示する。
 function renderCitationGroup(group: string, refMap: Map<number, ReferenceRecord>, keyBase: string): ReactNode {
   const numbers = expandCitationNumbers(group.slice(1, -1));
   if (!numbers.length) return <Fragment key={keyBase}>{group}</Fragment>;
+
+  // 数字が実際に referenceMap に存在する場合のみ引用リンクとしてレンダリングする。
+  // これにより (1) などの通常の括弧付き数字が誤って引用化されるのを防ぐ。
+  const hasValidRef = numbers.some((n) => refMap.has(n));
+  if (!hasValidRef) return <Fragment key={keyBase}>{group}</Fragment>;
+
+  const isParenthesis = group.startsWith("(");
+  const openBracket = isParenthesis ? "(" : "[";
+  const closeBracket = isParenthesis ? ")" : "]";
+
   return (
     <span className="cite-group" key={keyBase}>
       {numbers.map((n, idx) => (
         <span className="cite-item" key={idx}>
-          [<Citation n={n} record={refMap.get(n)} />]
+          {openBracket}
+          <Citation n={n} record={refMap.get(n)} />
+          {closeBracket}
         </span>
       ))}
     </span>

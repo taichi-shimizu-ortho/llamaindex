@@ -35,7 +35,13 @@ function metaContent(html: string, name: string): string {
 }
 
 function citationAuthors(html: string): string[] {
-  return Array.from(html.matchAll(/<meta[^>]+name=["']citation_author["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+  const citation = Array.from(html.matchAll(/<meta[^>]+name=["']citation_author["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+    .map((m) => stripTags(m[1] ?? ""))
+    .filter(Boolean);
+  if (citation.length) return citation;
+
+  // Fallback to dc.Creator (used by Science.org)
+  return Array.from(html.matchAll(/<meta[^>]+name=["']dc\.Creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
     .map((m) => stripTags(m[1] ?? ""))
     .filter(Boolean);
 }
@@ -44,6 +50,7 @@ function yearFromHtml(html: string): string {
   const title = titleTag(html);
   return (
     metaContent(html, "citation_publication_date").match(/\d{4}/)?.[0] ??
+    metaContent(html, "dc.Date").match(/\d{4}/)?.[0] ??
     title.match(/\b(19|20)\d{2}\b/)?.[0] ??
     ""
   );
@@ -79,8 +86,10 @@ export function citationBaseId(html: string, articleTitle: string, fallback: str
   const firstAuthor = authors.find(authorLooksComplete) || firstAuthorFromTitle(html, articleTitle);
   const author = capitalizeIdPart(surname(firstAuthor));
   const year = yearFromHtml(html);
-  const base = author && year ? `${author}${year}` : fallback;
-  return base.replace(/[^A-Za-z0-9_.-]/g, "") || "Article";
+  // Construct ID as Author + Year. If either part is missing, use whatever is available.
+  const base = `${author}${year}`;
+  // If both are empty, fall back to provided fallback.
+  return (base.replace(/[^A-Za-z0-9_.-]/g, "") || fallback) || "Article";
 }
 
 export function uniqueJsonId(outputDir: string, baseId: string): string {

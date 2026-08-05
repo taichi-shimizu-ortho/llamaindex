@@ -152,12 +152,19 @@ function inferMeta(html: string, sourceUrl: string) {
 }
 
 function inferAbstractParagraphs(html: string): string[] {
-  const metaAbstract =
-    stripTags(
-      html.match(/<meta[^>]+name=["'](?:citation_abstract|dc\.description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
-    );
-  if (metaAbstract) return [metaAbstract];
+  // 1. Try to extract from known abstract sections in body
+  const abstractIds = ["abstract", "structured-abstract", "editor-abstract"];
+  for (const id of abstractIds) {
+    const match = html.match(new RegExp(`<section\\b[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/section>`, "i"))
+      || html.match(new RegExp(`<div\\b[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/div>`, "i"));
+    if (match) {
+      const inner = match[1].replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, ""); // Remove heading
+      const paras = paragraphTexts(inner);
+      if (paras.length) return paras;
+    }
+  }
 
+  // 2. Original fallback logic: look for text "Abstract" block markers
   const blocks = Array.from(html.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi)).map((m) => ({
     tag: (m[1] ?? "").toLowerCase(),
     html: m[0] ?? "",
@@ -166,23 +173,86 @@ function inferAbstractParagraphs(html: string): string[] {
     end: (m.index ?? 0) + (m[0] ?? "").length,
   }));
   const marker = blocks.find((block) => /^abstract:?$/i.test(block.text));
-  if (!marker) return [];
-
-  const rest = html.slice(marker.end);
-  const paragraphs: string[] = [];
-  for (const match of rest.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
-    const tag = (match[1] ?? "").toLowerCase();
-    const text = stripTags(match[2] ?? "");
-    if (!text) continue;
-    if (/^h[1-4]$/.test(tag)) break;
-    if (/^(?:keywords?|key words?|mini review|article type|introduction|background|references?)\b/i.test(text)) break;
-    paragraphs.push(text);
+  if (marker) {
+    const rest = html.slice(marker.end);
+    const paragraphs: string[] = [];
+    for (const match of rest.matchAll(/<(h[1-4]|p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi)) {
+      const tag = (match[1] ?? "").toLowerCase();
+      const text = stripTags(match[2] ?? "");
+      if (!text) continue;
+      if (/^h[1-4]$/.test(tag)) break;
+      if (/^(?:keywords?|key words?|mini review|article type|introduction|background|references?)\b/i.test(text)) break;
+      paragraphs.push(text);
+    }
+    if (paragraphs.length) return paragraphs;
   }
 
-  return paragraphs;
+  // 3. Metadata fallback (only if no full text abstract is found)
+  const metaAbstract =
+    stripTags(
+      html.match(/<meta[^>]+name=["'](?:citation_abstract|dc\.description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
+    );
+  if (metaAbstract) return [metaAbstract];
+
+  return [];
 }
 
 function inferFigureSections(html: string): ArticleSection[] {
+  // 1. Try extracting actual <figure> elements from the document
+  const figures: ArticleSection[] = [];
+  const figMatches = Array.from(html.matchAll(/<figure\b([^>]*?)>([\s\S]*?)<\/figure>/gi));
+  
+  if (figMatches.length > 0) {
+    for (const m of figMatches) {
+      const attrs = m[1];
+      const content = m[2];
+      
+      const idMatch = attrs.match(/id=["']([^"']+)["']/i);
+      const id = idMatch ? idMatch[1] : "";
+      
+      const imgMatch = content.match(/<img\b[^>]*?src=["']([^"']+)["']/i);
+      const imageUrl = imgMatch ? imgMatch[1] : "";
+      
+      const figcaptionMatch = content.match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i);
+      let legend = "";
+      let title = "";
+      
+      if (figcaptionMatch) {
+        const figcaptionContent = figcaptionMatch[1];
+        const titleMatch = figcaptionContent.match(/<span\b[^>]*class=["']heading["'][^>]*>([\s\S]*?)<\/span>/i)
+          || figcaptionContent.match(/<strong\b[^>]*>([\s\S]*?)<\/strong>/i)
+          || figcaptionContent.match(/<b>([\s\S]*?)<\/b>/i);
+        
+        if (titleMatch) {
+          title = stripTags(titleMatch[1]).replace(/[.\s]+$/g, "").trim();
+        }
+        legend = stripTags(figcaptionContent);
+      }
+      
+      if (!title) {
+        title = id ? `Figure ${id}` : "Figure";
+      }
+      // Normalize "Fig. 1" to "Figure 1" for consistent frontend matching
+      title = title.replace(/^fig\b\.?/i, "Figure").trim();
+      
+      if (!legend) {
+        legend = stripTags(content);
+      }
+      
+      const contentText = imageUrl ? `[Image URL: ${imageUrl}]\n\n${legend}` : legend;
+      
+      figures.push({
+        title,
+        type: "figure",
+        content: contentText,
+        paragraphs: [contentText],
+        subsections: [],
+      });
+    }
+    return figures;
+  }
+
+  // 2. Fallback to old marker-based logic for document structures without <figure> tags
   const marker = html.match(/<p\b[^>]*>\s*(?:<(?:strong|b)\b[^>]*>\s*)?Figure\s+legends?(?:\s*<\/(?:strong|b)>)?\s*<\/p>/i);
   if (!marker || marker.index == null) return [];
 

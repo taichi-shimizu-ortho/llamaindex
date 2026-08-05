@@ -23,6 +23,11 @@ app.use(express.json({ limit: "128mb" }));
 
 const PORT = Number(process.env.PORT ?? 5174);
 
+// Article figure assets saved under the shared raw_html directory.
+if (fs.existsSync(PATHS.rawHtmlDir)) {
+  app.use("/raw_html", express.static(PATHS.rawHtmlDir));
+}
+
 // 状態確認
 app.get("/api/status", (_req, res) => {
   res.json({

@@ -308,11 +308,12 @@ function metaValues(html: string, names: RegExp): string[] {
     .filter(Boolean);
 }
 
-function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "generic" {
+function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "science" | "generic" {
   const metadata = metaValues(html, /^(?:citation_publisher|citation_journal_title|dc\.publisher)$/i).join(" ");
   const haystack = `${sourceUrl} ${metadata}`;
   if (/sagepub|sage publications|american journal of sports medicine/i.test(haystack)) return "sage";
   if (/onlinelibrary\.wiley|wiley|journal of orthopaedic research/i.test(haystack)) return "wiley";
+  if (/science\.org/i.test(haystack)) return "science";
   if (metaValues(html, /^(?:citation_reference|dc\.reference|dcterms\.bibliographiccitation|bepress_citation_reference|article_references?)$/i).length) {
     return "metadata";
   }
@@ -480,6 +481,50 @@ function extractMetaReferences(html: string, sourceUrl: string): ReferenceRecord
 // <p><strong>Reference</strong></p><p>[1] Author, Title. Journal ...</p>
 // These entries may not include DOI/PMID links, so the generic link-oriented
 // extractor would otherwise fall back to unrelated paragraphs from the body.
+function extractScienceReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const markRe = /<div\b[^>]*class=["'][^"']*biblioentry[^"']*["'][^>]*>/gi;
+  const marks: { n: number; start: number }[] = [];
+  let idx = 1;
+  for (let m = markRe.exec(html); m; m = markRe.exec(html)) {
+    marks.push({ n: idx++, start: m.index });
+  }
+
+  if (!marks.length) return [];
+
+  const records: ReferenceRecord[] = [];
+  for (let i = 0; i < marks.length; i++) {
+    const end = i + 1 < marks.length ? marks[i + 1].start : Math.min(html.length, marks[i].start + 10000);
+    const block = html.slice(marks[i].start, end).replace(/&amp;/g, "&");
+    const links = Array.from(block.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi));
+    const rawText = stripTags(block).replace(/\s+/g, " ").trim();
+    if (!rawText || rawText.length < 10) continue;
+
+    const doiMatch = rawText.match(/10\.\d{4,9}\/[-._;()/:a-z0-9A-Z]+/i);
+    const textDoi = doiMatch ? decodeHtmlEntities(doiMatch[0]).toLowerCase() : undefined;
+
+    let href = "";
+    let pmid = "";
+    let doi = textDoi;
+    for (const link of links) {
+      const ahref = attr(link[1], "href");
+      if (ahref && /doi\.org|\/doi\//i.test(ahref)) doi = extractDoi(ahref);
+      if (ahref && /pubmed/i.test(ahref)) pmid = extractPmid(ahref);
+      if (ahref && /google\.com\/scholar|webofscience\.com|crossref\.org/i.test(ahref)) continue;
+      if (ahref && !href && /^https?:\/\//i.test(ahref)) href = ahref;
+    }
+
+    records.push({
+      index: marks[i].n,
+      pmid,
+      doi,
+      href,
+      text: rawText,
+    });
+  }
+
+  return records;
+}
+
 function extractPlainNumberedReferences(html: string, sourceUrl: string): ReferenceRecord[] {
   const markerRe =
     /<(h[1-4]|p)\b[^>]*>\s*(?:<(?:strong|b)\b[^>]*>\s*)?(?:References?|Bibliography|Cited Literature)(?:\s*<\/(?:strong|b)>)?\s*<\/\1>/gi;
@@ -538,9 +583,11 @@ export function extractReferenceCandidates(html: string, sourceUrl: string): Ref
       ? [extractBibrReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
       : publisher === "wiley"
         ? [extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
-        : publisher === "metadata"
-          ? [extractMetaReferences, extractBibrReferences, extractWileyBibReferences, extractPlainNumberedReferences, generic]
-          : [extractBibrReferences, extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic];
+        : publisher === "science"
+          ? [extractScienceReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
+          : publisher === "metadata"
+            ? [extractMetaReferences, extractBibrReferences, extractWileyBibReferences, extractPlainNumberedReferences, generic]
+            : [extractBibrReferences, extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic];
 
   for (const extractor of extractors) {
     const records = extractor(html, sourceUrl);

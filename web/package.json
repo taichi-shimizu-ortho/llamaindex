@@ -27,6 +27,7 @@
     "@vitejs/plugin-react": "^4.3.0",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
+    "mailparser": "^3.9.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tsx": "^4.19.0",
