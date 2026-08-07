@@ -31,6 +31,29 @@
   --shadow: rgba(15, 23, 42, 0.1);
 }
 
+/* Kimi variant: same layout, desaturated slate accent instead of the green/gold theme. */
+.app-kimi {
+  --accent: #8b93a3;
+  --accent-2: #a89f8d;
+}
+:root[data-theme="light"] .app-kimi {
+  --accent: #5b6472;
+  --accent-2: #8a7f6a;
+}
+.variant-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
 * { box-sizing: border-box; }
 
 body {

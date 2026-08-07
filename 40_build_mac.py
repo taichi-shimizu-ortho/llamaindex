@@ -23,7 +23,7 @@ Settings.text_splitter = SentenceSplitter(chunk_size=8192, chunk_overlap=0)
 
 # パス設定（Mac: Dropboxから読み込む）
 SCRIPT_DIR = Path(__file__).resolve().parent
-JSON_FILE = Path.home() / "Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/articles_all3.json"
+JSON_FILE = Path.home() / "Dropbox/obsidian/50_coding/llamaindex/articles_all3.json"
 STORAGE_DIR = SCRIPT_DIR / "storage_all"
 
 EXCLUDE_SECTION_TYPES = ['references', 'acknowledgements']

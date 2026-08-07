@@ -740,7 +740,6 @@ export function App() {
   const [currentArticle, setCurrentArticle] = useState<ArticleSet | null>(null);
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(5);
-  const [translate, setTranslate] = useState(true);
   const [searchMode, setSearchMode] = useState<SearchMode>("integrated");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -849,7 +848,7 @@ export function App() {
     if (searchMode === "reference" && !currentSet) return;
     if (searchMode === "article" && !currentArticle) return;
     if (searchMode === "integrated" && (!currentArticle || !currentSet)) return;
-    setBusy(translate ? "Translating & searching..." : "Searching...");
+    setBusy("Searching...");
     setError("");
     try {
       const endpoint =
@@ -860,10 +859,10 @@ export function App() {
             : "/api/reference/query";
       const payload =
         searchMode === "article"
-          ? { articleId: currentArticle?.id, query: query.trim(), topK, translate }
+          ? { articleId: currentArticle?.id, query: query.trim(), topK }
           : searchMode === "integrated"
-            ? { articleId: currentArticle?.id, referenceSetId: currentSet?.id, query: query.trim(), topK, translate }
-            : { setId: currentSet?.id, query: query.trim(), topK, translate };
+            ? { articleId: currentArticle?.id, referenceSetId: currentSet?.id, query: query.trim(), topK }
+            : { setId: currentSet?.id, query: query.trim(), topK };
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -889,12 +888,12 @@ export function App() {
 
   return (
     <ReferenceMapContext.Provider value={referenceMap}>
-    <div className="app">
+    <div className="app app-kimi">
       <header className="topbar">
         <div className="brand">
           <span className="logo-mark">R</span>
           <div>
-            <h1>Reference Abstract RAG</h1>
+            <h1>Reference Abstract RAG <span className="variant-badge">Kimi K3</span></h1>
             <p className="subtitle">HTML references → PubMed abstracts → JSON search</p>
           </div>
         </div>
@@ -1001,10 +1000,6 @@ export function App() {
                     </select>
                   </label>
                   <label className="ctrl">
-                    <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
-                    JA→EN
-                  </label>
-                  <label className="ctrl">
                     Top-K
                     <input className="topk" type="number" min={1} max={20} value={topK} onChange={(e) => setTopK(Number(e.target.value))} />
                   </label>
@@ -1031,7 +1026,6 @@ export function App() {
                   <div className="answer-card">
                     <div className="answer-head">
                       <h2>Answer</h2>
-                      {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
                     </div>
                     {"articleAnswer" in result ? (
                       <div className="answer-split">

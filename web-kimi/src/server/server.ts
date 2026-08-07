@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "128mb" }));
 
-const PORT = Number(process.env.PORT ?? 5174);
+const PORT = Number(process.env.PORT ?? 5176);
 
 // Article figure assets saved under the shared raw_html directory.
 if (fs.existsSync(PATHS.rawHtmlDir)) {
@@ -31,7 +31,7 @@ if (fs.existsSync(PATHS.rawHtmlDir)) {
 // 状態確認
 app.get("/api/status", (_req, res) => {
   res.json({
-    hasApiKey: Boolean(process.env.OPENAI_API_KEY),
+    hasApiKey: Boolean(process.env.KIMI_API_KEY) && Boolean(process.env.OPENAI_API_KEY),
   });
 });
 
@@ -63,10 +63,10 @@ app.post("/api/reference/harvest", async (req, res) => {
 });
 
 app.post("/api/reference/query", async (req, res) => {
-  const { setId, query, topK, translate } = req.body ?? {};
+  const { setId, query, topK } = req.body ?? {};
   if (!setId || !query) return res.status(400).json({ error: "Specify a dataset and a query" });
   try {
-    const result = await runReferenceQuery(String(setId), String(query).trim(), { topK, translate });
+    const result = await runReferenceQuery(String(setId), String(query).trim(), { topK });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -161,10 +161,10 @@ app.post("/api/article/harvest", async (req, res) => {
 });
 
 app.post("/api/article/query", async (req, res) => {
-  const { articleId, query, topK, translate } = req.body ?? {};
+  const { articleId, query, topK } = req.body ?? {};
   if (!articleId || !query) return res.status(400).json({ error: "Specify an article JSON and a query" });
   try {
-    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate });
+    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -173,12 +173,12 @@ app.post("/api/article/query", async (req, res) => {
 });
 
 app.post("/api/integrated/query", async (req, res) => {
-  const { articleId, referenceSetId, query, topK, translate } = req.body ?? {};
+  const { articleId, referenceSetId, query, topK } = req.body ?? {};
   if (!articleId || !referenceSetId || !query) {
     return res.status(400).json({ error: "Specify an article JSON, a reference set, and a query" });
   }
   try {
-    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate });
+    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -242,9 +242,6 @@ function resultMarkdown(result: any): string {
     "",
     `## Q: ${result.originalQuery || result.original_query || ""}`,
   ];
-  if (result.enQuery && result.enQuery !== result.originalQuery) {
-    parts.push("", `*EN: ${result.enQuery}*`);
-  }
 
   if ("articleAnswer" in result) {
     parts.push("", "### Main Article", "", result.articleAnswer || "", "", "### Reference Abstracts", "", result.referenceAnswer || "");
@@ -290,9 +287,6 @@ app.post("/api/session/save", (req, res) => {
 });
 
 
-// 図の画像など raw_html 配下のファイルを配信（<img src="/raw_html/..."> 用）
-app.use("/raw_html", express.static(PATHS.rawHtmlDir));
-
 // 本番: ビルド済みクライアントを配信
 const clientDist = path.resolve(import.meta.dirname, "../../dist");
 if (fs.existsSync(clientDist)) {
@@ -301,6 +295,6 @@ if (fs.existsSync(clientDist)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`[server] http://localhost:${PORT}`);
-  console.log(`[server] api ready: ${Boolean(process.env.OPENAI_API_KEY) ? "with OPENAI_API_KEY" : "missing OPENAI_API_KEY"}`);
+  console.log(`[server] (kimi) http://localhost:${PORT}`);
+  console.log(`[server] api ready: ${Boolean(process.env.KIMI_API_KEY) ? "with KIMI_API_KEY" : "missing KIMI_API_KEY"} / ${Boolean(process.env.OPENAI_API_KEY) ? "with OPENAI_API_KEY (embeddings)" : "missing OPENAI_API_KEY (embeddings)"}`);
 });

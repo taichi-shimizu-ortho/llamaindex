@@ -264,7 +264,7 @@ def filter_sections(article: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def batch_convert_articles(
-    input_dir: str = "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/10_article/RXFP1",
+    input_dir: str = str(Path.home() / "Dropbox/obsidian/10_article/RXFP1"),
     output_file: str = "articles_all.json"
 ) -> Dict[str, Any]:
     """10_article/RXFP1 の .md ファイルを構造化 JSON に一括変換する。"""
@@ -394,8 +394,8 @@ def print_statistics(result: Dict[str, Any]):
 def main():
     import sys
 
-    input_dir  = sys.argv[1] if len(sys.argv) > 1 else "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/10_article/RXFP1"
-    output_file = sys.argv[2] if len(sys.argv) > 2 else "/Users/taichishimizu/Library/CloudStorage/Dropbox/obsidian/50_coding/llamaindex/articles_all3.json"
+    input_dir  = sys.argv[1] if len(sys.argv) > 1 else str(Path.home() / "Dropbox/obsidian/10_article/RXFP1")
+    output_file = sys.argv[2] if len(sys.argv) > 2 else str(Path.home() / "Dropbox/obsidian/50_coding/llamaindex/articles_all3.json")
 
     print("=" * 80)
     print("一括変換ツール: MD ファイル → LlamaIndex 用 JSON")
