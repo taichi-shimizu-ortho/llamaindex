@@ -41,7 +41,18 @@ function citationAuthors(html: string): string[] {
   if (citation.length) return citation;
 
   // Fallback to dc.Creator (used by Science.org)
-  return Array.from(html.matchAll(/<meta[^>]+name=["']dc\.Creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+  const dc = Array.from(html.matchAll(/<meta[^>]+name=["']dc\.Creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+    .map((m) => stripTags(m[1] ?? ""))
+    .filter(Boolean);
+  if (dc.length) return dc;
+
+  // Fallback to ScienceDirect HTML structure: <span class="given-name">...</span> <span class="surname">...</span>
+  const sdMatches = Array.from(html.matchAll(/<span\b[^>]*class=["'][^"']*given-name[^"']*["'][^>]*>([\s\S]*?)<\/span>\s*<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi))
+    .map((m) => `${stripTags(m[1])} ${stripTags(m[2])}`.trim())
+    .filter(Boolean);
+  if (sdMatches.length) return sdMatches;
+
+  return Array.from(html.matchAll(/<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi))
     .map((m) => stripTags(m[1] ?? ""))
     .filter(Boolean);
 }
@@ -83,13 +94,14 @@ function capitalizeIdPart(value: string): string {
 
 export function citationBaseId(html: string, articleTitle: string, fallback: string): string {
   const authors = citationAuthors(html);
-  const firstAuthor = authors.find(authorLooksComplete) || firstAuthorFromTitle(html, articleTitle);
+  const firstAuthor = authors.find(authorLooksComplete) || authors[0] || firstAuthorFromTitle(html, articleTitle);
   const author = capitalizeIdPart(surname(firstAuthor));
   const year = yearFromHtml(html);
+  const cleanFallback = fallback.replace(/-(?:sciencedirect|direct)$/i, "");
   // Construct ID as Author + Year. If either part is missing, use whatever is available.
   const base = `${author}${year}`;
   // If both are empty, fall back to provided fallback.
-  return (base.replace(/[^A-Za-z0-9_.-]/g, "") || fallback) || "Article";
+  return (base.replace(/[^A-Za-z0-9_.-]/g, "") || cleanFallback) || "Article";
 }
 
 export function uniqueJsonId(outputDir: string, baseId: string): string {
