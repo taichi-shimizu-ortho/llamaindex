@@ -8,7 +8,8 @@
     "dev:client": "vite",
     "dev": "concurrently -k -n SERVER,CLIENT -c blue,green \"npm:server\" \"npm:dev:client\"",
     "build:client": "vite build",
-    "start": "cross-env NODE_ENV=production tsx src/server/server.ts"
+    "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
+    "import:structured": "node scripts/import-structured-set.mjs"
   },
   "dependencies": {
     "@llamaindex/openai": "^0.4.0",
