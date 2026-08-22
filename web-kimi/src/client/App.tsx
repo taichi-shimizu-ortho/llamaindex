@@ -966,7 +966,20 @@ export function App() {
               <div className="dataset-summary">
                 <div>
                   <h2>{currentArticle?.title || currentSet?.title || currentSet?.id}</h2>
-                  <p>{currentArticle?.sourceUrl || currentSet?.sourceUrl}</p>
+                  {currentArticle && (
+                    <div className="article-metadata" aria-label="Article metadata">
+                      {currentArticle.authors?.length > 0 && (
+                        <span><strong>Authors</strong>{currentArticle.authors.join(", ")}</span>
+                      )}
+                      {currentArticle.year && (
+                        <span><strong>Year</strong>{currentArticle.year}</span>
+                      )}
+                      {currentArticle.journal && (
+                        <span><strong>Journal</strong>{currentArticle.journal}</span>
+                      )}
+                    </div>
+                  )}
+                  <p className="dataset-source-url">{currentArticle?.sourceUrl || currentSet?.sourceUrl}</p>
                 </div>
                 <div className="summary-grid">
                   <div><strong>{currentArticle?.sections.length ?? 0}</strong><span>sections</span></div>

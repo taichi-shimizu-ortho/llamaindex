@@ -340,6 +340,30 @@ body {
   padding-bottom: 14px;
 }
 
+.article-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.article-metadata span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+
+.article-metadata strong {
+  color: var(--text);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .dataset-summary p {
   margin: 4px 0 0;
   color: var(--muted);
