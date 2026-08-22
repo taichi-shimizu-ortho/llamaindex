@@ -112,6 +112,7 @@ function classifySection(title: string): string {
   if (t.includes("abstract")) return "abstract";
   if (t.includes("reference")) return "references";
   if (t.includes("acknowledg")) return "acknowledgements";
+  if (t.includes("outline") || t.includes("cited by") || t.includes("article metrics") || t.includes("recommended articles") || t.includes("keywords") || t.includes("cookie")) return "excluded";
   return "other";
 }
 
@@ -125,7 +126,8 @@ function inferTitle(html: string, fallback = ""): string {
   const citationTitle = html.match(/<meta[^>]+name=["']citation_title["'][^>]+content=["']([^"']+)["']/i)?.[1];
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
   const titleTag = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1];
-  return stripTags(citationTitle ?? h1 ?? titleTag ?? fallback).slice(0, 260);
+  const title = stripTags(citationTitle ?? h1 ?? titleTag ?? fallback).slice(0, 260);
+  return title.replace(/\s*-\s*ScienceDirect$/i, "").trim();
 }
 
 function inferAuthors(html: string): string[] {
@@ -133,6 +135,13 @@ function inferAuthors(html: string): string[] {
     .map((m) => stripTags(m[1] ?? ""))
     .filter(Boolean);
   if (metas.length) return metas;
+
+  const sdMatches = Array.from(
+    html.matchAll(/<span\b[^>]*class=["'][^"']*given-name[^"']*["'][^>]*>([\s\S]*?)<\/span>\s*<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi),
+  )
+    .map((m) => `${stripTags(m[1])} ${stripTags(m[2])}`.trim())
+    .filter(Boolean);
+  if (sdMatches.length) return sdMatches;
 
   return Array.from(html.matchAll(/<span\b[^>]+property=["']author["'][^>]*>([\s\S]*?)<\/span>/gi))
     .map((m) => stripTags(m[1] ?? "").replace(/,\s*(MSc|MD|PhD|FRCS|MBA)\b.*$/i, ""))
@@ -142,7 +151,7 @@ function inferAuthors(html: string): string[] {
 function inferMeta(html: string, sourceUrl: string) {
   const meta = (name: string) =>
     stripTags(html.match(new RegExp(`<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']+)["']`, "i"))?.[1] ?? "");
-  const doi = meta("citation_doi") || sourceUrl.match(/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0] || "";
+  const doi = meta("citation_doi") || meta("dc.identifier") || sourceUrl.match(/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0] || "";
   const year = meta("citation_publication_date").match(/\d{4}/)?.[0] ?? "";
   return {
     journal: meta("citation_journal_title"),
@@ -153,10 +162,10 @@ function inferMeta(html: string, sourceUrl: string) {
 
 function inferAbstractParagraphs(html: string): string[] {
   // 1. Try to extract from known abstract sections in body
-  const abstractIds = ["abstract", "structured-abstract", "editor-abstract"];
+  const abstractIds = ["abstract", "abstracts", "structured-abstract", "editor-abstract", "abstract-content", "author-highlights"];
   for (const id of abstractIds) {
-    const match = html.match(new RegExp(`<section\\b[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/section>`, "i"))
-      || html.match(new RegExp(`<div\\b[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/div>`, "i"));
+    const match = html.match(new RegExp(`<section\\b[^>]*(?:id=["']${id}["']|class=["'][^"']*${id}[^"']*["'])[^>]*>([\\s\\S]*?)<\\/section>`, "i"))
+      || html.match(new RegExp(`<div\\b[^>]*(?:id=["']${id}["']|class=["'][^"']*${id}[^"']*["'])[^>]*>([\\s\\S]*?)<\\/div>`, "i"));
     if (match) {
       const inner = match[1].replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, ""); // Remove heading
       const paras = paragraphTexts(inner);
@@ -190,7 +199,7 @@ function inferAbstractParagraphs(html: string): string[] {
   // 3. Metadata fallback (only if no full text abstract is found)
   const metaAbstract =
     stripTags(
-      html.match(/<meta[^>]+name=["'](?:citation_abstract|dc\.description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
+      html.match(/<meta[^>]+(?:name|property)=["'](?:citation_abstract|dc\.description|og:description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
     );
   if (metaAbstract) return [metaAbstract];
 
@@ -306,7 +315,7 @@ function inferFigureSections(html: string): ArticleSection[] {
 
 function bodyMatter(html: string): string {
   let rest = html;
-  const bodyStart = html.search(/<section\b[^>]*(?:id=["']bodymatter["']|property=["']articleBody["'])/i);
+  const bodyStart = html.search(/<(?:section|div)\b[^>]*(?:id=["'](?:bodymatter|body)["']|class=["'][^"']*(?:Body|article-body)[^"']*["']|property=["']articleBody["'])/i);
   if (bodyStart >= 0) {
     rest = html.slice(bodyStart);
   } else {
@@ -314,7 +323,7 @@ function bodyMatter(html: string): string {
     if (abstractEnd >= 0) rest = html.slice(abstractEnd);
   }
 
-  const end = rest.search(/<h2\b[^>]*>(?:<[^>]+>|\s)*(?:Acknowledg|Competing\s+Interests|Conflict\s+of\s+Interest|Funding|Author\s+Contributions|Data\s+Availability|ORCID|Footnote|References|Supplementary\s+Material)\b/i);
+  const end = rest.search(/<h[2-4]\b[^>]*>(?:<[^>]+>|\s)*(?:Acknowledg|Competing\s+Interests|Conflict\s+of\s+Interest|Funding|Author\s+Contributions|Data\s+Availability|ORCID|Footnote|References|Supplementary\s+Material|Article Metrics|Recommended articles)\b/i);
   return rest.slice(0, end > 0 ? end : undefined);
 }
 
@@ -506,6 +515,21 @@ export function buildSections(html: string): ArticleSection[] {
       paragraphs: mainParas,
       subsections,
     });
+  }
+
+  if (sections.length === 0 || (sections.length === 1 && sections[0].type === "abstract")) {
+    const mainParas = paragraphTexts(body);
+    const abstractSet = new Set(sections[0]?.paragraphs || []);
+    const remainingParas = mainParas.filter((p) => !abstractSet.has(p));
+    if (remainingParas.length) {
+      sections.push({
+        title: "Main Text",
+        type: "other",
+        content: remainingParas.join("\n\n"),
+        paragraphs: remainingParas,
+        subsections: [],
+      });
+    }
   }
 
   sections.push(...figureSections);
