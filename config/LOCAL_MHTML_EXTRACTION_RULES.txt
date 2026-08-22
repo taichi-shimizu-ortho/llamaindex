@@ -1,0 +1,35 @@
+Local MHTML Extraction Rules
+============================
+
+Scope
+-----
+Use the locally saved MHTML file as the sole source for article HTML, figures, and figure image assets. Do not fetch publisher pages or remote image URLs when rebuilding a saved article.
+
+Configuration
+-------------
+The machine-readable, versioned publisher rules are in:
+
+  config/publisher_mhtml_conversion_rules.json
+
+For Elsevier / ScienceDirect MHTML files, MIME transfer-decoded HTML payload bytes must be decoded as UTF-8 before DOM parsing. The primary article abstract is selected from `div.abstract.author`; Highlights and Keywords are excluded from the article set and RAG chunks.
+
+Figure Convention
+-----------------
+1. Select article figures with `figure[id^='fig']`.
+2. Read the figure image source from the descendant `img` tag.
+3. Match that source to an embedded MHTML image MIME part using Content-Location.
+4. Read the legend from `.captions`, falling back to `figcaption`; use `.label` for the figure name.
+5. Normalize `Fig. N` to `Figure N`.
+6. Write embedded image bytes under `raw_html/<article_id>_figures/Figure_<number>.<extension>`.
+7. Store the local browser URL as `/raw_html/<article_id>_figures/Figure_<number>.<extension>`.
+8. Persist the Figure as `type: "figure"` immediately after Abstract, with content:
+
+  [Image URL: <local_static_url>]
+
+  <legend>
+
+9. The UI renders the image before the legend. Figure sections are not included in main-text RAG chunks or the text chunk count.
+
+Validation
+----------
+Confirm that each figure section has a local `/raw_html/` URL, each asset exists locally, and the local server returns the matching image MIME type.

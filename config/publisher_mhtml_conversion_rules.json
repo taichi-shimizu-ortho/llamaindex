@@ -1,0 +1,247 @@
+{
+  "schema_version": "1.1.0",
+  "default_rule": "generic_html",
+  "description": "Publisher-specific, deterministic rules for converting saved MHTML article pages into the local RAG article and reference JSON schemas.",
+  "rules": {
+    "elsevier_sciencedirect": {
+      "publisher": "Elsevier",
+      "publication_platform": "ScienceDirect",
+      "match": {
+        "content_location_domains": [
+          "sciencedirect.com",
+          "elsevier.com"
+        ],
+        "required_signals": [
+          "article",
+          "references"
+        ]
+      },
+      "mhtml": {
+        "preferred_content_type": "text/html",
+        "part_selection": "largest_html_part_with_article_or_references",
+        "content_decoding": {
+          "transfer_encoding": "decode_mime_payload",
+          "charset": "utf-8",
+          "errors": "replace",
+          "rationale": "Decode quoted-printable MHTML HTML payload bytes as UTF-8 before DOM parsing."
+        },
+        "embedded_image_assets": {
+          "asset_content_types": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/svg+xml"
+          ],
+          "match_key": "Content-Location matching the figure img src attribute",
+          "output_directory": "raw_html/<article_id>_figures/",
+          "static_url_template": "/raw_html/<article_id>_figures/<filename>",
+          "filename_template": "Figure_<number>.<source_extension>",
+          "network_access": "not_required"
+        }
+      },
+      "extraction": {
+        "article_root_selectors": [
+          "article",
+          "main",
+          "#article-main",
+          ".article-content",
+          ".body",
+          ".fulltext"
+        ],
+        "title_selectors": [
+          "h1",
+          "meta[name='citation_title']",
+          "meta[property='og:title']"
+        ],
+        "author_selectors": [
+          "#author-group .react-xocs-alternative-link",
+          "meta[name='citation_author']"
+        ],
+        "author_selector_strategy": "first_nonempty_selector",
+        "abstract_selectors": [
+          "div.abstract.author",
+          "div.abstract:not(.author-highlights)",
+          ".abstract",
+          "section.abstract",
+          "[id*='abstract']"
+        ],
+        "section_heading_selector": "h2, h3, h4",
+        "section_container_selector": "section",
+        "section_stop_headings": [
+          "References",
+          "Bibliography",
+          "Acknowledgments",
+          "Acknowledgements",
+          "Supplementary material",
+          "Transparency document"
+        ],
+        "ignored_heading_classes": [
+          "publication-title"
+        ],
+        "legacy_leaf_text_tags": [
+          "p",
+          "li",
+          "div"
+        ],
+        "reference_selectors": [
+          "ol.references li",
+          ".reference",
+          ".bibliography li",
+          "[class*='reference']"
+        ],
+        "metadata_selectors": {
+          "doi": [
+            "meta[name='citation_doi']",
+            "meta[name='dc.identifier']"
+          ],
+          "published": [
+            "meta[name='citation_publication_date']",
+            "meta[name='citation_date']"
+          ],
+          "journal": [
+            "meta[name='citation_journal_title']"
+          ],
+          "volume": [
+            "meta[name='citation_volume']"
+          ],
+          "issue": [
+            "meta[name='citation_issue']"
+          ],
+          "first_page": [
+            "meta[name='citation_firstpage']"
+          ],
+          "last_page": [
+            "meta[name='citation_lastpage']"
+          ],
+          "pmid": [
+            "meta[name='citation_pmid']"
+          ]
+        },
+        "ignored_section_titles": [
+          "Highlights",
+          "Keywords"
+        ],
+        "figure_extraction": {
+          "figure_selector": "figure[id^='fig']",
+          "image_selector": "img",
+          "caption_selectors": [
+            ".captions",
+            "figcaption"
+          ],
+          "caption_label_selector": ".label",
+          "title_normalization": "Fig. N -> Figure N",
+          "skip_non_image_or_table_figures": true,
+          "output_section_type": "figure",
+          "section_content_template": "[Image URL: <local_static_url>]\\n\\n<legend>",
+          "insert_after_section_type": "abstract",
+          "exclude_from_text_chunk_count": true
+        }
+      },
+      "normalization": {
+        "remove_selectors": [
+          "script",
+          "style",
+          "noscript",
+          "nav",
+          "header",
+          "footer",
+          ".advertisement",
+          ".cookie"
+        ],
+        "title_suffix_pattern": "\\s*-\\s*ScienceDirect$",
+        "reference_number_pattern": "^\\s*\\[?(\\d{1,4})\\]?\\.?\\s*",
+        "doi_pattern": "10\\.\\d{4,9}/[-._;()/:A-Z0-9]+",
+        "exclude_wrapper_divs_with_descendants": [
+          "div",
+          "p",
+          "li"
+        ]
+      },
+      "output": {
+        "article_record": "article",
+        "article_chunks": "<citekey>_chunks.json",
+        "references": "<citekey>_ref.json",
+        "combined_document": "<citekey>_article_references.json",
+        "reference_record_fields": [
+          "index",
+          "section",
+          "text",
+          "metadata"
+        ],
+        "chunk_record_fields": [
+          "index",
+          "section",
+          "section_type",
+          "subsection",
+          "paragraph_index",
+          "total_paragraphs",
+          "char_count",
+          "text"
+        ]
+      },
+      "validation": {
+        "required_article_fields": [
+          "citekey",
+          "title",
+          "authors",
+          "doi",
+          "publisher",
+          "sections"
+        ],
+        "minimum_nonempty_sections": 1,
+        "references_must_be_numbered": true,
+        "reject_follow_on_widgets_after_stop_heading": true
+      }
+    },
+    "generic_html": {
+      "publisher": null,
+      "publication_platform": "Generic HTML",
+      "mhtml": {
+        "preferred_content_type": "text/html",
+        "part_selection": "largest_html_part"
+      },
+      "extraction": {
+        "article_root_selectors": [
+          "article",
+          "main",
+          "body"
+        ],
+        "title_selectors": [
+          "h1",
+          "title",
+          "meta[property='og:title']"
+        ],
+        "author_selectors": [
+          "meta[name='author']",
+          "meta[name='citation_author']",
+          ".author"
+        ],
+        "author_selector_strategy": "first_nonempty_selector",
+        "abstract_selectors": [
+          ".abstract",
+          "section.abstract",
+          "[id='abstract']"
+        ],
+        "section_heading_selector": "h2, h3, h4",
+        "section_stop_headings": [
+          "References",
+          "Bibliography"
+        ],
+        "reference_selectors": [
+          ".reference",
+          "ol.references li",
+          ".bibliography li"
+        ],
+        "metadata_selectors": {}
+      },
+      "normalization": {
+        "remove_selectors": [
+          "script",
+          "style",
+          "noscript"
+        ],
+        "reference_number_pattern": "^\\s*\\[?(\\d{1,4})\\]?\\.?\\s*"
+      }
+    }
+  }
+}
