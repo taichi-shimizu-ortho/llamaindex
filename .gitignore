@@ -14,3 +14,4 @@ wheels/
 # LlamaIndex vector stores (large files, stored in Dropbox)
 storage_all/
 storage*/
+RXFP1_rag/
