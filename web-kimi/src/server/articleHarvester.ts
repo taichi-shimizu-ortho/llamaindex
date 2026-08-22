@@ -526,7 +526,7 @@ export function listArticleSets() {
   if (!fs.existsSync(PATHS.articleOutputDir)) return [];
   return fs
     .readdirSync(PATHS.articleOutputDir)
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && !f.includes(".before_"))
     .map((file) => {
       const set = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, file), "utf-8")) as ArticleSet;
       return {

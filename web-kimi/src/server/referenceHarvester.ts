@@ -1038,7 +1038,7 @@ export function listReferenceSets() {
   if (!fs.existsSync(PATHS.referenceOutputDir)) return [];
   return fs
     .readdirSync(PATHS.referenceOutputDir)
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && !f.includes(".before_"))
     .map((file) => {
       const set = decodeEntityStrings(
         JSON.parse(fs.readFileSync(path.join(PATHS.referenceOutputDir, file), "utf-8")) as ReferenceSet,
