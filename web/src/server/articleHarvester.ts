@@ -201,7 +201,19 @@ function inferAbstractParagraphs(html: string): string[] {
     stripTags(
       html.match(/<meta[^>]+(?:name|property)=["'](?:citation_abstract|dc\.description|og:description|description)["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] ?? "",
     );
-  if (metaAbstract) return [metaAbstract];
+  if (metaAbstract) {
+    if (metaAbstract.endsWith("…") || metaAbstract.endsWith("...")) {
+      const prefix = metaAbstract.replace(/…|\.\.\.$/, "").trim();
+      if (prefix.length > 20) {
+        const bodyMatch = paragraphTexts(html).find(p => 
+          p.startsWith(prefix) || 
+          p.replace(/\s+/g, " ").startsWith(prefix.replace(/\s+/g, " "))
+        );
+        if (bodyMatch) return [bodyMatch];
+      }
+    }
+    return [metaAbstract];
+  }
 
   return [];
 }
@@ -386,7 +398,7 @@ function paragraphTexts(html: string): string[] {
   const processedRanges: [number, number][] = [];
 
   const paraMatches = Array.from(
-    html.matchAll(/<(?:div|p)\b[^>]*(?:role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
+    html.matchAll(/<(?:div|p)\b[^>]*(?:id=["'][a-z]*par\d+["']|role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
   );
   for (const m of paraMatches) {
     const text = stripTags(m[1] || m[2] || "");

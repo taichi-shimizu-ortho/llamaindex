@@ -308,9 +308,10 @@ function metaValues(html: string, names: RegExp): string[] {
     .filter(Boolean);
 }
 
-function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "science" | "generic" {
+function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "science" | "sciencedirect" | "generic" {
   const metadata = metaValues(html, /^(?:citation_publisher|citation_journal_title|dc\.publisher)$/i).join(" ");
   const haystack = `${sourceUrl} ${metadata}`;
+  if (/sciencedirect\.com|elsevier/i.test(haystack)) return "sciencedirect";
   if (/sagepub|sage publications|american journal of sports medicine/i.test(haystack)) return "sage";
   if (/onlinelibrary\.wiley|wiley|journal of orthopaedic research/i.test(haystack)) return "wiley";
   if (/science\.org/i.test(haystack)) return "science";
@@ -577,11 +578,52 @@ function extractPlainNumberedReferences(html: string, sourceUrl: string): Refere
   return best;
 }
 
+function extractScienceDirectReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const records: ReferenceRecord[] = [];
+  let index = 1;
+  
+  const olMatches = html.matchAll(/<ol\b[^>]*id=["']reference-links-[^"']*["'][^>]*>([\s\S]*?)<\/ol>/gi);
+  for (const olMatch of olMatches) {
+    const listContent = olMatch[1];
+    const liMatches = Array.from(listContent.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi));
+    
+    for (const liMatch of liMatches) {
+      const liContent = liMatch[1];
+      // Remove labels like <span class="label u-font-sans">1.</span>
+      let cleanContent = liContent.replace(/<span\b[^>]*class=["'][^"']*\blabel\b[^"']*["'][^>]*>[\s\S]*?<\/span>/i, "");
+      const text = cleanReferenceText(stripTags(cleanContent));
+      if (!text || text.length < 5) continue;
+
+      const pmid = liContent.match(/[?&]pmid=(\d+)/i)?.[1] || extractPmid(liContent);
+      const doi = extractDoi(liContent);
+      let href = pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : doi ? `https://doi.org/${doi}` : sourceUrl;
+      
+      if (href === sourceUrl) {
+         const aMatch = liContent.match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/i);
+         if (aMatch) href = absoluteUrl(aMatch[1], sourceUrl);
+      }
+      
+      records.push({
+        index: index++,
+        text: text || href,
+        sourceUrl,
+        href,
+        doi,
+        pmid,
+        pubmedFound: false,
+      });
+    }
+  }
+  return records;
+}
+
 export function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceRecord[] {
   const generic = () => extractGenericReferences(html, sourceUrl);
   const publisher = detectPublisher(html, sourceUrl);
   const extractors =
-    publisher === "sage"
+    publisher === "sciencedirect"
+      ? [extractScienceDirectReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
+      : publisher === "sage"
       ? [extractBibrReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
       : publisher === "wiley"
         ? [extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
