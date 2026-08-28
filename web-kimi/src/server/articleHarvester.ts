@@ -42,6 +42,46 @@ function ensureOutputDir() {
   fs.mkdirSync(PATHS.articleOutputDir, { recursive: true });
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isArticleSubsection(value: unknown): value is ArticleSubsection {
+  if (!value || typeof value !== "object") return false;
+  const subsection = value as Partial<ArticleSubsection>;
+  return typeof subsection.title === "string"
+    && typeof subsection.content === "string"
+    && isStringArray(subsection.paragraphs);
+}
+
+function isArticleSection(value: unknown): value is ArticleSection {
+  if (!value || typeof value !== "object") return false;
+  const section = value as Partial<ArticleSection>;
+  return typeof section.title === "string"
+    && typeof section.type === "string"
+    && typeof section.content === "string"
+    && isStringArray(section.paragraphs)
+    && Array.isArray(section.subsections)
+    && section.subsections.every(isArticleSubsection);
+}
+
+/** Runtime schema used by the article-set list and RAG index. */
+export function isArticleSet(value: unknown): value is ArticleSet {
+  if (!value || typeof value !== "object") return false;
+  const set = value as Partial<ArticleSet>;
+  return typeof set.id === "string"
+    && typeof set.sourceUrl === "string"
+    && typeof set.title === "string"
+    && isStringArray(set.authors)
+    && typeof set.journal === "string"
+    && typeof set.year === "string"
+    && typeof set.doi === "string"
+    && typeof set.createdAt === "string"
+    && typeof set.chunkCount === "number"
+    && Array.isArray(set.sections)
+    && set.sections.every(isArticleSection);
+}
+
 function decodeHtmlEntities(s: string): string {
   const named: Record<string, string> = {
     amp: "&",
@@ -519,7 +559,12 @@ export function articleSetPath(id: string): string {
 
 export function loadArticleSet(id: string): ArticleSet {
   const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  return JSON.parse(fs.readFileSync(articleSetPath(safeId), "utf-8")) as ArticleSet;
+  const filePath = articleSetPath(safeId);
+  const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  if (!isArticleSet(parsed)) {
+    throw new Error(`Invalid ArticleSet schema: ${filePath}. Import or convert the JSON before using it.`);
+  }
+  return parsed;
 }
 
 export function listArticleSets() {
@@ -527,15 +572,25 @@ export function listArticleSets() {
   return fs
     .readdirSync(PATHS.articleOutputDir)
     .filter((f) => f.endsWith(".json") && !f.includes(".before_"))
-    .map((file) => {
-      const set = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, file), "utf-8")) as ArticleSet;
-      return {
-        id: set.id,
-        title: set.title,
-        sourceUrl: set.sourceUrl,
-        chunkCount: set.chunkCount,
-        createdAt: set.createdAt,
-      };
+    .flatMap((file) => {
+      const filePath = path.join(PATHS.articleOutputDir, file);
+      try {
+        const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        if (!isArticleSet(parsed)) {
+          console.warn(`[article_sets] Skipping invalid ArticleSet JSON: ${filePath}`);
+          return [];
+        }
+        return [{
+          id: parsed.id,
+          title: parsed.title,
+          sourceUrl: parsed.sourceUrl,
+          chunkCount: parsed.chunkCount,
+          createdAt: parsed.createdAt,
+        }];
+      } catch (error) {
+        console.warn(`[article_sets] Skipping unreadable JSON: ${filePath}`, error);
+        return [];
+      }
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
