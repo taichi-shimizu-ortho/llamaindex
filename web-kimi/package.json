@@ -6,7 +6,7 @@
   "scripts": {
     "server": "tsx watch src/server/server.ts",
     "dev:client": "vite",
-    "dev": "concurrently -k -n SERVER,CLIENT -c blue,green \"npm:server\" \"npm:dev:client\"",
+    "dev": "node scripts/dev.mjs",
     "build:client": "vite build",
     "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
     "import:structured": "node scripts/import-structured-set.mjs"
