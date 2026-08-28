@@ -65,6 +65,34 @@ function ensureOutputDir() {
   fs.mkdirSync(PATHS.rawHtmlDir, { recursive: true });
 }
 
+function isReferenceRecord(value: unknown): value is ReferenceRecord {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<ReferenceRecord>;
+  // pubmed / error は任意項目なので存在チェックしない。
+  return typeof record.index === "number"
+    && typeof record.text === "string"
+    && typeof record.sourceUrl === "string"
+    && typeof record.href === "string"
+    && typeof record.doi === "string"
+    && typeof record.pmid === "string"
+    && typeof record.pubmedFound === "boolean";
+}
+
+/** Runtime schema used by the reference-set list and abstract RAG index. */
+export function isReferenceSet(value: unknown): value is ReferenceSet {
+  if (!value || typeof value !== "object") return false;
+  const set = value as Partial<ReferenceSet>;
+  return typeof set.id === "string"
+    && typeof set.sourceUrl === "string"
+    && typeof set.title === "string"
+    && typeof set.createdAt === "string"
+    && typeof set.totalReferences === "number"
+    && typeof set.pubmedFound === "number"
+    && typeof set.abstractFound === "number"
+    && Array.isArray(set.records)
+    && set.records.every(isReferenceRecord);
+}
+
 function decodeHtmlEntities(s: string): string {
   const named: Record<string, string> = {
     amp: "&",
@@ -1030,8 +1058,12 @@ export function referenceHtmlPath(id: string): string {
 
 export function loadReferenceSet(id: string): ReferenceSet {
   const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  const raw = fs.readFileSync(referenceSetPath(safeId), "utf-8");
-  return decodeEntityStrings(JSON.parse(raw) as ReferenceSet);
+  const filePath = referenceSetPath(safeId);
+  const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  if (!isReferenceSet(parsed)) {
+    throw new Error(`Invalid ReferenceSet schema: ${filePath}. Import or convert the JSON before using it.`);
+  }
+  return decodeEntityStrings(parsed);
 }
 
 export function listReferenceSets() {
@@ -1039,18 +1071,27 @@ export function listReferenceSets() {
   return fs
     .readdirSync(PATHS.referenceOutputDir)
     .filter((f) => f.endsWith(".json") && !f.includes(".before_"))
-    .map((file) => {
-      const set = decodeEntityStrings(
-        JSON.parse(fs.readFileSync(path.join(PATHS.referenceOutputDir, file), "utf-8")) as ReferenceSet,
-      );
-      return {
-        id: set.id,
-        title: set.title,
-        sourceUrl: set.sourceUrl,
-        totalReferences: set.totalReferences,
-        abstractFound: set.abstractFound,
-        createdAt: set.createdAt,
-      };
+    .flatMap((file) => {
+      const filePath = path.join(PATHS.referenceOutputDir, file);
+      try {
+        const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        if (!isReferenceSet(parsed)) {
+          console.warn(`[reference_sets] Skipping invalid ReferenceSet JSON: ${filePath}`);
+          return [];
+        }
+        const set = decodeEntityStrings(parsed);
+        return [{
+          id: set.id,
+          title: set.title,
+          sourceUrl: set.sourceUrl,
+          totalReferences: set.totalReferences,
+          abstractFound: set.abstractFound,
+          createdAt: set.createdAt,
+        }];
+      } catch (error) {
+        console.warn(`[reference_sets] Skipping unreadable JSON: ${filePath}`, error);
+        return [];
+      }
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
