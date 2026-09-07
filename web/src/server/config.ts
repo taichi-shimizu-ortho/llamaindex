@@ -43,9 +43,9 @@ export const PATHS = {
 };
 
 export const MODELS = {
-  llm: "gpt-5.4-mini",
+  llm: "gpt-5.6-terra",
   embed: "text-embedding-3-small",
-  translate: "gpt-4o-mini",
+  translate: "gpt-5.6-terra",
 };
 
 // 検索対象から除外するセクションタイプ（Python版 40 と一致）

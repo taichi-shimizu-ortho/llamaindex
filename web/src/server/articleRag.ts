@@ -35,17 +35,12 @@ function hasJapanese(s: string): boolean {
 
 export async function translateToEnglish(text: string): Promise<string> {
   const client = new OpenAIClient();
-  const res = await client.chat.completions.create({
+  const res = await (client as any).responses.create({
     model: MODELS.translate,
-    temperature: 0.1,
-    messages: [
-      {
-        role: "user",
-        content: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
-      },
-    ],
+    reasoning: { effort: "low" },
+    input: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
   });
-  return res.choices[0].message.content?.trim() ?? text;
+  return res.output_text?.trim() ?? text;
 }
 
 function cleanText(text: string): string {
@@ -156,27 +151,22 @@ async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySou
     })
     .join("\n\n---\n\n");
 
-  const res = await client.chat.completions.create({
+  const systemInstruction = [
+    "You answer questions using only the provided passages from a single research article.",
+    "Base every statement strictly on the passages; do not add outside knowledge.",
+    "If the passages do not contain enough information, say so clearly.",
+    "Always answer in English, regardless of the language of the user's query."
+  ].join(" ");
+
+  const input = `System Instructions:\n${systemInstruction}\n\nArticle Passages:\n\n${context}\n\nQuestion: ${enQuery}`;
+
+  const res = await (client as any).responses.create({
     model: MODELS.llm,
-    temperature: 0.1,
-    messages: [
-      {
-        role: "system",
-        content: [
-          "You answer questions using only the provided passages from a single research article.",
-          "Base every statement strictly on the passages; do not add outside knowledge.",
-          "If the passages do not contain enough information, say so clearly.",
-          "Always answer in English, regardless of the language of the user's query.",
-        ].join(" "),
-      },
-      {
-        role: "user",
-        content: [`Query: ${enQuery}`, "", "Article passages:", context].join("\n"),
-      },
-    ],
+    reasoning: { effort: "high" },
+    input,
   });
 
-  return res.choices[0].message.content?.trim() ?? "";
+  return res.output_text?.trim() ?? "";
 }
 
 export async function runArticleQuery(

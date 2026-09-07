@@ -47,17 +47,12 @@ function citationLabel(authors: string, year: string, refIndex: number | string)
 
 async function translateToEnglish(text: string): Promise<string> {
   const client = new OpenAIClient();
-  const res = await client.chat.completions.create({
+  const res = await (client as any).responses.create({
     model: MODELS.translate,
-    temperature: 0.1,
-    messages: [
-      {
-        role: "user",
-        content: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
-      },
-    ],
+    reasoning: { effort: "low" },
+    input: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
   });
-  return res.choices[0].message.content?.trim() ?? text;
+  return res.output_text?.trim() ?? text;
 }
 
 async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
@@ -144,34 +139,24 @@ async function synthesizeAnswerWithCitations(
     })
     .join("\n\n---\n\n");
 
-  const res = await client.chat.completions.create({
+  const systemInstruction = [
+    "You answer questions using only the provided PubMed reference abstracts.",
+    "Every substantive answer sentence must end with one or more citations in square brackets, using the exact reference numbers shown in brackets for each source, for example [2] or [2, 5].",
+    "If a sentence combines evidence from multiple abstracts, cite every reference used for that sentence.",
+    "Do not cite references that do not support the sentence.",
+    "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant reference if applicable.",
+    "Always answer in English, regardless of the language of the user's query."
+  ].join(" ");
+
+  const input = `System Instructions:\n${systemInstruction}\n\nReferences:\n\n${context}\n\nQuestion: ${enQuery}`;
+
+  const res = await (client as any).responses.create({
     model: MODELS.llm,
-    temperature: 0.1,
-    messages: [
-      {
-        role: "system",
-        content: [
-          "You answer questions using only the provided PubMed reference abstracts.",
-          "Every substantive answer sentence must end with one or more citations in square brackets, using the exact reference numbers shown in brackets for each source, for example [2] or [2, 5].",
-          "If a sentence combines evidence from multiple abstracts, cite every reference used for that sentence.",
-          "Do not cite references that do not support the sentence.",
-          "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant reference if applicable.",
-          "Always answer in English, regardless of the language of the user's query.",
-        ].join(" "),
-      },
-      {
-        role: "user",
-        content: [
-          `Query: ${enQuery}`,
-          "",
-          "Reference abstracts:",
-          context,
-        ].filter(Boolean).join("\n"),
-      },
-    ],
+    reasoning: { effort: "high" },
+    input,
   });
 
-  return res.choices[0].message.content?.trim() ?? "";
+  return res.output_text?.trim() ?? "";
 }
 
 export interface ReferenceQueryResult {

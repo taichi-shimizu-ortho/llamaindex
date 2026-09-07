@@ -1,19 +1,31 @@
-import { Document, Settings, VectorStoreIndex } from "llamaindex";
-import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
+import { SentenceSplitter } from "llamaindex";
 import OpenAIClient from "openai";
-import { KIMI, MODELS } from "./config.js";
+import { MODELS, PATHS, KIMI } from "./config.js";
+import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { loadReferenceSet, type ReferenceRecord, type ReferenceSet } from "./referenceHarvester.js";
+
+// アブストラクトを文単位の小チャンクへ分割する（検索精度向上のため）。
+// 表示・LLM提示はアブストラクト全文を使うので、ここは検索専用の細分化。
+const abstractSplitter = new SentenceSplitter({ chunkSize: 128, chunkOverlap: 24 });
+
+// 1チャンク = 埋め込みベクトル + 所属文献(ref_index)。テキストは保持しない
+// （表示・提示はレコードのアブストラクト全文を使うため）。
+interface Chunk {
+  refIndex: string;
+  embedding: number[];
+}
 
 interface CachedReferenceIndex {
   set: ReferenceSet;
-  index: VectorStoreIndex;
+  // ref_index -> 元レコード（アブストラクト全文の復元用）
+  recordByRef: Map<string, ReferenceRecord>;
+  chunks: Chunk[];
 }
 
 const cache = new Map<string, Promise<CachedReferenceIndex>>();
 
-function ensureSettings() {
-  Settings.llm = new OpenAI({ model: MODELS.llm, temperature: 1, topP: 0.95, apiKey: KIMI.apiKey, baseURL: KIMI.baseURL });
-  Settings.embedModel = new OpenAIEmbedding({ model: MODELS.embed });
+function hasJapanese(s: string): boolean {
+  return /[぀-ヿ㐀-鿿]/.test(s);
 }
 
 function citationAuthor(authors: string, fallback: string): string {
@@ -33,57 +45,42 @@ function citationLabel(authors: string, year: string, refIndex: number | string)
   return `${citationAuthor(authors, `Ref${refIndex || ""}`)}${citationYear(year)}`;
 }
 
-function recordToDocument(set: ReferenceSet, record: ReferenceRecord): Document | null {
-  const abstract = record.pubmed?.abstract?.trim();
-  if (!abstract) return null;
-  const authors = record.pubmed?.authors?.join(", ") || "";
-  const year = record.pubmed?.year || "";
-  return new Document({
-    text: abstract,
-    metadata: {
-      set_id: set.id,
-      source_url: set.sourceUrl,
-      ref_index: record.index,
-      reference_text: record.text,
-      href: record.href,
-      pmid: record.pubmed?.pmid || record.pmid,
-      doi: record.pubmed?.doi || record.doi,
-      title: record.pubmed?.title || "",
-      authors,
-      journal: record.pubmed?.journal || "",
-      year,
-      publication_types: record.pubmed?.publicationTypes?.join(", ") || "",
-      citation_label: citationLabel(authors, year, record.index),
-      metadata_source: record.pubmed?.source || "pubmed",
-    },
+async function translateToEnglish(text: string): Promise<string> {
+  const client = new OpenAIClient({ apiKey: KIMI.apiKey, baseURL: KIMI.baseURL });
+  const res = await (client as any).responses.create({
+    model: MODELS.translate,
+    reasoning: { effort: "low" },
+    input: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
   });
+  return res.output_text?.trim() ?? text;
 }
 
 async function buildReferenceIndex(id: string): Promise<CachedReferenceIndex> {
-  ensureSettings();
   const set = loadReferenceSet(id);
-  const documents = set.records
-    .map((record) => recordToDocument(set, record))
-    .filter((doc): doc is Document => Boolean(doc));
-  if (!documents.length) throw new Error("No references with an abstract");
-  const index = await VectorStoreIndex.init({ nodes: documents });
-  return { set, index };
+  const recordByRef = new Map<string, ReferenceRecord>();
+  for (const record of set.records) {
+    if (record.pubmed?.abstract?.trim()) recordByRef.set(String(record.index), record);
+  }
+  if (!recordByRef.size) throw new Error("No references with an abstract");
+
+  // アブストラクトを文チャンクに分割。ref_index との対応を texts/refs で並列保持。
+  const texts: string[] = [];
+  const refs: string[] = [];
+  for (const [key, record] of recordByRef) {
+    for (const text of abstractSplitter.splitText(record.pubmed!.abstract!.trim())) {
+      texts.push(text);
+      refs.push(key);
+    }
+  }
+  // 埋め込みはディスクキャッシュ経由（再起動時は再埋め込みしない）。
+  const embeddings = await getEmbeddings("reference", id, texts);
+  const chunks: Chunk[] = embeddings.map((embedding, i) => ({ refIndex: refs[i], embedding }));
+  return { set, recordByRef, chunks };
 }
 
 async function getReferenceIndex(id: string): Promise<CachedReferenceIndex> {
   if (!cache.has(id)) cache.set(id, buildReferenceIndex(id));
   return cache.get(id)!;
-}
-
-function nodeText(n: any): string {
-  if (typeof n.getContent === "function") {
-    try {
-      return n.getContent();
-    } catch {
-      /* fallthrough */
-    }
-  }
-  return n.text ?? "";
 }
 
 type ReferenceSource = {
@@ -100,6 +97,27 @@ type ReferenceSource = {
   abstract: string;
   citationLabel: string;
 };
+
+// 文チャンクのヒットから、文献（アブストラクト全文）単位のソースを組み立てる。
+// abstract は元レコードから復元するため、表示・synthesis は常に全文になる。
+function recordToSource(record: ReferenceRecord, score: number): ReferenceSource {
+  const authors = record.pubmed?.authors?.join(", ") || "";
+  const year = record.pubmed?.year || "";
+  return {
+    score,
+    refIndex: record.index,
+    title: record.pubmed?.title || "",
+    authors,
+    journal: record.pubmed?.journal || "",
+    year,
+    doi: record.pubmed?.doi || record.doi || "",
+    pmid: record.pubmed?.pmid || record.pmid || "",
+    href: record.href || "",
+    referenceText: record.text || "",
+    abstract: record.pubmed?.abstract?.trim() || "",
+    citationLabel: citationLabel(authors, year, record.index),
+  };
+}
 
 async function synthesizeAnswerWithCitations(
   enQuery: string,
@@ -121,35 +139,24 @@ async function synthesizeAnswerWithCitations(
     })
     .join("\n\n---\n\n");
 
-  const res = await client.chat.completions.create({
+  const systemInstruction = [
+    "You answer questions using only the provided PubMed reference abstracts.",
+    "Every substantive answer sentence must end with one or more citations in square brackets, using the exact reference numbers shown in brackets for each source, for example [2] or [2, 5].",
+    "If a sentence combines evidence from multiple abstracts, cite every reference used for that sentence.",
+    "Do not cite references that do not support the sentence.",
+    "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant reference if applicable.",
+    "Always answer in English, regardless of the language of the user's query."
+  ].join(" ");
+
+  const input = `System Instructions:\n${systemInstruction}\n\nReferences:\n\n${context}\n\nQuestion: ${enQuery}`;
+
+  const res = await (client as any).responses.create({
     model: MODELS.llm,
-    temperature: 1,
-    top_p: 0.95,
-    messages: [
-      {
-        role: "system",
-        content: [
-          "You answer questions using only the provided PubMed reference abstracts.",
-          "Every substantive answer sentence must end with one or more citations in square brackets, using the exact reference numbers shown in brackets for each source, for example [2] or [2, 5].",
-          "If a sentence combines evidence from multiple abstracts, cite every reference used for that sentence.",
-          "Do not cite references that do not support the sentence.",
-          "If the abstracts do not contain enough evidence, say so clearly and cite the closest relevant reference if applicable.",
-          "Always answer in English, regardless of the language of the user's query.",
-        ].join(" "),
-      },
-      {
-        role: "user",
-        content: [
-          `Query: ${enQuery}`,
-          "",
-          "Reference abstracts:",
-          context,
-        ].filter(Boolean).join("\n"),
-      },
-    ],
+    reasoning: { effort: "high" },
+    input,
   });
 
-  return res.choices[0].message.content?.trim() ?? "";
+  return res.output_text?.trim() ?? "";
 }
 
 export interface ReferenceQueryResult {
@@ -176,36 +183,29 @@ export interface ReferenceQueryResult {
 export async function runReferenceQuery(
   setId: string,
   originalQuery: string,
-  opts: { topK?: number } = {},
+  opts: { topK?: number; translate?: boolean; enQuery?: string } = {},
 ): Promise<ReferenceQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
-  const { index } = await getReferenceIndex(setId);
-  const enQuery = originalQuery;
+  const { recordByRef, chunks } = await getReferenceIndex(setId);
+  const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
+  const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
-  const retriever = index.asRetriever({ similarityTopK: topK });
-  const rawNodes: any[] = await retriever.retrieve(enQuery);
-  const sources = rawNodes
-    .map((nws): ReferenceSource => {
-      const node = nws.node ?? nws;
-      const meta = node.metadata ?? {};
-      const refIndex = meta.ref_index ?? "";
-      const authors = meta.authors ?? "";
-      const year = meta.year ?? "";
-      return {
-        score: typeof nws.score === "number" ? nws.score : 0,
-        refIndex,
-        title: meta.title ?? "",
-        authors,
-        journal: meta.journal ?? "",
-        year,
-        doi: meta.doi ?? "",
-        pmid: meta.pmid ?? "",
-        href: meta.href ?? "",
-        referenceText: meta.reference_text ?? "",
-        abstract: nodeText(node),
-        citationLabel: meta.citation_label ?? citationLabel(authors, year, refIndex),
-      };
+  // クエリを埋め込み、各チャンクとのコサイン類似度を算出。
+  // ref_index でグループ化し、各文献の最高スコア（＝最も刺さった文）を採用する。
+  const queryVec = await embedModel().getTextEmbedding(enQuery);
+  const bestByRef = new Map<string, number>();
+  for (const chunk of chunks) {
+    const score = cosineSimilarity(queryVec, chunk.embedding);
+    const prev = bestByRef.get(chunk.refIndex);
+    if (prev === undefined || score > prev) bestByRef.set(chunk.refIndex, score);
+  }
+
+  const sources = [...bestByRef.entries()]
+    .map(([key, score]) => {
+      const record = recordByRef.get(key);
+      return record ? recordToSource(record, score) : null;
     })
+    .filter((s): s is ReferenceSource => s !== null)
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 

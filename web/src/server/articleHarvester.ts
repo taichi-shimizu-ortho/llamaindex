@@ -30,12 +30,14 @@ export interface ArticleSet {
   createdAt: string;
   sections: ArticleSection[];
   chunkCount: number;
+  extractionSource?: string;
 }
 
 export interface ArticleHarvestOptions {
   sourceUrl?: string;
   html?: string;
   title?: string;
+  jatsXml?: string;
 }
 
 function ensureOutputDir() {
@@ -75,11 +77,17 @@ function convertSub(s: string): string {
   );
 }
 
+function formatHtmlCitations(s: string): string {
+  let cited = s.replace(/<a\b[^>]*href=["']#(?:bibr|ref|R)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "[$1]");
+  cited = cited.replace(/<a\b[^>]*class=["'][^"']*\b(?:bibr|ref-link|citation)\b[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "[$1]");
+  return cited;
+}
+
 function stripTags(s: string): string {
-  return convertSub(decodeHtmlEntities(s))
+  const cited = formatHtmlCitations(s);
+  return convertSub(decodeHtmlEntities(cited))
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<sup\b[\s\S]*?<\/sup>/gi, " ")
     .replace(/<table\b[\s\S]*?<\/table>/gi, " ")
     .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ")
     .replace(/<[^>]+>/g, " ")
@@ -148,7 +156,7 @@ function inferAuthors(html: string): string[] {
     .filter(Boolean);
 }
 
-function inferMeta(html: string, sourceUrl: string) {
+export function inferMeta(html: string, sourceUrl: string) {
   const meta = (name: string) =>
     stripTags(html.match(new RegExp(`<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']+)["']`, "i"))?.[1] ?? "");
   const doi = meta("citation_doi") || meta("dc.identifier") || sourceUrl.match(/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0] || "";
@@ -359,7 +367,7 @@ function stripTagsNoTable(s: string): string {
   return convertSub(decodeHtmlEntities(s))
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<sup\b[\s\S]*?<\/sup>/gi, " ")
+    
     .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
@@ -576,31 +584,86 @@ export function listArticleSets() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
-  if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
-  const sourceUrl = options.sourceUrl?.trim() ?? "";
-  const html = options.html ?? (await fetchText(sourceUrl));
-  const title = options.title?.trim() || inferTitle(html, sourceUrl);
-  const meta = inferMeta(html, sourceUrl);
-  const sections = buildSections(html);
-  if (!sections.length) throw new Error("Could not extract body sections");
+import { parseJatsArticle } from "./sageJatsHarvester.js";
 
-  const id = uniqueJsonId(PATHS.articleOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
-  const set: ArticleSet = {
-    id,
-    sourceUrl,
-    title,
-    authors: inferAuthors(html),
-    journal: meta.journal,
-    year: meta.year,
-    doi: meta.doi,
-    createdAt: new Date().toISOString(),
-    sections,
-    chunkCount: sections.reduce(
-      (sum, section) => sum + section.paragraphs.length + section.subsections.reduce((n, sub) => n + sub.paragraphs.length, 0),
+export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
+  if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
+  const sourceUrl = options.sourceUrl?.trim() ?? "";
+  const html = options.html ?? (sourceUrl ? await fetchText(sourceUrl) : "");
+  const title = options.title?.trim() || (html ? inferTitle(html, sourceUrl) : "");
+  
+  const baseId = citationBaseId(html || options.jatsXml || "", title, slugify(title || sourceUrl));
+  
+  let set: ArticleSet | null = null;
+  let finalDoi = "";
+  if (options.jatsXml) {
+    const parsed = parseJatsArticle(options.jatsXml, { id: "dummy", sourceUrl, title });
+    if (parsed) {
+      set = parsed as ArticleSet;
+      finalDoi = set.doi || "";
+      
+      // supplement figure absolute URLs from HTML if present
+      if (html && set.sections) {
+         for (const section of set.sections) {
+           if (section.type === "figure") {
+             for (let i = 0; i < section.paragraphs.length; i++) {
+               const p = section.paragraphs[i];
+               const match = p.match(/\[Image URL:\s*(.*?)\]/i);
+               if (match) {
+                 const relUrl = match[1];
+                 // find the absolute URL in HTML that contains this relative ID or filename
+                 // The relative URL in JATS might just be "10.1177_...-fig1.tif" but HTML might use ".jpg"
+                 const basename = relUrl.replace(/\.[^/.]+$/, "");
+                 const escapedRel = basename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                 const imgRegex = new RegExp(`<img[^>]*src=["']([^"']*${escapedRel}[^"']*)["'][^>]*>`, "i");
+                 const imgMatch = html.match(imgRegex);
+                 if (imgMatch) {
+                   let absUrl = imgMatch[1];
+                   if (absUrl.startsWith("/")) {
+                     const origin = new URL(sourceUrl).origin;
+                     absUrl = origin + absUrl;
+                   }
+                   section.paragraphs[i] = p.replace(relUrl, absUrl);
+                   section.content = section.paragraphs.join("\n");
+                 }
+               }
+             }
+           }
+         }
+      }
+    }
+  }
+
+  if (!set && html) {
+    const meta = inferMeta(html, sourceUrl);
+    finalDoi = meta.doi || "";
+    const sections = buildSections(html);
+    if (!sections.length) throw new Error("Could not extract body sections");
+
+    set = {
+      id: "dummy",
+      sourceUrl,
+      title,
+      authors: inferAuthors(html),
+      journal: meta.journal,
+      year: meta.year,
+      doi: finalDoi,
+      createdAt: new Date().toISOString(),
+      sections,
+      chunkCount: 0,
+      extractionSource: "html"
+    };
+  }
+
+  if (!set) throw new Error("Failed to extract article content");
+  
+  const id = uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, title);
+  set.id = id;
+
+  set.chunkCount = set.sections.reduce(
+      (sum, section) => sum + section.paragraphs.length + (section.subsections || []).reduce((n, sub) => n + sub.paragraphs.length, 0),
       0,
-    ),
-  };
+  );
 
   ensureOutputDir();
   fs.writeFileSync(articleSetPath(id), JSON.stringify(set, null, 2), "utf-8");

@@ -84,23 +84,26 @@ function articleSummary(article: Awaited<ReturnType<typeof harvestArticle>>) {
     title: article.title,
     sourceUrl: article.sourceUrl,
     chunkCount: article.chunkCount,
+    extractionSource: article.extractionSource,
     createdAt: article.createdAt,
   };
 }
 
-function referenceSummary(reference: Awaited<ReturnType<typeof harvestReferences>>) {
+function referenceSummary(ref: Awaited<ReturnType<typeof harvestReferences>>) {
   return {
-    id: reference.id,
-    title: reference.title,
-    sourceUrl: reference.sourceUrl,
-    totalReferences: reference.totalReferences,
-    abstractFound: reference.abstractFound,
-    createdAt: reference.createdAt,
+    id: ref.id,
+    title: ref.title,
+    sourceUrl: ref.sourceUrl,
+    totalReferences: ref.totalReferences,
+    pubmedFound: ref.pubmedFound,
+    abstractFound: ref.abstractFound,
+    extractionSource: ref.extractionSource,
+    createdAt: ref.createdAt,
   };
 }
 
 app.post("/api/import/ors", async (req, res) => {
-  const { sourceUrl, html, title, limit } = req.body ?? {};
+  const { sourceUrl, html, title, limit, jatsXml } = req.body ?? {};
   if (!sourceUrl && !html) return res.status(400).json({ error: "Enter a URL or HTML" });
 
   const result: {
@@ -112,15 +115,23 @@ app.post("/api/import/ors", async (req, res) => {
   } = { ok: false };
 
   try {
-    result.article = articleSummary(await harvestArticle({ sourceUrl, html, title }));
+    result.article = articleSummary(await harvestArticle({ sourceUrl, html, title, jatsXml }));
   } catch (e) {
     result.articleError = errorText(e);
   }
 
   try {
-    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit }));
+    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit, jatsXml }));
   } catch (e) {
     result.referenceError = errorText(e);
+  }
+
+  // Save XML if present and article/reference extraction succeeded (or even if it failed partially)
+  const id = result.article?.id || result.reference?.id;
+  if (id && jatsXml) {
+    const xmlPath = path.join(PATHS.rawHtmlDir, `${id}.source.xml`);
+    fs.mkdirSync(PATHS.rawHtmlDir, { recursive: true });
+    fs.writeFileSync(xmlPath, jatsXml, "utf-8");
   }
 
   result.ok = Boolean(result.article || result.reference);

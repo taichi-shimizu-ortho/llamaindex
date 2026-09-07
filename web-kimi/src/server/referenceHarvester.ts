@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
+import { inferMeta } from "./articleHarvester.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const TOOL = "llamaindex-reference-web";
@@ -46,11 +47,13 @@ export interface ReferenceSet {
   id: string;
   sourceUrl: string;
   title: string;
+  doi?: string;
   createdAt: string;
   totalReferences: number;
   pubmedFound: number;
   abstractFound: number;
   records: ReferenceRecord[];
+  extractionSource?: string;
 }
 
 export interface HarvestOptions {
@@ -58,39 +61,12 @@ export interface HarvestOptions {
   html?: string;
   title?: string;
   limit?: number;
+  jatsXml?: string;
 }
 
 function ensureOutputDir() {
   fs.mkdirSync(PATHS.referenceOutputDir, { recursive: true });
   fs.mkdirSync(PATHS.rawHtmlDir, { recursive: true });
-}
-
-function isReferenceRecord(value: unknown): value is ReferenceRecord {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Partial<ReferenceRecord>;
-  // pubmed / error は任意項目なので存在チェックしない。
-  return typeof record.index === "number"
-    && typeof record.text === "string"
-    && typeof record.sourceUrl === "string"
-    && typeof record.href === "string"
-    && typeof record.doi === "string"
-    && typeof record.pmid === "string"
-    && typeof record.pubmedFound === "boolean";
-}
-
-/** Runtime schema used by the reference-set list and abstract RAG index. */
-export function isReferenceSet(value: unknown): value is ReferenceSet {
-  if (!value || typeof value !== "object") return false;
-  const set = value as Partial<ReferenceSet>;
-  return typeof set.id === "string"
-    && typeof set.sourceUrl === "string"
-    && typeof set.title === "string"
-    && typeof set.createdAt === "string"
-    && typeof set.totalReferences === "number"
-    && typeof set.pubmedFound === "number"
-    && typeof set.abstractFound === "number"
-    && Array.isArray(set.records)
-    && set.records.every(isReferenceRecord);
 }
 
 function decodeHtmlEntities(s: string): string {
@@ -336,9 +312,10 @@ function metaValues(html: string, names: RegExp): string[] {
     .filter(Boolean);
 }
 
-function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "science" | "generic" {
+function detectPublisher(html: string, sourceUrl: string): "sage" | "wiley" | "metadata" | "science" | "sciencedirect" | "generic" {
   const metadata = metaValues(html, /^(?:citation_publisher|citation_journal_title|dc\.publisher)$/i).join(" ");
   const haystack = `${sourceUrl} ${metadata}`;
+  if (/sciencedirect\.com|elsevier/i.test(haystack)) return "sciencedirect";
   if (/sagepub|sage publications|american journal of sports medicine/i.test(haystack)) return "sage";
   if (/onlinelibrary\.wiley|wiley|journal of orthopaedic research/i.test(haystack)) return "wiley";
   if (/science\.org/i.test(haystack)) return "science";
@@ -605,11 +582,52 @@ function extractPlainNumberedReferences(html: string, sourceUrl: string): Refere
   return best;
 }
 
+function extractScienceDirectReferences(html: string, sourceUrl: string): ReferenceRecord[] {
+  const records: ReferenceRecord[] = [];
+  let index = 1;
+  
+  const olMatches = html.matchAll(/<ol\b[^>]*id=["']reference-links-[^"']*["'][^>]*>([\s\S]*?)<\/ol>/gi);
+  for (const olMatch of olMatches) {
+    const listContent = olMatch[1];
+    const liMatches = Array.from(listContent.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi));
+    
+    for (const liMatch of liMatches) {
+      const liContent = liMatch[1];
+      // Remove labels like <span class="label u-font-sans">1.</span>
+      let cleanContent = liContent.replace(/<span\b[^>]*class=["'][^"']*\blabel\b[^"']*["'][^>]*>[\s\S]*?<\/span>/i, "");
+      const text = cleanReferenceText(stripTags(cleanContent));
+      if (!text || text.length < 5) continue;
+
+      const pmid = liContent.match(/[?&]pmid=(\d+)/i)?.[1] || extractPmid(liContent);
+      const doi = extractDoi(liContent);
+      let href = pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : doi ? `https://doi.org/${doi}` : sourceUrl;
+      
+      if (href === sourceUrl) {
+         const aMatch = liContent.match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/i);
+         if (aMatch) href = absoluteUrl(aMatch[1], sourceUrl);
+      }
+      
+      records.push({
+        index: index++,
+        text: text || href,
+        sourceUrl,
+        href,
+        doi,
+        pmid,
+        pubmedFound: false,
+      });
+    }
+  }
+  return records;
+}
+
 export function extractReferenceCandidates(html: string, sourceUrl: string): ReferenceRecord[] {
   const generic = () => extractGenericReferences(html, sourceUrl);
   const publisher = detectPublisher(html, sourceUrl);
   const extractors =
-    publisher === "sage"
+    publisher === "sciencedirect"
+      ? [extractScienceDirectReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
+      : publisher === "sage"
       ? [extractBibrReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
       : publisher === "wiley"
         ? [extractWileyBibReferences, extractMetaReferences, extractPlainNumberedReferences, generic]
@@ -1058,43 +1076,32 @@ export function referenceHtmlPath(id: string): string {
 
 export function loadReferenceSet(id: string): ReferenceSet {
   const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  const filePath = referenceSetPath(safeId);
-  const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  if (!isReferenceSet(parsed)) {
-    throw new Error(`Invalid ReferenceSet schema: ${filePath}. Import or convert the JSON before using it.`);
-  }
-  return decodeEntityStrings(parsed);
+  const raw = fs.readFileSync(referenceSetPath(safeId), "utf-8");
+  return decodeEntityStrings(JSON.parse(raw) as ReferenceSet);
 }
 
 export function listReferenceSets() {
   if (!fs.existsSync(PATHS.referenceOutputDir)) return [];
   return fs
     .readdirSync(PATHS.referenceOutputDir)
-    .filter((f) => f.endsWith(".json") && !f.includes(".before_"))
-    .flatMap((file) => {
-      const filePath = path.join(PATHS.referenceOutputDir, file);
-      try {
-        const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-        if (!isReferenceSet(parsed)) {
-          console.warn(`[reference_sets] Skipping invalid ReferenceSet JSON: ${filePath}`);
-          return [];
-        }
-        const set = decodeEntityStrings(parsed);
-        return [{
-          id: set.id,
-          title: set.title,
-          sourceUrl: set.sourceUrl,
-          totalReferences: set.totalReferences,
-          abstractFound: set.abstractFound,
-          createdAt: set.createdAt,
-        }];
-      } catch (error) {
-        console.warn(`[reference_sets] Skipping unreadable JSON: ${filePath}`, error);
-        return [];
-      }
+    .filter((f) => f.endsWith(".json"))
+    .map((file) => {
+      const set = decodeEntityStrings(
+        JSON.parse(fs.readFileSync(path.join(PATHS.referenceOutputDir, file), "utf-8")) as ReferenceSet,
+      );
+      return {
+        id: set.id,
+        title: set.title,
+        sourceUrl: set.sourceUrl,
+        totalReferences: set.totalReferences,
+        abstractFound: set.abstractFound,
+        createdAt: set.createdAt,
+      };
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
+
+import { parseJatsReferences } from "./sageJatsHarvester.js";
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
   if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
@@ -1102,7 +1109,50 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   const html = options.html ?? (await fetchText(sourceUrl, {}));
   const title = options.title?.trim() || inferTitle(html, sourceUrl);
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
-  const candidates = extractReferenceCandidates(html, sourceUrl).slice(0, limit);
+  
+  const baseId = citationBaseId(html || options.jatsXml || "", title, slugify(title || sourceUrl));
+  // Try to get article DOI from html or jats
+  const articleDoiMatch = options.jatsXml?.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
+  const finalDoi = (articleDoiMatch ? articleDoiMatch[1].replace(/<[^>]+>/g, "").trim() : inferMeta(html, sourceUrl).doi) || "";
+  
+  const id = uniqueJsonId(PATHS.referenceOutputDir, baseId, sourceUrl, finalDoi, title);
+  
+  const existingPath = referenceSetPath(id);
+  if (fs.existsSync(existingPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(existingPath, "utf-8"));
+      if (existing.records && existing.records.length > 0 && existing.abstractFound > 0) {
+        return existing; // Skip if already fetched
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  
+  let candidates = extractReferenceCandidates(html, sourceUrl).slice(0, limit);
+  let extractionSource = "html";
+  
+  if (options.jatsXml) {
+    const jatsCandidates = parseJatsReferences(options.jatsXml).map((c, idx) => ({
+      index: idx + 1,
+      originalText: c.text || "",
+      text: c.text || "",
+      href: "",
+      sourceUrl,
+      doi: c.doi || "",
+      pmid: c.pmid || "",
+      pubmedFound: false
+    })) as ReferenceRecord[];
+    
+    const htmlIds = candidates.filter(c => c.doi || c.pmid).length;
+    const jatsIds = jatsCandidates.filter(c => c.doi || c.pmid).length;
+    
+    if (jatsIds > htmlIds || (jatsCandidates.length > 0 && candidates.length === 0)) {
+      candidates = jatsCandidates.slice(0, limit);
+      extractionSource = "sage-jats";
+    }
+  }
+
   const enrichedRecords: ReferenceRecord[] = [];
 
   for (const candidate of candidates) {
@@ -1110,16 +1160,17 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   }
   const records = dedupeEnrichedRecords(enrichedRecords, sourceUrl, html);
 
-  const id = uniqueJsonId(PATHS.referenceOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
   const set: ReferenceSet = {
     id,
     sourceUrl,
     title,
+    doi: finalDoi,
     createdAt: new Date().toISOString(),
     totalReferences: records.length,
     pubmedFound: records.filter((r) => r.pubmedFound).length,
     abstractFound: records.filter((r) => r.pubmed?.abstract).length,
     records: records.map((r, i) => ({ ...r, index: i + 1 })),
+    extractionSource
   };
   const decodedSet = decodeEntityStrings(set);
 

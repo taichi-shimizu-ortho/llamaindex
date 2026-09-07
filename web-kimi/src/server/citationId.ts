@@ -41,7 +41,18 @@ function citationAuthors(html: string): string[] {
   if (citation.length) return citation;
 
   // Fallback to dc.Creator (used by Science.org)
-  return Array.from(html.matchAll(/<meta[^>]+name=["']dc\.Creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+  const dc = Array.from(html.matchAll(/<meta[^>]+name=["']dc\.Creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+    .map((m) => stripTags(m[1] ?? ""))
+    .filter(Boolean);
+  if (dc.length) return dc;
+
+  // Fallback to ScienceDirect HTML structure: <span class="given-name">...</span> <span class="surname">...</span>
+  const sdMatches = Array.from(html.matchAll(/<span\b[^>]*class=["'][^"']*given-name[^"']*["'][^>]*>([\s\S]*?)<\/span>\s*<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi))
+    .map((m) => `${stripTags(m[1])} ${stripTags(m[2])}`.trim())
+    .filter(Boolean);
+  if (sdMatches.length) return sdMatches;
+
+  return Array.from(html.matchAll(/<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi))
     .map((m) => stripTags(m[1] ?? ""))
     .filter(Boolean);
 }
@@ -83,21 +94,46 @@ function capitalizeIdPart(value: string): string {
 
 export function citationBaseId(html: string, articleTitle: string, fallback: string): string {
   const authors = citationAuthors(html);
-  const firstAuthor = authors.find(authorLooksComplete) || firstAuthorFromTitle(html, articleTitle);
+  const firstAuthor = authors.find(authorLooksComplete) || authors[0] || firstAuthorFromTitle(html, articleTitle);
   const author = capitalizeIdPart(surname(firstAuthor));
   const year = yearFromHtml(html);
+  const cleanFallback = fallback.replace(/-(?:sciencedirect|direct)$/i, "");
   // Construct ID as Author + Year. If either part is missing, use whatever is available.
   const base = `${author}${year}`;
   // If both are empty, fall back to provided fallback.
-  return (base.replace(/[^A-Za-z0-9_.-]/g, "") || fallback) || "Article";
+  return (base.replace(/[^A-Za-z0-9_.-]/g, "") || cleanFallback) || "Article";
 }
 
-export function uniqueJsonId(outputDir: string, baseId: string): string {
-  let id = baseId;
-  let n = 2;
-  while (fs.existsSync(`${outputDir}/${id}.json`)) {
-    id = `${baseId}-${n}`;
+export function uniqueJsonId(outputDir: string, baseId: string, sourceUrl: string, doi: string, title?: string): string {
+  // Check existing files matching baseId, baseId-2, etc.
+  // If we find one with the same sourceUrl, doi, or title, we reuse that ID.
+  let n = 1;
+  while (true) {
+    const id = n === 1 ? baseId : `${baseId}-${n}`;
+    const p = `${outputDir}/${id}.json`;
+    if (!fs.existsSync(p)) {
+      return id; // No collision, safe to use
+    }
+    
+    // Read the file and check if it's the same article
+    try {
+      const content = JSON.parse(fs.readFileSync(p, "utf-8"));
+      // Strip query params for loose URL match
+      const normalizeUrl = (u: string) => (u || "").split("?")[0].replace(/\/$/, "");
+      const cleanUrl1 = normalizeUrl(sourceUrl);
+      const cleanUrl2 = normalizeUrl(content.sourceUrl);
+
+      if (
+        (doi && content.doi && content.doi === doi) || 
+        (cleanUrl1 && cleanUrl2 && cleanUrl1 === cleanUrl2) ||
+        (title && content.title && content.title === title)
+      ) {
+        return id; // Same article, reuse ID to overwrite!
+      }
+    } catch {
+      // Ignore parse errors, just continue
+    }
+    
     n += 1;
   }
-  return id;
 }

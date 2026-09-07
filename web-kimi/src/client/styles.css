@@ -31,29 +31,6 @@
   --shadow: rgba(15, 23, 42, 0.1);
 }
 
-/* Kimi variant: same layout, desaturated slate accent instead of the green/gold theme. */
-.app-kimi {
-  --accent: #8b93a3;
-  --accent-2: #a89f8d;
-}
-:root[data-theme="light"] .app-kimi {
-  --accent: #5b6472;
-  --accent-2: #8a7f6a;
-}
-.variant-badge {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  vertical-align: middle;
-}
-
 * { box-sizing: border-box; }
 
 body {
@@ -340,35 +317,41 @@ body {
   padding-bottom: 14px;
 }
 
-.article-metadata {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px 14px;
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.article-metadata span {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  overflow-wrap: anywhere;
-}
-
-.article-metadata strong {
-  color: var(--text);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.dataset-summary p {
+.dataset-summary p.article-source-url {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 13px;
   overflow-wrap: anywhere;
+}
+
+.dataset-summary p.article-source-url a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.dataset-summary p.article-source-url a:hover {
+  text-decoration: underline;
+}
+
+.article-meta-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.article-year {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.article-authors {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+  opacity: 0.85;
 }
 
 .summary-grid {

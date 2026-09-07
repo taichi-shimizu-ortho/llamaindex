@@ -1,5 +1,9 @@
-import { runArticleQuery, type ArticleQuerySource } from "./articleRag.js";
+import { runArticleQuery, translateToEnglish, type ArticleQuerySource } from "./articleRag.js";
 import { runReferenceQuery } from "./referenceRag.js";
+
+function hasJapanese(s: string): boolean {
+  return /[぀-ヿ㐀-鿿]/.test(s);
+}
 
 export interface IntegratedSource {
   scope: "main_article" | "reference_abstract";
@@ -56,15 +60,14 @@ export async function runIntegratedQuery(
   articleId: string,
   referenceSetId: string,
   originalQuery: string,
-  opts: { topK?: number } = {},
+  opts: { topK?: number; translate?: boolean } = {},
 ): Promise<IntegratedQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
-  const enQuery = originalQuery;
+  const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
+  const enQuery = shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery;
 
-  const [article, references] = await Promise.all([
-    runArticleQuery(articleId, originalQuery, { topK }),
-    runReferenceQuery(referenceSetId, originalQuery, { topK }),
-  ]);
+  const article = await runArticleQuery(articleId, originalQuery, { topK, translate: false, enQuery });
+  const references = await runReferenceQuery(referenceSetId, originalQuery, { topK, translate: false, enQuery });
 
   const articleSources = article.sources.map(articleSourceToIntegrated);
   const referenceSources: IntegratedSource[] = references.sources.map((source) => ({

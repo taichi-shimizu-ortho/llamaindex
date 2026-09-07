@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
+import { inferMeta } from "./articleHarvester.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const TOOL = "llamaindex-reference-web";
@@ -46,11 +47,13 @@ export interface ReferenceSet {
   id: string;
   sourceUrl: string;
   title: string;
+  doi?: string;
   createdAt: string;
   totalReferences: number;
   pubmedFound: number;
   abstractFound: number;
   records: ReferenceRecord[];
+  extractionSource?: string;
 }
 
 export interface HarvestOptions {
@@ -58,6 +61,7 @@ export interface HarvestOptions {
   html?: string;
   title?: string;
   limit?: number;
+  jatsXml?: string;
 }
 
 function ensureOutputDir() {
@@ -1097,13 +1101,58 @@ export function listReferenceSets() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+import { parseJatsReferences } from "./sageJatsHarvester.js";
+
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
   if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   const html = options.html ?? (await fetchText(sourceUrl, {}));
   const title = options.title?.trim() || inferTitle(html, sourceUrl);
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
-  const candidates = extractReferenceCandidates(html, sourceUrl).slice(0, limit);
+  
+  const baseId = citationBaseId(html || options.jatsXml || "", title, slugify(title || sourceUrl));
+  // Try to get article DOI from html or jats
+  const articleDoiMatch = options.jatsXml?.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
+  const finalDoi = (articleDoiMatch ? articleDoiMatch[1].replace(/<[^>]+>/g, "").trim() : inferMeta(html, sourceUrl).doi) || "";
+  
+  const id = uniqueJsonId(PATHS.referenceOutputDir, baseId, sourceUrl, finalDoi, title);
+  
+  const existingPath = referenceSetPath(id);
+  if (fs.existsSync(existingPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(existingPath, "utf-8"));
+      if (existing.records && existing.records.length > 0 && existing.abstractFound > 0) {
+        return existing; // Skip if already fetched
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  
+  let candidates = extractReferenceCandidates(html, sourceUrl).slice(0, limit);
+  let extractionSource = "html";
+  
+  if (options.jatsXml) {
+    const jatsCandidates = parseJatsReferences(options.jatsXml).map((c, idx) => ({
+      index: idx + 1,
+      originalText: c.text || "",
+      text: c.text || "",
+      href: "",
+      sourceUrl,
+      doi: c.doi || "",
+      pmid: c.pmid || "",
+      pubmedFound: false
+    })) as ReferenceRecord[];
+    
+    const htmlIds = candidates.filter(c => c.doi || c.pmid).length;
+    const jatsIds = jatsCandidates.filter(c => c.doi || c.pmid).length;
+    
+    if (jatsIds > htmlIds || (jatsCandidates.length > 0 && candidates.length === 0)) {
+      candidates = jatsCandidates.slice(0, limit);
+      extractionSource = "sage-jats";
+    }
+  }
+
   const enrichedRecords: ReferenceRecord[] = [];
 
   for (const candidate of candidates) {
@@ -1111,16 +1160,17 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   }
   const records = dedupeEnrichedRecords(enrichedRecords, sourceUrl, html);
 
-  const id = uniqueJsonId(PATHS.referenceOutputDir, citationBaseId(html, title, slugify(title || sourceUrl)));
   const set: ReferenceSet = {
     id,
     sourceUrl,
     title,
+    doi: finalDoi,
     createdAt: new Date().toISOString(),
     totalReferences: records.length,
     pubmedFound: records.filter((r) => r.pubmedFound).length,
     abstractFound: records.filter((r) => r.pubmed?.abstract).length,
     records: records.map((r, i) => ({ ...r, index: i + 1 })),
+    extractionSource
   };
   const decodedSet = decodeEntityStrings(set);
 

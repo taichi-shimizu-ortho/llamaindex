@@ -104,12 +104,36 @@ export function citationBaseId(html: string, articleTitle: string, fallback: str
   return (base.replace(/[^A-Za-z0-9_.-]/g, "") || cleanFallback) || "Article";
 }
 
-export function uniqueJsonId(outputDir: string, baseId: string): string {
-  let id = baseId;
-  let n = 2;
-  while (fs.existsSync(`${outputDir}/${id}.json`)) {
-    id = `${baseId}-${n}`;
+export function uniqueJsonId(outputDir: string, baseId: string, sourceUrl: string, doi: string, title?: string): string {
+  // Check existing files matching baseId, baseId-2, etc.
+  // If we find one with the same sourceUrl, doi, or title, we reuse that ID.
+  let n = 1;
+  while (true) {
+    const id = n === 1 ? baseId : `${baseId}-${n}`;
+    const p = `${outputDir}/${id}.json`;
+    if (!fs.existsSync(p)) {
+      return id; // No collision, safe to use
+    }
+    
+    // Read the file and check if it's the same article
+    try {
+      const content = JSON.parse(fs.readFileSync(p, "utf-8"));
+      // Strip query params for loose URL match
+      const normalizeUrl = (u: string) => (u || "").split("?")[0].replace(/\/$/, "");
+      const cleanUrl1 = normalizeUrl(sourceUrl);
+      const cleanUrl2 = normalizeUrl(content.sourceUrl);
+
+      if (
+        (doi && content.doi && content.doi === doi) || 
+        (cleanUrl1 && cleanUrl2 && cleanUrl1 === cleanUrl2) ||
+        (title && content.title && content.title === title)
+      ) {
+        return id; // Same article, reuse ID to overwrite!
+      }
+    } catch {
+      // Ignore parse errors, just continue
+    }
+    
     n += 1;
   }
-  return id;
 }

@@ -140,7 +140,7 @@ function renderMarkdownLine(text: string, refMap: Map<number, ReferenceRecord>, 
 
 // 本文段落（ソース表示）向け: 引用番号のみをリンク化する軽量レンダラー。
 function CitedText({ className, text }: { className?: string; text: string }) {
-  if (text.trim().startsWith("|")) {
+  if (text.trim().startsWith("|") || text.includes("\n|")) {
     return <MarkdownText className={className} text={text} cite />;
   }
   const refMap = useContext(ReferenceMapContext);
@@ -177,6 +177,7 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
     listItems = [];
   }
 
+  let tableCaption: string | null = null;
   function flushTable() {
     if (!tableRows.length) return;
     const rowsToRender = [...tableRows];
@@ -186,16 +187,18 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
     if (hasHeader && rowsToRender.length > 0) {
       headerRow = rowsToRender.shift()!;
     }
+    const maxCols = Math.max(headerRow?.length || 0, ...rowsToRender.map(r => r.length));
     hasHeader = false;
 
     blocks.push(
       <div className="table-container" key={`table-${blocks.length}`}>
         <table className="markdown-table">
+          {tableCaption && <caption>{renderInline(tableCaption, refMap, cite, `cap`)}</caption>}
           {headerRow && (
             <thead>
               <tr>
                 {headerRow.map((cell, idx) => (
-                  <th key={`th-${idx}`}>{renderInline(cell, refMap, cite, `th-${idx}`)}</th>
+                  <th key={`th-${idx}`} colSpan={idx === headerRow!.length - 1 && headerRow!.length < maxCols ? maxCols - headerRow!.length + 1 : 1}>{renderInline(cell, refMap, cite, `th-${idx}`)}</th>
                 ))}
               </tr>
             </thead>
@@ -204,7 +207,7 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
             {rowsToRender.map((row, rIdx) => (
               <tr key={`tr-${rIdx}`}>
                 {row.map((cell, cIdx) => (
-                  <td key={`td-${cIdx}`}>{renderInline(cell, refMap, cite, `td-${rIdx}-${cIdx}`)}</td>
+                  <td key={`td-${cIdx}`} colSpan={cIdx === row.length - 1 && row.length < maxCols ? maxCols - row.length + 1 : 1}>{renderInline(cell, refMap, cite, `td-${rIdx}-${cIdx}`)}</td>
                 ))}
               </tr>
             ))}
@@ -212,18 +215,24 @@ function MarkdownText({ className, text, cite = false }: { className?: string; t
         </table>
       </div>
     );
+    tableCaption = null;
   }
 
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trimEnd();
     const listMatch = line.match(/^\s*[-*]\s+(.+)$/);
     const isTableLine = line.trim().startsWith("|");
+    const captionMatch = line.match(/^(?:Table|Figure)\s+\d+[^:]*:\s*(.+)$/i) || line.match(/^(?:Table|Figure)\s+\d+\..+$/i);
 
     if (!line.trim()) {
       flushParagraph();
       flushList();
       flushTable();
     } else if (isTableLine) {
+      if (paragraph.length === 1 && paragraph[0].match(/^(?:Table|Figure)\s+\d+/i)) {
+         tableCaption = paragraph[0];
+         paragraph = [];
+      }
       flushParagraph();
       flushList();
       if (line.replace(/[\s:|:-]/g, "") === "") {
@@ -706,9 +715,18 @@ function ArticleContentBrowser({ article }: { article: ArticleSet }) {
         <details className="article-details article-details-abstract" key={section.title} open>
           <summary>
             <span className="article-summary-main">Abstract</span>
-            <span className="article-summary-meta">{section.paragraphs.length} paragraphs</span>
+            <span className="article-summary-meta">
+              {section.paragraphs.length + section.subsections.reduce((n, sub) => n + sub.paragraphs.length, 0)} paragraphs
+            </span>
           </summary>
-          <ParagraphList paragraphs={section.paragraphs} />
+          {section.paragraphs.length > 0 && <ParagraphList paragraphs={section.paragraphs} />}
+          {section.subsections.length > 0 && (
+            <div className="subsection-stack">
+              {section.subsections.map((subsection) => (
+                <SubsectionDropdown key={subsection.title} subsection={subsection} />
+              ))}
+            </div>
+          )}
         </details>
       ))}
 
@@ -965,9 +983,19 @@ export function App() {
           {currentSet || currentArticle ? (
             <>
               <div className="dataset-summary">
-                <div>
+                <div className="article-meta-header">
+                  {currentArticle && currentArticle.year && (
+                    <div className="article-year">{currentArticle.year}</div>
+                  )}
                   <h2>{currentArticle?.title || currentSet?.title || currentSet?.id}</h2>
-                  <p>{currentArticle?.sourceUrl || currentSet?.sourceUrl}</p>
+                  {currentArticle && currentArticle.authors && currentArticle.authors.length > 0 && (
+                    <div className="article-authors">{currentArticle.authors.join(", ")}</div>
+                  )}
+                  <p className="article-source-url">
+                    <a href={currentArticle?.sourceUrl || currentSet?.sourceUrl} target="_blank" rel="noreferrer">
+                      {currentArticle?.sourceUrl || currentSet?.sourceUrl}
+                    </a>
+                  </p>
                 </div>
                 <div className="summary-grid">
                   <div><strong>{currentArticle?.sections.length ?? 0}</strong><span>sections</span></div>

@@ -317,11 +317,41 @@ body {
   padding-bottom: 14px;
 }
 
-.dataset-summary p {
+.dataset-summary p.article-source-url {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 13px;
   overflow-wrap: anywhere;
+}
+
+.dataset-summary p.article-source-url a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.dataset-summary p.article-source-url a:hover {
+  text-decoration: underline;
+}
+
+.article-meta-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.article-year {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.article-authors {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+  opacity: 0.85;
 }
 
 .summary-grid {

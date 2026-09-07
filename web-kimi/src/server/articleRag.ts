@@ -1,18 +1,46 @@
-import { Document, Settings, VectorStoreIndex } from "llamaindex";
-import { OpenAI, OpenAIEmbedding } from "@llamaindex/openai";
-import { KIMI, MODELS } from "./config.js";
+import OpenAIClient from "openai";
+import { MODELS, KIMI } from "./config.js";
+import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+
+// 1パラグラフ = 1検索・表示単位。テキストとメタデータを保持する。
+interface ArticleItem {
+  text: string;
+  meta: {
+    title: string;
+    authors: string;
+    journal: string;
+    year: string;
+    doi: string;
+    source_url: string;
+    section: string;
+    section_type: string;
+    subsection: string;
+    paragraph_index: number;
+    total_paragraphs: number;
+  };
+}
 
 interface CachedArticleIndex {
   set: ArticleSet;
-  index: VectorStoreIndex;
+  items: ArticleItem[];
+  embeddings: number[][];
 }
 
 const cache = new Map<string, Promise<CachedArticleIndex>>();
 
-function ensureSettings() {
-  Settings.llm = new OpenAI({ model: MODELS.llm, temperature: 1, topP: 0.95, apiKey: KIMI.apiKey, baseURL: KIMI.baseURL });
-  Settings.embedModel = new OpenAIEmbedding({ model: MODELS.embed });
+function hasJapanese(s: string): boolean {
+  return /[぀-ヿ㐀-鿿]/.test(s);
+}
+
+export async function translateToEnglish(text: string): Promise<string> {
+  const client = new OpenAIClient({ apiKey: KIMI.apiKey, baseURL: KIMI.baseURL });
+  const res = await (client as any).responses.create({
+    model: MODELS.translate,
+    reasoning: { effort: "low" },
+    input: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
+  });
+  return res.output_text?.trim() ?? text;
 }
 
 function cleanText(text: string): string {
@@ -22,10 +50,9 @@ function cleanText(text: string): string {
     .trim();
 }
 
-function documentsFromArticle(set: ArticleSet): Document[] {
-  const docs: Document[] = [];
+function itemsFromArticle(set: ArticleSet): ArticleItem[] {
+  const items: ArticleItem[] = [];
   const base = {
-    article_id: set.id,
     title: set.title,
     authors: set.authors.join(", "),
     journal: set.journal,
@@ -35,67 +62,58 @@ function documentsFromArticle(set: ArticleSet): Document[] {
   };
 
   for (const section of set.sections) {
-    const sectionBase = {
-      ...base,
-      section: section.title,
-      section_type: section.type,
-    };
-
     section.paragraphs.forEach((paragraph, i) => {
-      docs.push(new Document({
-        text: cleanText(paragraph),
-        metadata: {
-          ...sectionBase,
-          subsection: "",
-          paragraph_index: i + 1,
-          total_paragraphs: section.paragraphs.length,
-          content_scope: "main_article",
-        },
-      }));
+      const text = cleanText(paragraph);
+      if (text) {
+        items.push({
+          text,
+          meta: {
+            ...base,
+            section: section.title,
+            section_type: section.type,
+            subsection: "",
+            paragraph_index: i + 1,
+            total_paragraphs: section.paragraphs.length,
+          },
+        });
+      }
     });
 
     for (const subsection of section.subsections) {
       subsection.paragraphs.forEach((paragraph, i) => {
-        docs.push(new Document({
-          text: cleanText(paragraph),
-          metadata: {
-            ...sectionBase,
-            subsection: subsection.title,
-            paragraph_index: i + 1,
-            total_paragraphs: subsection.paragraphs.length,
-            content_scope: "main_article",
-          },
-        }));
+        const text = cleanText(paragraph);
+        if (text) {
+          items.push({
+            text,
+            meta: {
+              ...base,
+              section: section.title,
+              section_type: section.type,
+              subsection: subsection.title,
+              paragraph_index: i + 1,
+              total_paragraphs: subsection.paragraphs.length,
+            },
+          });
+        }
       });
     }
   }
 
-  return docs.filter((doc) => doc.text.trim());
+  return items;
 }
 
 async function buildArticleIndex(id: string): Promise<CachedArticleIndex> {
-  ensureSettings();
   const set = loadArticleSet(id);
-  const documents = documentsFromArticle(set);
-  if (!documents.length) throw new Error("No body paragraphs to search");
-  const index = await VectorStoreIndex.init({ nodes: documents });
-  return { set, index };
+  const items = itemsFromArticle(set);
+  if (!items.length) throw new Error("No body paragraphs to search");
+  // 埋め込みはディスクキャッシュ経由（再起動時は再埋め込みしない）。
+  const embeddings = await getEmbeddings("article", id, items.map((item) => item.text));
+  return { set, items, embeddings };
 }
 
 async function getArticleIndex(id: string): Promise<CachedArticleIndex> {
   if (!cache.has(id)) cache.set(id, buildArticleIndex(id));
   return cache.get(id)!;
-}
-
-function nodeText(n: any): string {
-  if (typeof n.getContent === "function") {
-    try {
-      return n.getContent();
-    } catch {
-      /* fallthrough */
-    }
-  }
-  return n.text ?? "";
 }
 
 export interface ArticleQuerySource {
@@ -123,47 +141,67 @@ export interface ArticleQueryResult {
   sources: ArticleQuerySource[];
 }
 
+async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySource[]): Promise<string> {
+  if (!sources.length) return "";
+  const client = new OpenAIClient({ apiKey: KIMI.apiKey, baseURL: KIMI.baseURL });
+  const context = sources
+    .map((source, i) => {
+      const section = source.subsection ? `${source.section} > ${source.subsection}` : source.section;
+      return `[${i + 1}] (${section}, paragraph ${source.paragraphIndex})\n${source.text}`;
+    })
+    .join("\n\n---\n\n");
+
+  const systemInstruction = [
+    "You answer questions using only the provided passages from a single research article.",
+    "Base every statement strictly on the passages; do not add outside knowledge.",
+    "If the passages do not contain enough information, say so clearly.",
+    "Always answer in English, regardless of the language of the user's query."
+  ].join(" ");
+
+  const input = `System Instructions:\n${systemInstruction}\n\nArticle Passages:\n\n${context}\n\nQuestion: ${enQuery}`;
+
+  const res = await (client as any).responses.create({
+    model: MODELS.llm,
+    reasoning: { effort: "high" },
+    input,
+  });
+
+  return res.output_text?.trim() ?? "";
+}
+
 export async function runArticleQuery(
   articleId: string,
   originalQuery: string,
-  opts: { topK?: number } = {},
+  opts: { topK?: number; translate?: boolean; enQuery?: string } = {},
 ): Promise<ArticleQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
-  const { index } = await getArticleIndex(articleId);
-  const enQuery = originalQuery;
+  const { items, embeddings } = await getArticleIndex(articleId);
+  const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
+  const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
-  const queryEngine = index.asQueryEngine({ similarityTopK: topK });
-  const response: any = await queryEngine.query({ query: enQuery });
-  const answer: string = response?.response ?? response?.message?.content ?? String(response ?? "");
-  const rawNodes: any[] = response?.sourceNodes ?? [];
+  // クエリを埋め込み、各パラグラフとのコサイン類似度で上位topKを選ぶ。
+  const queryVec = await embedModel().getTextEmbedding(enQuery);
+  const sources: ArticleQuerySource[] = items
+    .map((item, i): ArticleQuerySource => ({
+      scope: "main_article",
+      score: cosineSimilarity(queryVec, embeddings[i]),
+      title: item.meta.title,
+      authors: item.meta.authors,
+      journal: item.meta.journal,
+      year: item.meta.year,
+      doi: item.meta.doi,
+      sourceUrl: item.meta.source_url,
+      section: item.meta.section,
+      subsection: item.meta.subsection,
+      sectionType: item.meta.section_type,
+      paragraphIndex: item.meta.paragraph_index,
+      totalParagraphs: item.meta.total_paragraphs,
+      text: item.text,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
 
-  return {
-    articleId,
-    originalQuery,
-    enQuery,
-    answer,
-    sources: rawNodes
-      .map((nws): ArticleQuerySource => {
-        const node = nws.node ?? nws;
-        const meta = node.metadata ?? {};
-        return {
-          scope: "main_article",
-          score: typeof nws.score === "number" ? nws.score : 0,
-          title: meta.title ?? "",
-          authors: meta.authors ?? "",
-          journal: meta.journal ?? "",
-          year: meta.year ?? "",
-          doi: meta.doi ?? "",
-          sourceUrl: meta.source_url ?? "",
-          section: meta.section ?? "",
-          subsection: meta.subsection ?? "",
-          sectionType: meta.section_type ?? "",
-          paragraphIndex: meta.paragraph_index ?? "",
-          totalParagraphs: meta.total_paragraphs ?? "",
-          text: nodeText(node),
-        };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK),
-  };
+  const answer = await synthesizeArticleAnswer(enQuery, sources);
+
+  return { articleId, originalQuery, enQuery, answer, sources };
 }

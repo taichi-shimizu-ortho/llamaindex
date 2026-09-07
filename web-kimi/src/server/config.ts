@@ -32,14 +32,16 @@ const BASE = path.join(CODING, "llamaindex");
 export const PATHS = {
   mdSourceDir: path.join(OBSIDIAN, "10_article", "RXFP1"),
   articlesJson: path.join(BASE, "articles_all3.json"),
-  storageAll: path.join(BASE, "storage_all_ts_kimi"),
+  storageAll: path.join(BASE, "storage_all_ts"),
   outputDir: BASE,
   referenceOutputDir: path.join(BASE, "reference_sets"),
   articleOutputDir: path.join(BASE, "article_sets"),
   rawHtmlDir: path.join(BASE, "raw_html"),
+  // 埋め込みベクトルのキャッシュ（再起動時の再埋め込みを避ける）。
+  // Dropbox同期のBASE配下に置くことで複数端末でも再埋め込み不要。
+  embeddingCacheDir: path.join(BASE, "embeddings_cache"),
 };
 
-// LLM回答生成はKimi(Moonshot)、embeddingはOpenAIをそのまま流用する。
 export const KIMI = {
   apiKey: process.env.KIMI_API_KEY,
   baseURL: process.env.KIMI_BASE_URL ?? "https://api.moonshot.ai/v1",
@@ -47,7 +49,8 @@ export const KIMI = {
 
 export const MODELS = {
   llm: process.env.KIMI_MODEL ?? "kimi-k3",
-  embed: "text-embedding-3-large",
+  embed: "text-embedding-3-small",
+  translate: process.env.KIMI_MODEL ?? "kimi-k3",
 };
 
 // 検索対象から除外するセクションタイプ（Python版 40 と一致）
