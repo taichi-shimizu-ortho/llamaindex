@@ -17,9 +17,15 @@ storage*/
 RXFP1_rag/
 
 # 使い捨てのデバッグ／検証スクリプトとその入出力はコミットしない。
-patch_*.py
-debug_*.ts
-debug_*.py
-test_*.ts
-*_raw.html
-*_out.json
+# リポジトリ直下のみを対象にし、パッケージ内の正規ファイルは巻き込まない。
+/patch_*.py
+/debug_*.py
+/debug_*.ts
+/test_*.py
+/test_*.ts
+/test_*.js
+/test_*.cjs
+/check_*.js
+/check_*.cjs
+/*_raw.html
+/*_out.json

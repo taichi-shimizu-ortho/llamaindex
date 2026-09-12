@@ -10,8 +10,14 @@ article_sets/
 raw_html/
 
 # 使い捨てのデバッグ／検証スクリプトとその入出力はコミットしない。
-debug_*.ts
-debug_*.py
-test_*.ts
-*_raw.html
-*_out.json
+# このディレクトリ直下のみを対象にし、src/ や scripts/ 配下は巻き込まない。
+/debug_*.ts
+/debug_*.py
+/test_*.ts
+/test_*.js
+/test_*.cjs
+/check_*.js
+/check_*.cjs
+/import_*.js
+/*_raw.html
+/*_out.json
