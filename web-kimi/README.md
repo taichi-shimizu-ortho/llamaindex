@@ -96,7 +96,6 @@ Documents画面で選んだ主論文JSON（と自動で対応付いた参考文�
 <Obsidian>/50_coding/llamaindex/article_sets     # 主論文セット JSON
 <Obsidian>/50_coding/llamaindex/raw_html         # 取り込み時の入力HTML（再現性確保・パーサ検証用）
 <Obsidian>/50_coding/llamaindex/library.json     # ドキュメント選択画面のフォルダ構成
-<Obsidian>/50_coding/llamaindex/storage_all_ts_kimi  # ベクトルindex（web版のstorage_all_tsとは別ディレクトリ）
 ```
 
 `<Obsidian>` は `config.ts` が自動解決する（Windows: `~/Dropbox/obsidian`、Mac: `~/Library/CloudStorage/Dropbox/obsidian`）。

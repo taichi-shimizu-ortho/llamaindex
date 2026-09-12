@@ -5,9 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    strictPort: true,
     open: true, // 起動時にデフォルトブラウザで自動的に開く
     proxy: {
       "/api": `http://localhost:${process.env.PORT ?? 5174}`,
+      "/raw_html": `http://localhost:${process.env.PORT ?? 5174}`,
     },
   },
   build: {
