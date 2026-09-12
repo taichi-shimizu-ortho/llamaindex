@@ -145,3 +145,39 @@ export interface IntegratedQueryResult {
     text: string;
   }[];
 }
+
+// ---- ドキュメント選択画面（フォルダ管理） ----
+
+export interface LibraryFolder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: string;
+}
+
+export interface LibraryState {
+  folders: LibraryFolder[];
+  /** documentId（article set の id） -> folderId */
+  assignments: Record<string, string>;
+}
+
+export interface ImportReport {
+  ok: boolean;
+  article?: {
+    id: string;
+    title: string;
+    sourceUrl: string;
+    chunkCount: number;
+    createdAt: string;
+  };
+  reference?: {
+    id: string;
+    title: string;
+    sourceUrl: string;
+    totalReferences: number;
+    abstractFound: number;
+    createdAt: string;
+  };
+  articleError?: string;
+  referenceError?: string;
+}

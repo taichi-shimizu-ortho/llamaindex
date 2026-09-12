@@ -37,6 +37,8 @@ export const PATHS = {
   referenceOutputDir: path.join(BASE, "reference_sets"),
   articleOutputDir: path.join(BASE, "article_sets"),
   rawHtmlDir: path.join(BASE, "raw_html"),
+  // ドキュメント選択画面のフォルダ構成（フォルダ定義と文献の振り分け）。
+  libraryFile: path.join(BASE, "library.json"),
   // 埋め込みベクトルのキャッシュ（再起動時の再埋め込みを避ける）。
   // Dropbox同期のBASE配下に置くことで複数端末でも再埋め込み不要。
   embeddingCacheDir: path.join(BASE, "embeddings_cache"),
