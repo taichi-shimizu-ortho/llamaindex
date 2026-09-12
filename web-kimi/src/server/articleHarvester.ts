@@ -701,10 +701,14 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
                  const imgRegex = new RegExp(`<img[^>]*src=["']([^"']*${escapedRel}[^"']*)["'][^>]*>`, "i");
                  const imgMatch = html.match(imgRegex);
                  if (imgMatch) {
+                   // プロトコル相対 (//host/path)・ルート相対 (/path)・相対パス・絶対URLを
+                   // まとめて解決する。origin を素朴に前置すると //host/path が
+                   // https://origin//host/path になり壊れる（Springer/BMCの図が該当）。
                    let absUrl = imgMatch[1];
-                   if (absUrl.startsWith("/")) {
-                     const origin = new URL(sourceUrl).origin;
-                     absUrl = origin + absUrl;
+                   try {
+                     absUrl = new URL(absUrl, sourceUrl).href;
+                   } catch {
+                     // 解決できない場合は元の値を残す（リンク切れの方がデータ消失よりまし）
                    }
                    section.paragraphs[i] = p.replace(relUrl, absUrl);
                    section.content = section.paragraphs.join("\n");
