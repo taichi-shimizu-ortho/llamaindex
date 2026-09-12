@@ -15,3 +15,11 @@ wheels/
 storage_all/
 storage*/
 RXFP1_rag/
+
+# 使い捨てのデバッグ／検証スクリプトとその入出力はコミットしない。
+patch_*.py
+debug_*.ts
+debug_*.py
+test_*.ts
+*_raw.html
+*_out.json

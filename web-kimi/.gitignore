@@ -8,3 +8,10 @@ dist/
 reference_sets/
 article_sets/
 raw_html/
+
+# 使い捨てのデバッグ／検証スクリプトとその入出力はコミットしない。
+debug_*.ts
+debug_*.py
+test_*.ts
+*_raw.html
+*_out.json
