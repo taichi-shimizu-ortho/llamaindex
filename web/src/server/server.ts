@@ -7,6 +7,8 @@ import { runReferenceQuery } from "./referenceRag.js";
 import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
 import { runArticleQuery } from "./articleRag.js";
 import { runIntegratedQuery } from "./integratedRag.js";
+import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
+import { syncZotero, zoteroStatus } from "./zotero.js";
 import { PATHS } from "./config.js";
 
 const app = express();
@@ -194,6 +196,51 @@ app.post("/api/integrated/query", async (req, res) => {
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+// ---- ドキュメント選択画面のフォルダ管理 ----
+// 更新系はすべて新しいライブラリ全体を返すので、クライアントは差分計算をしなくてよい。
+function libraryRoute(handler: (body: any) => ReturnType<typeof readLibrary>) {
+  return (req: express.Request, res: express.Response) => {
+    try {
+      res.json({ library: handler(req.body ?? {}) });
+    } catch (e: any) {
+      res.status(400).json({ error: String(e?.message ?? e) });
+    }
+  };
+}
+
+app.get("/api/library", (_req, res) => {
+  try {
+    res.json({ library: readLibrary() });
+  } catch (e: any) {
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/library/folders/create", libraryRoute((body) => createFolder(body.name, body.parentId)));
+app.post("/api/library/folders/rename", libraryRoute((body) => renameFolder(body.id, body.name)));
+app.post("/api/library/folders/move", libraryRoute((body) => moveFolder(body.id, body.parentId)));
+app.post("/api/library/folders/delete", libraryRoute((body) => deleteFolder(body.id)));
+app.post("/api/library/assign", libraryRoute((body) => assignDocument(body.documentId, body.folderId)));
+
+// ---- Zotero ローカルAPI 連携 ----
+// dryRun=true なら library.json を書かず、同期したらどうなるかだけ返す。
+app.get("/api/zotero/status", async (_req, res) => {
+  try {
+    res.json(await zoteroStatus());
+  } catch (e: any) {
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/zotero/sync", async (req, res) => {
+  try {
+    res.json(await syncZotero({ dryRun: Boolean(req.body?.dryRun) }));
+  } catch (e: any) {
+    console.error(e);
+    res.status(502).json({ error: String(e?.message ?? e) });
   }
 });
 
