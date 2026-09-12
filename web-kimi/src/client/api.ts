@@ -7,6 +7,8 @@ import type {
   ReferenceSet,
   ReferenceSetSummary,
   Status,
+  ZoteroStatus,
+  ZoteroSyncReport,
 } from "./types.js";
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -53,6 +55,11 @@ export const api = {
     postJson<{ library: LibraryState }>("/api/library/folders/delete", { id }).then((d) => d.library),
   assignDocument: (documentId: string, folderId: string | null) =>
     postJson<{ library: LibraryState }>("/api/library/assign", { documentId, folderId }).then((d) => d.library),
+
+  zoteroStatus: () => requestJson<ZoteroStatus>("/api/zotero/status"),
+  // dryRun=true なら library.json は書かれず、同期結果の見込みだけ返る。
+  zoteroSync: (dryRun: boolean) =>
+    postJson<{ library: LibraryState; report: ZoteroSyncReport }>("/api/zotero/sync", { dryRun }),
 
   saveSession: (sessionId: string, result: unknown) =>
     postJson<{ file?: string }>("/api/session/save", { sessionId, result }),

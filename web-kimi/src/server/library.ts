@@ -10,12 +10,19 @@ export interface LibraryFolder {
   name: string;
   parentId: string | null;
   createdAt: string;
+  // Zoteroコレクション由来のフォルダは source="zotero"。手動作成分は undefined。
+  source?: "zotero";
+  zoteroKey?: string;
+  zoteroVersion?: number;
 }
 
 export interface LibraryState {
   folders: LibraryFolder[];
   // documentId（article set の id） -> folderId
   assignments: Record<string, string>;
+  // documentId -> Zoteroアイテムkey（同期で対応付いた文献の目印）
+  zoteroLinks?: Record<string, string>;
+  zoteroSyncedAt?: string;
 }
 
 const MAX_NAME_LENGTH = 80;
@@ -45,7 +52,7 @@ function documentId(value: unknown): string {
 
 // 壊れた JSON / 手編集にも耐えるように、読み込み時に構造を整える。
 // 存在しない親や循環参照はルート直下に戻し、消えたフォルダへの振り分けは解除する。
-function normalize(raw: unknown): LibraryState {
+export function normalizeLibrary(raw: unknown): LibraryState {
   const source = (raw ?? {}) as Partial<LibraryState>;
   const folders: LibraryFolder[] = [];
   const seen = new Set<string>();
@@ -55,11 +62,16 @@ function normalize(raw: unknown): LibraryState {
     const name = String((entry as LibraryFolder)?.name ?? "").trim();
     if (!id || !name || seen.has(id)) continue;
     seen.add(id);
+    const data = entry as LibraryFolder;
+    const version = Number(data?.zoteroVersion);
     folders.push({
       id,
       name: name.slice(0, MAX_NAME_LENGTH),
-      parentId: String((entry as LibraryFolder)?.parentId ?? "") || null,
-      createdAt: String((entry as LibraryFolder)?.createdAt ?? "") || new Date().toISOString(),
+      parentId: String(data?.parentId ?? "") || null,
+      createdAt: String(data?.createdAt ?? "") || new Date().toISOString(),
+      ...(data?.source === "zotero" ? { source: "zotero" as const } : {}),
+      ...(data?.zoteroKey ? { zoteroKey: String(data.zoteroKey) } : {}),
+      ...(Number.isFinite(version) ? { zoteroVersion: version } : {}),
     });
   }
 
@@ -88,18 +100,28 @@ function normalize(raw: unknown): LibraryState {
     if (docId && byId.has(id)) assignments[docId] = id;
   }
 
-  return { folders, assignments };
+  const zoteroLinks: Record<string, string> = {};
+  const rawLinks = (source.zoteroLinks ?? {}) as Record<string, unknown>;
+  for (const [docId, itemKey] of Object.entries(rawLinks)) {
+    const key = String(itemKey ?? "").trim();
+    if (docId && key) zoteroLinks[docId] = key;
+  }
+
+  const state: LibraryState = { folders, assignments };
+  if (Object.keys(zoteroLinks).length) state.zoteroLinks = zoteroLinks;
+  if (source.zoteroSyncedAt) state.zoteroSyncedAt = String(source.zoteroSyncedAt);
+  return state;
 }
 
 export function readLibrary(): LibraryState {
   try {
-    return normalize(JSON.parse(fs.readFileSync(PATHS.libraryFile, "utf-8")));
+    return normalizeLibrary(JSON.parse(fs.readFileSync(PATHS.libraryFile, "utf-8")));
   } catch {
     return emptyLibrary();
   }
 }
 
-function writeLibrary(state: LibraryState): LibraryState {
+export function writeLibrary(state: LibraryState): LibraryState {
   fs.mkdirSync(path.dirname(PATHS.libraryFile), { recursive: true });
   fs.writeFileSync(PATHS.libraryFile, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
   return state;

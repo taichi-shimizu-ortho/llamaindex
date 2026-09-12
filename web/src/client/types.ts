@@ -91,6 +91,7 @@ export interface ArticleSetSummary {
   id: string;
   title: string;
   sourceUrl: string;
+  doi?: string;
   chunkCount: number;
   createdAt: string;
 }
@@ -153,12 +154,19 @@ export interface LibraryFolder {
   name: string;
   parentId: string | null;
   createdAt: string;
+  /** Zoteroコレクション由来のフォルダ。手動作成分は undefined。 */
+  source?: "zotero";
+  zoteroKey?: string;
+  zoteroVersion?: number;
 }
 
 export interface LibraryState {
   folders: LibraryFolder[];
   /** documentId（article set の id） -> folderId */
   assignments: Record<string, string>;
+  /** documentId -> Zoteroアイテムkey */
+  zoteroLinks?: Record<string, string>;
+  zoteroSyncedAt?: string;
 }
 
 export interface ImportReport {
@@ -180,4 +188,31 @@ export interface ImportReport {
   };
   articleError?: string;
   referenceError?: string;
+}
+
+// ---- Zotero 連携 ----
+
+export interface ZoteroStatus {
+  available: boolean;
+  base: string;
+  error?: string;
+  collections?: number;
+  items?: number;
+  syncedAt?: string;
+}
+
+export interface ZoteroSyncReport {
+  dryRun: boolean;
+  collections: number;
+  items: number;
+  foldersCreated: string[];
+  foldersRenamed: { from: string; to: string }[];
+  foldersRemoved: string[];
+  moved: { documentId: string; from: string; to: string }[];
+  matched: { documentId: string; itemKey: string; via: "doi" | "citekey" | "title"; folder: string }[];
+  multiCollection: { documentId: string; chosen: string; others: string[] }[];
+  unmatched: { key: string; title: string; doi: string; pmid: string; year: string }[];
+  unmatchedTotal: number;
+  unfiledInZotero: string[];
+  syncedAt: string;
 }

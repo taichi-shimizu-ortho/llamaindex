@@ -1,6 +1,6 @@
 // ドキュメント選択・取り込み画面。
 // 取り込んだ主論文JSONをフォルダに整理し、RAG画面へ渡す文献を選ぶ。
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import type { ImportRequest } from "./api.js";
 import {
@@ -20,6 +20,7 @@ import type {
   LibraryState,
   ReferenceSetSummary,
 } from "./types.js";
+import { ZoteroPanel } from "./ZoteroPanel.js";
 
 // 左ペインで選択中の絞り込み。フォルダIDそのものも入る。
 type FolderView = "all" | "unfiled" | string;
@@ -246,6 +247,10 @@ function FolderNode({
 }) {
   const children = childFolders(folders, folder.id);
   const isOpen = expanded.has(folder.id);
+  // Zoteroコレクション由来のフォルダは名前・階層がZotero側で決まる。
+  // ここで編集しても次の同期で戻るだけなので、変更操作は無効にしておく。
+  const fromZotero = folder.source === "zotero";
+  const zoteroHint = "This folder comes from a Zotero collection. Rename or delete it in Zotero.";
   const isRenaming = edit?.mode === "rename" && edit.id === folder.id;
   const isCreatingHere = edit?.mode === "create" && edit.parentId === folder.id;
   // 自分自身や子孫の上にはドロップさせない（サーバ側でも弾くが、UI上も無効化する）。
@@ -263,7 +268,7 @@ function FolderNode({
           .filter(Boolean)
           .join(" ")}
         style={{ paddingLeft: `${6 + depth * 14}px` }}
-        draggable={!isRenaming}
+        draggable={!isRenaming && !fromZotero}
         onDragStart={() => onDragItem({ kind: "folder", id: folder.id })}
         onDragEnd={() => {
           onDragItem(null);
@@ -305,6 +310,11 @@ function FolderNode({
         ) : (
           <button className="folder-open" onClick={() => onSelect(folder.id)} title={folderPath(folders, folder.id)}>
             <span className="folder-name">{folder.name}</span>
+            {fromZotero && (
+              <span className="folder-badge" title={zoteroHint}>
+                Z
+              </span>
+            )}
             <span className="folder-count">{counts.get(folder.id) ?? 0}</span>
           </button>
         )}
@@ -323,7 +333,8 @@ function FolderNode({
           </button>
           <button
             className="icon-btn"
-            title="Rename folder"
+            title={fromZotero ? zoteroHint : "Rename folder"}
+            disabled={fromZotero}
             onClick={() => {
               onDraft(folder.name);
               onEdit({ mode: "rename", id: folder.id });
@@ -331,7 +342,12 @@ function FolderNode({
           >
             ✎
           </button>
-          <button className="icon-btn" title="Delete folder" onClick={() => onDelete(folder)}>
+          <button
+            className="icon-btn"
+            title={fromZotero ? zoteroHint : "Delete folder"}
+            disabled={fromZotero}
+            onClick={() => onDelete(folder)}
+          >
             ×
           </button>
         </span>
@@ -392,6 +408,7 @@ function DocumentCard({
   folderId,
   referenceSet,
   selected,
+  zoteroKey,
   onOpen,
   onAssign,
   onDragItem,
@@ -401,6 +418,7 @@ function DocumentCard({
   folderId: string;
   referenceSet?: ReferenceSetSummary;
   selected: boolean;
+  zoteroKey?: string;
   onOpen: () => void;
   onAssign: (folderId: string) => void;
   onDragItem: (item: DragItem | null) => void;
@@ -414,6 +432,11 @@ function DocumentCard({
     >
       <div className="doc-card-head">
         <h3 className="doc-title">{documentLabel(set)}</h3>
+        {zoteroKey && (
+          <span className="pill zotero-pill" title={`Linked to Zotero item ${zoteroKey}`}>
+            Zotero
+          </span>
+        )}
         {selected && <span className="pill ok">In RAG</span>}
       </div>
 
@@ -506,6 +529,13 @@ export function LibraryScreen({
   const viewTitle =
     view === "all" ? "All documents" : view === "unfiled" ? "Unfiled" : folderPath(folders, view) || "Folder";
 
+  // Zotero同期などで表示中のフォルダが消えたら全件表示に戻す。
+  useEffect(() => {
+    if (view !== "all" && view !== "unfiled" && !folders.some((folder) => folder.id === view)) {
+      setView("all");
+    }
+  }, [folders, view]);
+
   async function run(action: () => Promise<LibraryState>) {
     try {
       onLibraryChange(await action());
@@ -562,7 +592,10 @@ export function LibraryScreen({
 
   return (
     <div className="library-screen">
-      <ImportPanel folders={folders} onImported={handleImported} onError={onError} />
+      <div className="library-top">
+        <ImportPanel folders={folders} onImported={handleImported} onError={onError} />
+        <ZoteroPanel library={library} onLibraryChange={onLibraryChange} onError={onError} />
+      </div>
 
       <div className="library-body">
         <aside className="tool-panel folder-pane">
@@ -722,6 +755,7 @@ export function LibraryScreen({
                   folderId={assignments[set.id] ?? ""}
                   referenceSet={referenceByDocument.get(set.id)}
                   selected={set.id === selectedDocumentId}
+                  zoteroKey={library.zoteroLinks?.[set.id]}
                   onOpen={() => onOpenDocument(set.id)}
                   onAssign={(folderId) => run(() => api.assignDocument(set.id, folderId || null))}
                   onDragItem={setDragItem}

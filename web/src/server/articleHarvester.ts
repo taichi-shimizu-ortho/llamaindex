@@ -577,6 +577,8 @@ export function listArticleSets() {
         id: set.id,
         title: set.title,
         sourceUrl: set.sourceUrl,
+        // Zotero同期の突き合わせキー。
+        doi: set.doi ?? "",
         chunkCount: set.chunkCount,
         createdAt: set.createdAt,
       };
