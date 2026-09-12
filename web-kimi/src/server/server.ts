@@ -7,6 +7,7 @@ import { runReferenceQuery } from "./referenceRag.js";
 import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
 import { runArticleQuery } from "./articleRag.js";
 import { runIntegratedQuery } from "./integratedRag.js";
+import { harvestByDoi } from "./doiHarvester.js";
 import { PATHS } from "./config.js";
 
 const app = express();
@@ -142,6 +143,20 @@ app.post("/api/import/ors", async (req, res) => {
     });
   }
   res.json(result);
+});
+
+// DOIだけを渡して、PMC/Europe PMCのOA全文XMLを自動判定・取得しJSON保存する。
+// OA全文が見つからない場合は出版社URLを添えて失敗を返す（ブックマークレット併用を想定）。
+app.post("/api/article/harvest-by-doi", async (req, res) => {
+  const { doi } = req.body ?? {};
+  if (!doi || typeof doi !== "string") return res.status(400).json({ error: "DOIを入力してください" });
+  try {
+    const result = await harvestByDoi(doi);
+    res.json(result);
+  } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ error: String(e?.message ?? e) });
+  }
 });
 
 app.get("/api/article/sets", (_req, res) => {

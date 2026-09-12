@@ -269,6 +269,25 @@ body {
   margin-top: 14px;
 }
 
+.doi-fetch-panel {
+  margin-top: 8px;
+}
+
+.doi-fetch-row {
+  display: flex;
+  gap: 8px;
+}
+
+.doi-fetch-row input {
+  flex: 1;
+}
+
+.doi-fetch-message {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .dataset-picker {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;

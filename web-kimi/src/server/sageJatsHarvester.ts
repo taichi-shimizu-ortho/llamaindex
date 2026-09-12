@@ -23,6 +23,14 @@ function cleanJatsText(html: string): string {
   return stripTags(cited);
 }
 
+// 表・図は table / figure セクションとして別に出力するため、本文段落の抽出対象から除く。
+// これをしないと <td><p>…</p></td> のセルが本文段落として二重に取り込まれる。
+function stripBlockElements(xml: string): string {
+  return xml
+    .replace(/<table-wrap(?:\s[^>]*)?>[\s\S]*?<\/table-wrap>/gi, " ")
+    .replace(/<fig(?:\s[^>]*)?>[\s\S]*?<\/fig>/gi, " ");
+}
+
 function extractTagContent(xml: string, tag: string): string[] {
   const results: string[] = [];
   const regex = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, "gi");
@@ -68,19 +76,22 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
   const authors: string[] = [];
   const contribMatch = articleMeta.match(/<contrib-group[^>]*>([\s\S]*?)<\/contrib-group>/i);
   if (contribMatch) {
-    const contribs = extractTagContent(contribMatch[1], "contrib");
-    for (const c of contribs) {
-      if (c.includes('contrib-type="author"') || c.includes("contrib-type='author'")) {
-        const surnameMatch = c.match(/<surname[^>]*>([\s\S]*?)<\/surname>/i);
-        const givenMatch = c.match(/<given-names[^>]*>([\s\S]*?)<\/given-names>/i);
-        if (surnameMatch && givenMatch) {
-          authors.push(`${stripTags(givenMatch[1]).trim()} ${stripTags(surnameMatch[1]).trim()}`);
-        } else if (surnameMatch) {
-          authors.push(stripTags(surnameMatch[1]).trim());
-        }
+    // contrib-type は開始タグの属性にあるため、内容だけでなく属性も併せて見る。
+    for (const m of contribMatch[1].matchAll(/<contrib\b([^>]*)>([\s\S]*?)<\/contrib>/gi)) {
+      const [, attrs, inner] = m;
+      if (!/contrib-type\s*=\s*["']author["']/i.test(attrs)) continue;
+      const surnameMatch = inner.match(/<surname[^>]*>([\s\S]*?)<\/surname>/i);
+      const givenMatch = inner.match(/<given-names[^>]*>([\s\S]*?)<\/given-names>/i);
+      if (surnameMatch && givenMatch) {
+        authors.push(`${stripTags(givenMatch[1]).trim()} ${stripTags(surnameMatch[1]).trim()}`);
+      } else if (surnameMatch) {
+        authors.push(stripTags(surnameMatch[1]).trim());
       }
     }
   }
+
+  // journal-title は article-meta ではなく journal-meta 側にある。
+  const journal = stripTags(jatsXml.match(/<journal-title[^>]*>([\s\S]*?)<\/journal-title>/i)?.[1] ?? "").trim();
 
   const sections: ArticleSection[] = [];
 
@@ -130,7 +141,7 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
     // Check if there is text before the first <sec> (usually Introduction)
     const firstSecMatch = bodyContent.match(/<sec\b/i);
     const beforeSecContent = firstSecMatch ? bodyContent.substring(0, firstSecMatch.index) : bodyContent;
-    const introParagraphs = extractTagContent(beforeSecContent, "p").map(cleanJatsText);
+    const introParagraphs = extractTagContent(stripBlockElements(beforeSecContent), "p").map(cleanJatsText).filter(Boolean);
     if (introParagraphs.length > 0) {
       sections.push({
         title: "Introduction",
@@ -176,13 +187,13 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
         contentNoSubSec = contentNoSubSec.replace(sub, "");
       }
       const paragraphs: string[] = [];
-      paragraphs.push(...extractTagContent(contentNoSubSec, "p").map(cleanJatsText));
+      paragraphs.push(...extractTagContent(stripBlockElements(contentNoSubSec), "p").map(cleanJatsText).filter(Boolean));
 
       const subsections: ArticleSubsection[] = [];
       for (const sub of subSecs) {
         const subTitleMatch = sub.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
         const subTitle = subTitleMatch ? stripTags(subTitleMatch[1]) : "";
-        const subParagraphs = extractTagContent(sub, "p").map(cleanJatsText);
+        const subParagraphs = extractTagContent(stripBlockElements(sub), "p").map(cleanJatsText).filter(Boolean);
         if (subTitle && subParagraphs.length > 0) {
           subsections.push({ title: subTitle, content: subParagraphs.join(" "), paragraphs: subParagraphs });
         }
@@ -264,6 +275,7 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
     sourceUrl: baseInfo.sourceUrl,
     title: title || "",
     authors,
+    journal,
     doi,
     year,
     sections,

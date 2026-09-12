@@ -92,6 +92,13 @@ function capitalizeIdPart(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+// JATSから得た著者・年でIDを組み立てる。取得元ページがbot検査ページを返しても影響を受けない。
+export function authorYearId(firstAuthor: string, year: string): string {
+  const author = capitalizeIdPart(surname(firstAuthor));
+  const y = year.match(/\b(19|20)\d{2}\b/)?.[0] ?? "";
+  return `${author}${y}`.replace(/[^A-Za-z0-9_.-]/g, "");
+}
+
 export function citationBaseId(html: string, articleTitle: string, fallback: string): string {
   const authors = citationAuthors(html);
   const firstAuthor = authors.find(authorLooksComplete) || authors[0] || firstAuthorFromTitle(html, articleTitle);

@@ -747,6 +747,15 @@ function ArticleContentBrowser({ article }: { article: ArticleSet }) {
   );
 }
 
+
+async function safeJson(res: Response) {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`API connection failed (HTTP ${res.status}). Ensure the backend server is running.`);
+  }
+  return res.json();
+}
+
 export function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [status, setStatus] = useState<Status | null>(null);
@@ -765,6 +774,8 @@ export function App() {
   const [savedFile, setSavedFile] = useState("");
   const [sessionId] = useState(initialSessionId);
   const [result, setResult] = useState<QueryResultUnion | null>(null);
+  const [doiInput, setDoiInput] = useState("");
+  const [doiMessage, setDoiMessage] = useState("");
 
   const referenceMap = useMemo(() => {
     const map = new Map<number, ReferenceRecord>();
@@ -779,7 +790,7 @@ export function App() {
 
   async function fetchReferenceSetSummaries(): Promise<ReferenceSetSummary[]> {
     const res = await fetch("/api/reference/sets");
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load dataset list");
     const nextSets = data.sets ?? [];
     setSets(nextSets);
@@ -788,7 +799,7 @@ export function App() {
 
   async function fetchArticleSetSummaries(): Promise<ArticleSetSummary[]> {
     const res = await fetch("/api/article/sets");
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON list");
     const nextSets = data.sets ?? [];
     setArticleSets(nextSets);
@@ -827,9 +838,37 @@ export function App() {
     }
   }
 
+  async function fetchByDoi() {
+    const doi = doiInput.trim();
+    if (!doi || busy) return;
+    setBusy("Fetching by DOI...");
+    setError("");
+    setDoiMessage("");
+    try {
+      const res = await fetch("/api/article/harvest-by-doi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doi }),
+      });
+      const data = await safeJson(res);
+      if (!res.ok) throw new Error(data.error ?? "DOIの取り込みに失敗しました");
+      if (data.ok) {
+        setDoiInput("");
+        setDoiMessage(`全文XMLを取得しました (source: ${data.source}${data.pmcid ? `, ${data.pmcid}` : ""})`);
+        await loadArticleSets(data.article?.id);
+      } else {
+        setDoiMessage(data.message || "全文XMLを自動取得できませんでした。");
+      }
+    } catch (e: any) {
+      setError(String(e?.message ?? e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function loadSet(id: string) {
     const res = await fetch(`/api/reference/sets/${encodeURIComponent(id)}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load JSON");
     setCurrentSet(data);
     setResult(null);
@@ -837,7 +876,7 @@ export function App() {
 
   async function loadArticleSet(id: string) {
     const res = await fetch(`/api/article/sets/${encodeURIComponent(id)}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON");
     setCurrentArticle(data);
     setResult(null);
@@ -845,7 +884,7 @@ export function App() {
 
   useEffect(() => {
     fetch("/api/status")
-      .then((r) => r.json())
+      .then((r) => safeJson(r))
       .then(setStatus)
       .catch(() => setStatus(null));
     loadArticleSets().catch(() => undefined);
@@ -857,7 +896,7 @@ export function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, result: nextResult }),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to save Markdown");
     setSavedFile(data.file ?? "");
   }
@@ -887,7 +926,7 @@ export function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error ?? "Search failed");
       setResult(data);
       await saveResult(data);
@@ -934,6 +973,27 @@ export function App() {
           <div className="panel-head">
             <h2>Datasets</h2>
             <span className="panel-note">Bookmarklet input</span>
+          </div>
+
+          <div className="doi-fetch-panel">
+            <label className="field">
+              <span>DOIから自動取得 (PMC/Europe PMC)</span>
+              <div className="doi-fetch-row">
+                <input
+                  type="text"
+                  placeholder="10.xxxx/xxxxx"
+                  value={doiInput}
+                  onChange={(e) => setDoiInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") fetchByDoi();
+                  }}
+                />
+                <button className="ghost" disabled={!doiInput.trim() || Boolean(busy)} onClick={fetchByDoi}>
+                  Fetch by DOI
+                </button>
+              </div>
+              {doiMessage && <div className="doi-fetch-message">{doiMessage}</div>}
+            </label>
           </div>
 
           <div className="dataset-picker">

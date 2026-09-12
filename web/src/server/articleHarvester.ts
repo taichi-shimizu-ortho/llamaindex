@@ -3,7 +3,7 @@ import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 
-const EXCLUDED_SECTION_TYPES = new Set(["references", "acknowledgements"]);
+const EXCLUDED_SECTION_TYPES = new Set(["references", "acknowledgements", "excluded"]);
 
 export interface ArticleSubsection {
   title: string;
@@ -119,7 +119,7 @@ function classifySection(title: string): string {
   if (t.includes("introduction") || t === "intro") return "intro";
   if (t.includes("abstract")) return "abstract";
   if (t.includes("reference")) return "references";
-  if (t.includes("acknowledg")) return "acknowledgements";
+  if (t.includes("acknowledg") || t.includes("supporting information") || t.includes("supplementary")) return "excluded";
   if (t.includes("outline") || t.includes("cited by") || t.includes("article metrics") || t.includes("recommended articles") || t.includes("keywords") || t.includes("cookie")) return "excluded";
   return "other";
 }
@@ -168,16 +168,58 @@ export function inferMeta(html: string, sourceUrl: string) {
   };
 }
 
+function extractTagContent(html: string, startIndex: number, tag: string): string {
+  let depth = 1;
+  let i = startIndex;
+  const openRegex = new RegExp(`<${tag}\\b`, "ig");
+  const closeRegex = new RegExp(`<\/${tag}>`, "ig");
+  
+  openRegex.lastIndex = startIndex;
+  closeRegex.lastIndex = startIndex;
+  
+  while (depth > 0) {
+    const nextOpen = openRegex.exec(html);
+    const nextClose = closeRegex.exec(html);
+    
+    if (!nextClose) return "";
+    
+    if (nextOpen && nextOpen.index < nextClose.index) {
+      depth++;
+      openRegex.lastIndex = nextOpen.index + 1;
+      closeRegex.lastIndex = nextOpen.index + 1;
+    } else {
+      depth--;
+      i = nextClose.index;
+      openRegex.lastIndex = nextClose.index + 1;
+    }
+  }
+  return html.slice(startIndex, i);
+}
+
 function inferAbstractParagraphs(html: string): string[] {
   // 1. Try to extract from known abstract sections in body
   const abstractIds = ["abstract", "abstracts", "structured-abstract", "editor-abstract", "abstract-content", "author-highlights"];
   for (const id of abstractIds) {
-    const match = html.match(new RegExp(`<section\\b[^>]*(?:id=["']${id}["']|class=["'][^"']*${id}[^"']*["'])[^>]*>([\\s\\S]*?)<\\/section>`, "i"))
-      || html.match(new RegExp(`<div\\b[^>]*(?:id=["']${id}["']|class=["'][^"']*${id}[^"']*["'])[^>]*>([\\s\\S]*?)<\\/div>`, "i"));
-    if (match) {
-      const inner = match[1].replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, ""); // Remove heading
-      const paras = paragraphTexts(inner);
-      if (paras.length) return paras;
+    const sectionMatch = html.match(new RegExp(`<section\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
+    if (sectionMatch && sectionMatch.index != null) {
+      const startIndex = sectionMatch.index + sectionMatch[0].length;
+      const inner = extractTagContent(html, startIndex, "section");
+      if (inner) {
+        const cleanInner = inner.replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, "");
+        const paras = paragraphTexts(cleanInner);
+        if (paras.length) return paras;
+      }
+    }
+    
+    const divMatch = html.match(new RegExp(`<div\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
+    if (divMatch && divMatch.index != null) {
+      const startIndex = divMatch.index + divMatch[0].length;
+      const inner = extractTagContent(html, startIndex, "div");
+      if (inner) {
+        const cleanInner = inner.replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, "");
+        const paras = paragraphTexts(cleanInner);
+        if (paras.length) return paras;
+      }
     }
   }
 
@@ -335,7 +377,19 @@ function inferFigureSections(html: string): ArticleSection[] {
 
 function bodyMatter(html: string): string {
   let rest = html;
-  const bodyStart = html.search(/<(?:section|div)\b[^>]*(?:id=["'](?:bodymatter|body)["']|class=["'][^"']*(?:Body|article-body)[^"']*["']|property=["']articleBody["'])/i);
+  
+  const patterns = [
+    /<(?:section|div)\b[^>]*(?:id=["'](?:bodymatter|article-body)["']|class=["'][^"']*\barticle(?:__|-)?body\b[^"']*["']|property=["']articleBody["'])/i,
+    /<(?:section|div)\b[^>]*(?:class=["'][^"']*\barticle-section__content\b[^"']*["'])/i,
+    /<(?:section|div)\b[^>]*(?:id=["']body["']|class=["'][^"']*\bbody-text\b[^"']*["'])/i
+  ];
+  
+  let bodyStart = -1;
+  for (const pat of patterns) {
+    bodyStart = html.search(pat);
+    if (bodyStart >= 0) break;
+  }
+
   if (bodyStart >= 0) {
     rest = html.slice(bodyStart);
   } else {
@@ -343,7 +397,7 @@ function bodyMatter(html: string): string {
     if (abstractEnd >= 0) rest = html.slice(abstractEnd);
   }
 
-  const end = rest.search(/<h[2-4]\b[^>]*>(?:<[^>]+>|\s)*(?:Acknowledg|Competing\s+Interests|Conflict\s+of\s+Interest|Funding|Author\s+Contributions|Data\s+Availability|ORCID|Footnote|References|Supplementary\s+Material|Article Metrics|Recommended articles)\b/i);
+  const end = rest.search(/<h[2-4]\b[^>]*>(?:<[^>]+>|\s)*(?:Acknowledgements?|Acknowledgments?|Competing\s+Interests|Conflict\s+of\s+Interest|Funding|Author\s+Contributions|Data\s+Availability|ORCID|Footnote|References|Supplementary\s+Materials?|Supporting\s+Information|Article Metrics|Recommended articles)\b/i);
   return rest.slice(0, end > 0 ? end : undefined);
 }
 
@@ -468,8 +522,17 @@ function sectionContent(html: string): string {
 export function buildSections(html: string): ArticleSection[] {
   const body = bodyMatter(html);
   const headings = headingMarkers(body);
-  const h2s = headings.filter((h) => h.level === 2);
-  const top = headings.filter((h) => h.level === 2 && !EXCLUDED_SECTION_TYPES.has(classifySection(h.title)));
+  let h2s = headings.filter((h) => h.level === 2);
+  let top = headings.filter((h) => h.level === 2 && !EXCLUDED_SECTION_TYPES.has(classifySection(h.title)));
+
+  if (top.filter((h) => classifySection(h.title) !== "abstract").length === 0) {
+    const h3s = headings.filter((h) => h.level === 3);
+    if (h3s.length > 0) {
+      h2s = [...h2s, ...h3s].sort((a, b) => a.start - b.start);
+      top = h2s.filter((h) => !EXCLUDED_SECTION_TYPES.has(classifySection(h.title)));
+    }
+  }
+
   const methods = top.find((h) => classifySection(h.title) === "materials|methods");
   const hasIntroHeading = top.some((h) => classifySection(h.title) === "intro");
   const sections: ArticleSection[] = [];
@@ -486,17 +549,23 @@ export function buildSections(html: string): ArticleSection[] {
     });
   }
 
-  if (!hasIntroHeading && methods && methods.start > 0) {
-    const introHtml = body.slice(0, methods.start);
-    const introParas = paragraphTexts(introHtml);
-    if (introParas.length) {
-      sections.push({
-        title: "Introduction",
-        type: "intro",
-        content: introParas.join("\n\n"),
-        paragraphs: introParas,
-        subsections: [],
-      });
+  const firstMain = top.find((h) => classifySection(h.title) !== "abstract");
+  if (!hasIntroHeading && firstMain && firstMain.start > 0) {
+    const firstType = classifySection(firstMain.title);
+    if (firstType === "materials|methods" || firstType === "intro" || firstType === "results" || firstType === "other") {
+        const introHtml = body.slice(0, firstMain.start);
+        const introParas = paragraphTexts(introHtml);
+        const abstractTexts = new Set(abstractParas);
+        const uniqueIntro = introParas.filter(p => !abstractTexts.has(p) && p.length > 20);
+        if (uniqueIntro.length) {
+          sections.push({
+            title: "Introduction",
+            type: "intro",
+            content: uniqueIntro.join("\n\n"),
+            paragraphs: uniqueIntro,
+            subsections: [],
+          });
+        }
     }
   }
 
@@ -554,7 +623,20 @@ export function buildSections(html: string): ArticleSection[] {
 
   sections.push(...figureSections);
 
-  return sections.filter((section) => section.paragraphs.length || section.subsections.some((sub) => sub.paragraphs.length));
+  const validSections = sections.filter((section) => section.paragraphs.length || section.subsections.some((sub) => sub.paragraphs.length));
+  
+  // If we found abstract paragraphs but no Abstract section survived the filter, add it
+  if (abstractParas.length && !validSections.some((s) => s.type === "abstract")) {
+    validSections.unshift({
+      title: "Abstract",
+      type: "abstract",
+      content: abstractParas.join("\n\n"),
+      paragraphs: abstractParas,
+      subsections: [],
+    });
+  }
+  
+  return validSections;
 }
 
 export function articleSetPath(id: string): string {

@@ -747,6 +747,15 @@ function ArticleContentBrowser({ article }: { article: ArticleSet }) {
   );
 }
 
+
+async function safeJson(res: Response) {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`API connection failed (HTTP ${res.status}). Ensure the backend server is running.`);
+  }
+  return res.json();
+}
+
 export function App() {
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [status, setStatus] = useState<Status | null>(null);
@@ -779,7 +788,7 @@ export function App() {
 
   async function fetchReferenceSetSummaries(): Promise<ReferenceSetSummary[]> {
     const res = await fetch("/api/reference/sets");
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load dataset list");
     const nextSets = data.sets ?? [];
     setSets(nextSets);
@@ -788,7 +797,7 @@ export function App() {
 
   async function fetchArticleSetSummaries(): Promise<ArticleSetSummary[]> {
     const res = await fetch("/api/article/sets");
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON list");
     const nextSets = data.sets ?? [];
     setArticleSets(nextSets);
@@ -829,7 +838,7 @@ export function App() {
 
   async function loadSet(id: string) {
     const res = await fetch(`/api/reference/sets/${encodeURIComponent(id)}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load JSON");
     setCurrentSet(data);
     setResult(null);
@@ -837,7 +846,7 @@ export function App() {
 
   async function loadArticleSet(id: string) {
     const res = await fetch(`/api/article/sets/${encodeURIComponent(id)}`);
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load article JSON");
     setCurrentArticle(data);
     setResult(null);
@@ -845,7 +854,7 @@ export function App() {
 
   useEffect(() => {
     fetch("/api/status")
-      .then((r) => r.json())
+      .then((r) => safeJson(r))
       .then(setStatus)
       .catch(() => setStatus(null));
     loadArticleSets().catch(() => undefined);
@@ -857,7 +866,7 @@ export function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, result: nextResult }),
     });
-    const data = await res.json();
+    const data = await safeJson(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to save Markdown");
     setSavedFile(data.file ?? "");
   }
@@ -887,7 +896,7 @@ export function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       if (!res.ok) throw new Error(data.error ?? "Search failed");
       setResult(data);
       await saveResult(data);

@@ -31,9 +31,9 @@
 保存先（gitリポジトリ外。Dropbox同期で他端末と共有する）:
 
 ```text
-<Obsidian>/50_coding/pubmed_mcp/reference_sets   # 参考文献セット JSON
-<Obsidian>/50_coding/pubmed_mcp/article_sets     # 主論文セット JSON
-<Obsidian>/50_coding/pubmed_mcp/raw_html         # 取り込み時の入力HTML（再現性確保・パーサ検証用）
+<Obsidian>/50_coding/llamaindex/reference_sets   # 参考文献セット JSON
+<Obsidian>/50_coding/llamaindex/article_sets     # 主論文セット JSON
+<Obsidian>/50_coding/llamaindex/raw_html         # 取り込み時の入力HTML（再現性確保・パーサ検証用）
 ```
 
 `<Obsidian>` は `config.ts` が自動解決する（Windows: `~/Dropbox/obsidian`、Mac: `~/Library/CloudStorage/Dropbox/obsidian`）。

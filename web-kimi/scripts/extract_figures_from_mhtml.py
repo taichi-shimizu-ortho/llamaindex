@@ -60,7 +60,7 @@ def main():
     figures, used_titles = [], set()
     for ordinal, figure in enumerate(root.select('figure'), start=1):
         figure_id, image = figure.get('id', ''), figure.find('img')
-        if not image or not figure_id.lower().startswith('fig'):
+        if not image or ('fig' not in figure_id.lower() and not figure.get('class') == ['figure']):
             continue
         source_url = image.get('src', '').strip()
         if not source_url or source_url not in assets:
