@@ -32,6 +32,8 @@ export interface ZoteroItem {
   pmid: string;
   citekey: string;
   year: string;
+  // Zoteroにアイテムを登録した日時（ISO8601）。取り込み日でのソートに使う。
+  dateAdded: string;
   collections: string[];
 }
 
@@ -136,6 +138,7 @@ function itemFrom(entry: any): ZoteroItem {
     // Better BibTeX が Extra に書く "Citation Key: xxx"。
     citekey: extraField(extra, "Citation Key"),
     year: String(data.date ?? "").match(/\d{4}/)?.[0] ?? "",
+    dateAdded: String(data.dateAdded ?? "").trim(),
     collections: Array.isArray(data.collections) ? data.collections.map((k: unknown) => String(k)) : [],
   };
 }
@@ -337,6 +340,7 @@ export function planSync(
 
   const order = treeOrder(collections);
   const zoteroLinks: Record<string, string> = {};
+  const zoteroDates: Record<string, string> = {};
 
   for (const item of items) {
     const match = matchDocument(item, byDoi, byId, byTitle);
@@ -355,6 +359,7 @@ export function planSync(
     }
 
     zoteroLinks[match.doc.id] = item.key;
+    if (item.dateAdded) zoteroDates[match.doc.id] = item.dateAdded;
 
     const known = item.collections.filter((key) => keptKeys.has(key));
     if (!known.length) {
@@ -396,6 +401,7 @@ export function planSync(
     assignments,
     // Zoteroから消えたアイテムの目印は残さない。
     zoteroLinks,
+    zoteroDates,
     zoteroSyncedAt: syncedAt,
   });
 

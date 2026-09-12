@@ -458,6 +458,7 @@ function DocumentCard({
   referenceSet,
   selected,
   zoteroKey,
+  zoteroAdded,
   onOpen,
   onAssign,
   onDragItem,
@@ -468,6 +469,7 @@ function DocumentCard({
   referenceSet?: ReferenceSetSummary;
   selected: boolean;
   zoteroKey?: string;
+  zoteroAdded?: string;
   onOpen: () => void;
   onAssign: (folderId: string) => void;
   onDragItem: (item: DragItem | null) => void;
@@ -497,7 +499,7 @@ function DocumentCard({
             ? `${referenceSet.abstractFound}/${referenceSet.totalReferences} abstracts`
             : "No reference JSON"}
         </span>
-        <span>{formatDate(set.createdAt)}</span>
+        {zoteroAdded && <span title="Date added in Zotero">Added {formatDate(zoteroAdded)}</span>}
       </div>
 
       {set.sourceUrl && (
@@ -534,12 +536,14 @@ export function LibraryScreen({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [includeSubfolders, setIncludeSubfolders] = useState(true);
   const [filter, setFilter] = useState("");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [edit, setEdit] = useState<EditState | null>(null);
   const [draft, setDraft] = useState("");
   const [dragItem, setDragItem] = useState<DragItem | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   const { folders, assignments } = library;
+  const zoteroDates = library.zoteroDates ?? {};
 
   const referenceByDocument = useMemo(() => {
     const map = new Map<string, ReferenceSetSummary>();
@@ -569,11 +573,29 @@ export function LibraryScreen({
           ? articleSets.filter((set) => !assignments[set.id])
           : documentsInFolder(articleSets, assignments, folders, view, includeSubfolders);
     const needle = filter.trim().toLowerCase();
-    if (!needle) return base;
-    return base.filter((set) =>
-      `${set.title ?? ""} ${set.id} ${set.sourceUrl ?? ""}`.toLowerCase().includes(needle),
-    );
-  }, [articleSets, assignments, folders, view, includeSubfolders, filter]);
+    const filtered = needle
+      ? base.filter((set) =>
+          `${set.title ?? ""} ${set.id} ${set.sourceUrl ?? ""}`.toLowerCase().includes(needle),
+        )
+      : base;
+
+    // Zoteroへの登録日で並べる。文字列比較だと "…+00:00" と "…Z" の混在で
+    // 順序が崩れるため、必ずタイムスタンプに変換して比較する。
+    const added = (id: string) => {
+      const value = Date.parse(zoteroDates[id] ?? "");
+      return Number.isNaN(value) ? null : value;
+    };
+    return [...filtered].sort((a, b) => {
+      const va = added(a.id);
+      const vb = added(b.id);
+      // Zotero未リンクなど日付が無いものは、昇順・降順どちらでも末尾に置く。
+      if (va === null && vb === null) return documentLabel(a).localeCompare(documentLabel(b));
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      if (va === vb) return documentLabel(a).localeCompare(documentLabel(b));
+      return sortDir === "desc" ? vb - va : va - vb;
+    });
+  }, [articleSets, assignments, folders, view, includeSubfolders, filter, sortDir, zoteroDates]);
 
   const viewTitle =
     view === "all" ? "All documents" : view === "unfiled" ? "Unfiled" : folderPath(folders, view) || "Folder";
@@ -790,6 +812,17 @@ export function LibraryScreen({
                   Subfolders
                 </label>
               )}
+              <label className="ctrl">
+                Zotero added
+                <select
+                  value={sortDir}
+                  onChange={(e) => setSortDir(e.target.value as "desc" | "asc")}
+                  aria-label="Sort by date added in Zotero"
+                >
+                  <option value="desc">Newest first</option>
+                  <option value="asc">Oldest first</option>
+                </select>
+              </label>
               <button className="ghost" onClick={() => onRefresh().catch((e) => onError(errorMessage(e)))}>
                 Refresh
               </button>
@@ -814,6 +847,7 @@ export function LibraryScreen({
                   referenceSet={referenceByDocument.get(set.id)}
                   selected={set.id === selectedDocumentId}
                   zoteroKey={library.zoteroLinks?.[set.id]}
+                  zoteroAdded={zoteroDates[set.id]}
                   onOpen={() => onOpenDocument(set.id)}
                   onAssign={(folderId) => run(() => api.assignDocument(set.id, folderId || null))}
                   onDragItem={setDragItem}

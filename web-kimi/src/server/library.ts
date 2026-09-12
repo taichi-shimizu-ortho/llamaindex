@@ -22,6 +22,8 @@ export interface LibraryState {
   assignments: Record<string, string>;
   // documentId -> Zoteroアイテムkey（同期で対応付いた文献の目印）
   zoteroLinks?: Record<string, string>;
+  // documentId -> Zoteroへの登録日時（ISO8601）。取り込み日でのソートに使う。
+  zoteroDates?: Record<string, string>;
   zoteroSyncedAt?: string;
 }
 
@@ -107,8 +109,16 @@ export function normalizeLibrary(raw: unknown): LibraryState {
     if (docId && key) zoteroLinks[docId] = key;
   }
 
+  const zoteroDates: Record<string, string> = {};
+  const rawDates = (source.zoteroDates ?? {}) as Record<string, unknown>;
+  for (const [docId, added] of Object.entries(rawDates)) {
+    const value = String(added ?? "").trim();
+    if (docId && value) zoteroDates[docId] = value;
+  }
+
   const state: LibraryState = { folders, assignments };
   if (Object.keys(zoteroLinks).length) state.zoteroLinks = zoteroLinks;
+  if (Object.keys(zoteroDates).length) state.zoteroDates = zoteroDates;
   if (source.zoteroSyncedAt) state.zoteroSyncedAt = String(source.zoteroSyncedAt);
   return state;
 }

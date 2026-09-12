@@ -166,6 +166,8 @@ export interface LibraryState {
   assignments: Record<string, string>;
   /** documentId -> Zoteroアイテムkey */
   zoteroLinks?: Record<string, string>;
+  /** documentId -> Zoteroへの登録日時（ISO8601） */
+  zoteroDates?: Record<string, string>;
   zoteroSyncedAt?: string;
 }
 
