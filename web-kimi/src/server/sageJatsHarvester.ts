@@ -214,23 +214,32 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
       const tableMatch = tw.match(/<table[^>]*>([\s\S]*?)<\/table>/i);
       if (!tableMatch) continue;
       const tableRows = extractTagContent(tableMatch[1], "tr");
-      const mdRows: string[] = [];
-      
-      let isFirstRow = true;
+
+      // JATSは空のスタブセル（表の左上）を <th/> のように自己閉じで書くため、
+      // 閉じタグを必須にするとセルが1つ消え、行全体が左にずれる。
+      // colspan はmarkdownで結合できないので、その分の空セルを足して桁を保つ。
+      const rows: string[][] = [];
       for (const tr of tableRows) {
-        const thtdRegex = /<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi;
+        const cellRegex = /<(th|td)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1\s*>)/gi;
         const cells: string[] = [];
         let cellMatch;
-        while ((cellMatch = thtdRegex.exec(tr)) !== null) {
-          cells.push(cleanJatsText(cellMatch[2]).replace(/\|/g, ""));
+        while ((cellMatch = cellRegex.exec(tr)) !== null) {
+          cells.push(cleanJatsText(cellMatch[3] ?? "").replace(/\|/g, ""));
+          const span = Number(cellMatch[2]?.match(/colspan=["'](\d+)["']/i)?.[1] ?? 1);
+          for (let k = 1; k < span; k++) cells.push("");
         }
-        if (cells.length) {
-          mdRows.push(`| ${cells.join(" | ")} |`);
-          if (isFirstRow) {
-            mdRows.push(`| ${cells.map(() => "---").join(" | ")} |`);
-            isFirstRow = false;
-          }
-        }
+        if (cells.length) rows.push(cells);
+      }
+
+      // 全行を最大列数に合わせる。markdownは行ごとの列数の不一致を表現できない。
+      const mdRows: string[] = [];
+      if (rows.length) {
+        const width = Math.max(...rows.map((r) => r.length));
+        const pad = (r: string[]) => [...r, ...Array(width - r.length).fill("")];
+        rows.forEach((r, i) => {
+          mdRows.push(`| ${pad(r).join(" | ")} |`);
+          if (i === 0) mdRows.push(`| ${Array(width).fill("---").join(" | ")} |`);
+        });
       }
       if (mdRows.length) {
         sections.push({
