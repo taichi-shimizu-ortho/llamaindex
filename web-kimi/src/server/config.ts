@@ -55,6 +55,11 @@ export const MODELS = {
   translate: process.env.KIMI_MODEL ?? "kimi-k3",
 };
 
+// 主論文RAG（articleRag）の本文インデックスから除くセクションタイプ。
+// abstractは本文各節（Results/Conclusionなど）とほぼ同一の文を含むため、
+// 同じ内容が2件ヒットしてtop-Kを食いつぶす。要約は本文側から引く。
+export const EXCLUDE_FROM_ARTICLE_INDEX = new Set(["abstract"]);
+
 // 検索対象から除外するセクションタイプ（Python版 40 と一致）
 export const EXCLUDE_FROM_INDEX = new Set([
   "references",

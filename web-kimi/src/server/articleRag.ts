@@ -1,5 +1,5 @@
 import OpenAIClient from "openai";
-import { MODELS, KIMI } from "./config.js";
+import { MODELS, KIMI, EXCLUDE_FROM_ARTICLE_INDEX } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { loadArticleSet, type ArticleSet } from "./articleHarvester.js";
 
@@ -50,7 +50,9 @@ function cleanText(text: string): string {
     .trim();
 }
 
-function itemsFromArticle(set: ArticleSet): ArticleItem[] {
+// includeAbstract=true のときだけ除外を無視する。
+// abstractしか無い論文（本文が取れていない等）で検索対象が空になるのを防ぐ保険。
+function itemsFromArticle(set: ArticleSet, includeAbstract = false): ArticleItem[] {
   const items: ArticleItem[] = [];
   const base = {
     title: set.title,
@@ -62,6 +64,8 @@ function itemsFromArticle(set: ArticleSet): ArticleItem[] {
   };
 
   for (const section of set.sections) {
+    if (!includeAbstract && EXCLUDE_FROM_ARTICLE_INDEX.has(section.type)) continue;
+
     section.paragraphs.forEach((paragraph, i) => {
       const text = cleanText(paragraph);
       if (text) {
@@ -104,7 +108,9 @@ function itemsFromArticle(set: ArticleSet): ArticleItem[] {
 
 async function buildArticleIndex(id: string): Promise<CachedArticleIndex> {
   const set = loadArticleSet(id);
-  const items = itemsFromArticle(set);
+  let items = itemsFromArticle(set);
+  // 本文が無くabstractだけの論文は、除外すると検索できなくなるので戻す。
+  if (!items.length) items = itemsFromArticle(set, true);
   if (!items.length) throw new Error("No body paragraphs to search");
   // 埋め込みはディスクキャッシュ経由（再起動時は再埋め込みしない）。
   const embeddings = await getEmbeddings("article", id, items.map((item) => item.text));
