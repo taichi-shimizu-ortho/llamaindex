@@ -341,6 +341,7 @@ export function planSync(
   const order = treeOrder(collections);
   const zoteroLinks: Record<string, string> = {};
   const zoteroDates: Record<string, string> = {};
+  const memberships: Record<string, string[]> = {};
 
   for (const item of items) {
     const match = matchDocument(item, byDoi, byId, byTitle);
@@ -368,8 +369,11 @@ export function planSync(
       continue;
     }
 
-    const chosen = known.slice().sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0))[0];
+    const sorted = known.slice().sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+    const chosen = sorted[0];
     const targetId = folderIdFor(chosen);
+    // 置き場所は1つだが、フォルダ単位の一覧・RAG ではすべての所属コレクションから見えるようにする。
+    memberships[match.doc.id] = sorted.map(folderIdFor);
     if (previousAssignments[match.doc.id] !== targetId) {
       report.moved.push({
         documentId: match.doc.id,
@@ -402,6 +406,7 @@ export function planSync(
     // Zoteroから消えたアイテムの目印は残さない。
     zoteroLinks,
     zoteroDates,
+    zoteroFolders: memberships,
     zoteroSyncedAt: syncedAt,
   });
 

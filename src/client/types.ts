@@ -96,6 +96,8 @@ export interface CorpusSource {
 
 export interface CorpusQueryResult {
   scope: "corpus";
+  /** 検索対象の説明（例: "Folder: Rxfp1 / Clinical"、手動選択なら "Custom selection"） */
+  scopeLabel: string;
   articleIds: string[];
   papers: CorpusPaper[];
   skipped: CorpusSkipped[];
@@ -130,7 +132,15 @@ export interface LibraryState {
   zoteroLinks?: Record<string, string>;
   /** documentId -> Zoteroへの登録日時（ISO8601） */
   zoteroDates?: Record<string, string>;
+  /** documentId -> 所属する Zotero 由来フォルダすべて（複数コレクション所属の文献用） */
+  zoteroFolders?: Record<string, string[]>;
   zoteroSyncedAt?: string;
+}
+
+/** RAG の対象をフォルダ単位で決めるときのスコープ。フォルダの中身が変われば対象も追従する。 */
+export interface CorpusScope {
+  folderId: string;
+  includeSubfolders: boolean;
 }
 
 export interface ImportReport {

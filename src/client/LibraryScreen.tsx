@@ -1,10 +1,12 @@
 // ドキュメント選択・取り込み画面。
-// 取り込んだ主論文JSONをフォルダに整理し、複数論文RAGの対象にする論文をチェックで選ぶ。
+// 取り込んだ主論文JSONをフォルダに整理し、複数論文RAGの対象を決める。
+// 基本はフォルダ（Zotero コレクション）単位で「Ask this folder」、細かく足し引きしたいときはチェックで選ぶ。
 import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import type { ImportRequest } from "./api.js";
 import {
   childFolders,
+  documentFolderIds,
   documentLabel,
   documentsInFolder,
   flattenFolders,
@@ -15,12 +17,16 @@ import {
 } from "./documents.js";
 import type {
   ArticleSetSummary,
+  CorpusScope,
   ImportReport,
   LibraryFolder,
   LibraryState,
   ReferenceSetSummary,
 } from "./types.js";
 import { ZoteroPanel } from "./ZoteroPanel.js";
+
+// corpus RAG が想定する本数の上限。超えても検索はできるが、ボタンで注意を出す。
+const CORPUS_SOFT_LIMIT = 30;
 
 // 左ペインで選択中の絞り込み。フォルダIDそのものも入る。
 type FolderView = "all" | "unfiled" | string;
@@ -35,12 +41,16 @@ interface LibraryScreenProps {
   library: LibraryState;
   // RAG の対象（corpus）に入っている論文
   selectedIds: string[];
+  // フォルダ単位で対象にしているときのスコープ（手動選択なら null）
+  scope: CorpusScope | null;
+  scopeLabel: string;
   loading: string;
   onLibraryChange: (next: LibraryState) => void;
   onRefresh: () => Promise<void>;
   onSelect: (ids: string[], selected: boolean) => void;
   onClearSelection: () => void;
   onAsk: () => void;
+  onAskFolder: (scope: CorpusScope) => void;
   onError: (message: string) => void;
 }
 
@@ -413,6 +423,7 @@ function DocumentCard({
   selected,
   zoteroKey,
   zoteroAdded,
+  otherFolderIds,
   onToggle,
   onAssign,
   onDragItem,
@@ -420,6 +431,8 @@ function DocumentCard({
   set: ArticleSetSummary;
   folders: LibraryFolder[];
   folderId: string;
+  // 置き場所以外に入っている Zotero コレクション（フォルダ単位の RAG ではそちらにも含まれる）
+  otherFolderIds: string[];
   referenceSet?: ReferenceSetSummary;
   selected: boolean;
   zoteroKey?: string;
@@ -461,6 +474,11 @@ function DocumentCard({
             : "No reference JSON"}
         </span>
         {zoteroAdded && <span title="Date added in Zotero">Added {formatDate(zoteroAdded)}</span>}
+        {otherFolderIds.length > 0 && (
+          <span title="Also in these Zotero collections; folder-scoped RAG includes it there too">
+            Also in {otherFolderIds.map((id) => folderPath(folders, id)).join(", ")}
+          </span>
+        )}
       </div>
 
       {set.sourceUrl && (
@@ -484,12 +502,15 @@ export function LibraryScreen({
   referenceSets,
   library,
   selectedIds,
+  scope,
+  scopeLabel,
   loading,
   onLibraryChange,
   onRefresh,
   onSelect,
   onClearSelection,
   onAsk,
+  onAskFolder,
   onError,
 }: LibraryScreenProps) {
   const [view, setView] = useState<FolderView>("all");
@@ -518,10 +539,10 @@ export function LibraryScreen({
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     for (const folder of folders) {
-      map.set(folder.id, documentsInFolder(articleSets, assignments, folders, folder.id, true).length);
+      map.set(folder.id, documentsInFolder(articleSets, library, folder.id, true).length);
     }
     return map;
-  }, [articleSets, assignments, folders]);
+  }, [articleSets, library, folders]);
 
   const unfiledCount = articleSets.filter((set) => !assignments[set.id]).length;
 
@@ -531,7 +552,7 @@ export function LibraryScreen({
         ? articleSets
         : view === "unfiled"
           ? articleSets.filter((set) => !assignments[set.id])
-          : documentsInFolder(articleSets, assignments, folders, view, includeSubfolders);
+          : documentsInFolder(articleSets, library, view, includeSubfolders);
     const needle = filter.trim().toLowerCase();
     const filtered = needle
       ? base.filter((set) =>
@@ -555,7 +576,16 @@ export function LibraryScreen({
       if (va === vb) return documentLabel(a).localeCompare(documentLabel(b));
       return sortDir === "desc" ? vb - va : va - vb;
     });
-  }, [articleSets, assignments, folders, view, includeSubfolders, filter, sortDir, zoteroDates]);
+  }, [articleSets, library, assignments, view, includeSubfolders, filter, sortDir, zoteroDates]);
+
+  // 「Ask this folder」の対象。タイトル絞り込みは表示用なので、フォルダの中身全体を数える。
+  const folderView = view !== "all" && view !== "unfiled" ? view : null;
+  const folderDocuments = useMemo(
+    () => (folderView ? documentsInFolder(articleSets, library, folderView, includeSubfolders) : []),
+    [articleSets, library, folderView, includeSubfolders],
+  );
+  const isCurrentScope =
+    folderView !== null && scope?.folderId === folderView && scope.includeSubfolders === includeSubfolders;
 
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const visibleSelected = visibleDocuments.filter((set) => selected.has(set.id)).length;
@@ -785,6 +815,20 @@ export function LibraryScreen({
           </div>
 
           <div className="corpus-bar">
+            {folderView && (
+              <button
+                className="primary"
+                onClick={() => onAskFolder({ folderId: folderView, includeSubfolders })}
+                disabled={!folderDocuments.length}
+                title={
+                  folderDocuments.length > CORPUS_SOFT_LIMIT
+                    ? `${folderDocuments.length} papers — corpus RAG is tuned for 10–${CORPUS_SOFT_LIMIT}. A subfolder may answer better.`
+                    : "Search every paper in this folder; the scope follows the folder when Zotero is re-synced"
+                }
+              >
+                Ask this folder ({folderDocuments.length}) →
+              </button>
+            )}
             <label className="ctrl">
               <input
                 type="checkbox"
@@ -794,17 +838,19 @@ export function LibraryScreen({
               />
               Select all {visibleDocuments.length} here
             </label>
-            <span className="panel-note">
-              {selectedIds.length} selected for RAG
-              {selectedIds.length > visibleSelected ? ` (${selectedIds.length - visibleSelected} outside this view)` : ""}
+            <span className="panel-note" title={scopeLabel}>
+              {selectedIds.length
+                ? `RAG: ${scope ? scopeLabel : `${selectedIds.length} selected`}${isCurrentScope ? " (this folder)" : ""}`
+                : "Nothing selected for RAG"}
+              {selectedIds.length > visibleSelected ? ` · ${selectedIds.length - visibleSelected} outside this view` : ""}
             </span>
             {selectedIds.length > 0 && (
               <button className="ghost" onClick={onClearSelection}>
                 Clear
               </button>
             )}
-            <button className="primary" onClick={onAsk} disabled={!selectedIds.length}>
-              Ask {selectedIds.length || ""} papers →
+            <button className={folderView ? "ghost" : "primary"} onClick={onAsk} disabled={!selectedIds.length}>
+              Ask {selectedIds.length || ""} {scope ? "papers" : "selected"} →
             </button>
           </div>
 
@@ -827,6 +873,7 @@ export function LibraryScreen({
                   selected={selected.has(set.id)}
                   zoteroKey={library.zoteroLinks?.[set.id]}
                   zoteroAdded={zoteroDates[set.id]}
+                  otherFolderIds={documentFolderIds(library, set.id).filter((id) => id !== assignments[set.id])}
                   onToggle={() => onSelect([set.id], !selected.has(set.id))}
                   onAssign={(folderId) => run(() => api.assignDocument(set.id, folderId || null))}
                   onDragItem={setDragItem}

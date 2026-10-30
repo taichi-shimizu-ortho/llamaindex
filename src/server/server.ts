@@ -179,10 +179,10 @@ app.post("/api/corpus/prepare", async (req, res) => {
 });
 
 app.post("/api/corpus/query", async (req, res) => {
-  const { articleIds, query, topK, perPaper, sectionGroups, translate } = req.body ?? {};
+  const { articleIds, scopeLabel, query, topK, perPaper, sectionGroups, translate } = req.body ?? {};
   if (!query) return res.status(400).json({ error: "Enter a question" });
   try {
-    res.json(await runCorpusQuery(articleIds, String(query).trim(), { topK, perPaper, sectionGroups, translate }));
+    res.json(await runCorpusQuery(articleIds, String(query).trim(), { topK, perPaper, sectionGroups, translate, scopeLabel }));
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
@@ -270,6 +270,7 @@ function resultMarkdown(result: CorpusQueryResult): string {
     result.perPaper ? `max ${result.perPaper}/paper` : "",
     result.sectionGroups?.length ? `sections: ${result.sectionGroups.join(", ")}` : "",
   ].filter(Boolean).join(" · ");
+  if (result.scopeLabel) parts.push("", `*Scope: ${result.scopeLabel}*`);
   parts.push("", `*Papers (${result.papers.length}): ${result.papers.map((p) => p.label).join(", ")} — ${settings}*`);
   parts.push("", "### Answer", "", result.answer || "");
   if (result.sources.length) {

@@ -1,4 +1,4 @@
-// 複数論文 RAG 画面。Documents で選んだ論文（10〜30本を想定）を段落単位で横断検索し、
+// 複数論文 RAG 画面。Documents で選んだフォルダ（Zotero コレクション）または論文（10〜30本を想定）を段落単位で横断検索し、
 // 回答中の [S3] から根拠の段落へ飛べるようにする。単一論文の読解は 50_article-json 側の全文検索に任せる。
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, errorMessage } from "./api.js";
@@ -9,6 +9,8 @@ import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
 import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, SectionGroup } from "./types.js";
 
 const SECTION_GROUPS = Object.keys(SECTION_GROUP_LABEL) as SectionGroup[];
+// これを超えると上位段落が一部の論文に偏りやすい。検索は止めず注意だけ出す。
+const CORPUS_SOFT_LIMIT = 30;
 
 function sessionStamp(): string {
   const d = new Date();
@@ -32,12 +34,14 @@ function initialSessionId(): string {
 interface RagScreenProps {
   // 選択中の論文（corpus）
   papers: ArticleSetSummary[];
+  // 対象の説明（"Folder: …" / "Custom selection"）。画面と保存する md に出す。
+  scopeLabel: string;
   active: boolean;
   onRemove: (id: string) => void;
   onBackToLibrary: () => void;
 }
 
-export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScreenProps) {
+export function RagScreen({ papers, scopeLabel, active, onRemove, onBackToLibrary }: RagScreenProps) {
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(10);
   const [perPaper, setPerPaper] = useState(3);
@@ -98,7 +102,15 @@ export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScre
     setBusy(translate ? "Translating & searching..." : "Searching...");
     setError("");
     try {
-      const data = await api.corpusQuery({ articleIds: ids, query: query.trim(), topK, perPaper, sectionGroups: groups, translate });
+      const data = await api.corpusQuery({
+        articleIds: ids,
+        scopeLabel,
+        query: query.trim(),
+        topK,
+        perPaper,
+        sectionGroups: groups,
+        translate,
+      });
       setResult(data);
       const saved = await api.saveSession(sessionId, data);
       setSavedFile(saved.file ?? "");
@@ -121,7 +133,7 @@ export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScre
       <section className="main-panel">
         <div className="empty-state">
           <h2>No papers selected</h2>
-          <p>Tick papers on the Documents screen (or select a whole folder), then ask across them.</p>
+          <p>Open a folder on the Documents screen and press “Ask this folder”, or tick papers one by one.</p>
           <button className="primary" onClick={onBackToLibrary}>
             Go to Documents
           </button>
@@ -138,11 +150,18 @@ export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScre
         <button className="ghost" onClick={onBackToLibrary}>
           ← Documents
         </button>
+        <strong className="rag-scope">{scopeLabel}</strong>
         <span className="panel-note">
           {papers.length} papers
           {prepared ? ` · ${prepared.totalParagraphs} paragraphs indexed` : ""}
         </span>
       </div>
+      {papers.length > CORPUS_SOFT_LIMIT && (
+        <div className="panel-note warn-text">
+          {papers.length} papers in scope — this RAG is tuned for 10–{CORPUS_SOFT_LIMIT}. Answers may lean on a few papers;
+          a subfolder or a lower “Per paper” keeps them balanced.
+        </div>
+      )}
 
       {preparing && (
         <div className="loading inline-loading">
@@ -166,7 +185,7 @@ export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScre
       <details className="corpus-papers" open={papers.length <= 12}>
         <summary>
           <h2>Papers ({papers.length})</h2>
-          <span className="panel-note">Remove a paper to leave it out of the search</span>
+          <span className="panel-note">Removing a paper turns the folder scope into a custom selection</span>
         </summary>
         <ul className="paper-list">
           {papers.map((paper) => {

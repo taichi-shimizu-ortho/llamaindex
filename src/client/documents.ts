@@ -1,5 +1,5 @@
 // 主論文JSON（ドキュメント）と参照文献JSONの対応付け、表示用の整形。
-import type { ArticleSetSummary, LibraryFolder, ReferenceSetSummary } from "./types.js";
+import type { ArticleSetSummary, LibraryFolder, LibraryState, ReferenceSetSummary } from "./types.js";
 
 // 取り込み時に付く連番サフィックス（-2 など）を落として同一論文を突き合わせる。
 export function datasetBaseId(id: string): string {
@@ -73,14 +73,29 @@ export function flattenFolders(
   ]);
 }
 
+// 文献が入っているフォルダすべて。置き場所（assignments）に加え、Zotero で複数コレクションに
+// 入っている文献はそのすべてに属するものとして扱う（Zotero のサイドバーと同じ見え方にする）。
+export function documentFolderIds(library: LibraryState, documentId: string): string[] {
+  const ids = new Set(library.zoteroFolders?.[documentId] ?? []);
+  const primary = library.assignments[documentId];
+  if (primary) ids.add(primary);
+  return [...ids];
+}
+
 // 指定フォルダに属するドキュメント。includeSubfolders で子孫フォルダの分も含める。
 export function documentsInFolder(
   sets: ArticleSetSummary[],
-  assignments: Record<string, string>,
-  folders: LibraryFolder[],
+  library: LibraryState,
   folderId: string,
   includeSubfolders: boolean,
 ): ArticleSetSummary[] {
-  const targets = includeSubfolders ? folderDescendants(folders, folderId) : new Set([folderId]);
-  return sets.filter((set) => targets.has(assignments[set.id] ?? ""));
+  const targets = includeSubfolders ? folderDescendants(library.folders, folderId) : new Set([folderId]);
+  return sets.filter((set) => documentFolderIds(library, set.id).some((id) => targets.has(id)));
+}
+
+// RAG 画面・保存する md に出すスコープ名。
+export function scopeLabel(folders: LibraryFolder[], folderId: string, includeSubfolders: boolean): string {
+  const path = folderPath(folders, folderId) || folderId;
+  const hasChildren = folders.some((folder) => folder.parentId === folderId);
+  return `Folder: ${path}${includeSubfolders && hasChildren ? " (with subfolders)" : ""}`;
 }

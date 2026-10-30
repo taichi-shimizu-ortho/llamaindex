@@ -46,6 +46,7 @@ export interface ImportRequest {
 
 export interface CorpusQueryRequest {
   articleIds: string[];
+  scopeLabel: string;
   query: string;
   topK: number;
   perPaper: number;

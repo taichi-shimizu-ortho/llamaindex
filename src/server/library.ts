@@ -1,5 +1,7 @@
 // ドキュメント選択画面のフォルダ構成を JSON ファイルに永続化する。
-// フォルダはネスト可能で、文献（article set）は最大1つのフォルダに所属する。
+// フォルダはネスト可能で、文献（article set）の置き場所（assignments）は最大1つ。
+// Zotero で複数コレクションに入っている文献は、置き場所とは別に zoteroFolders で全所属を持ち、
+// フォルダ単位の一覧・RAG ではどのコレクション側からも見えるようにする。
 // 文献JSON本体には触れないため、フォルダを消しても文献は消えない。
 import fs from "node:fs";
 import path from "node:path";
@@ -24,6 +26,8 @@ export interface LibraryState {
   zoteroLinks?: Record<string, string>;
   // documentId -> Zoteroへの登録日時（ISO8601）。取り込み日でのソートに使う。
   zoteroDates?: Record<string, string>;
+  // documentId -> その文献が入っている Zotero 由来フォルダすべて（ツリー順）。同期で丸ごと作り直す。
+  zoteroFolders?: Record<string, string[]>;
   zoteroSyncedAt?: string;
 }
 
@@ -116,9 +120,18 @@ export function normalizeLibrary(raw: unknown): LibraryState {
     if (docId && value) zoteroDates[docId] = value;
   }
 
+  const zoteroFolders: Record<string, string[]> = {};
+  const rawMemberships = (source.zoteroFolders ?? {}) as Record<string, unknown>;
+  for (const [docId, ids] of Object.entries(rawMemberships)) {
+    if (!docId || !Array.isArray(ids)) continue;
+    const live = [...new Set(ids.map((id) => String(id ?? "")))].filter((id) => byId.has(id));
+    if (live.length) zoteroFolders[docId] = live;
+  }
+
   const state: LibraryState = { folders, assignments };
   if (Object.keys(zoteroLinks).length) state.zoteroLinks = zoteroLinks;
   if (Object.keys(zoteroDates).length) state.zoteroDates = zoteroDates;
+  if (Object.keys(zoteroFolders).length) state.zoteroFolders = zoteroFolders;
   if (source.zoteroSyncedAt) state.zoteroSyncedAt = String(source.zoteroSyncedAt);
   return state;
 }
@@ -204,6 +217,11 @@ export function deleteFolder(id: unknown): LibraryState {
   state.folders = state.folders.filter((folder) => !removed.has(folder.id));
   for (const [docId, folderId] of Object.entries(state.assignments)) {
     if (removed.has(folderId)) delete state.assignments[docId];
+  }
+  for (const [docId, ids] of Object.entries(state.zoteroFolders ?? {})) {
+    const live = ids.filter((id) => !removed.has(id));
+    if (live.length) state.zoteroFolders![docId] = live;
+    else delete state.zoteroFolders![docId];
   }
   return writeLibrary(state);
 }
