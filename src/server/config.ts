@@ -4,9 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import dotenv from "dotenv";
 
-// リポジトリ直下の .env（OPENAI_API_KEY）を読み込む
-dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });
-// web/.env があれば上書き
+// リポジトリ直下の .env（OPENAI_API_KEY / ANTHROPIC_API_KEY）を読み込む
 dotenv.config({ path: path.resolve(import.meta.dirname, "../../.env") });
 
 const HOME = os.homedir();

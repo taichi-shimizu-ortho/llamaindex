@@ -7,17 +7,24 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# Virtual environments / dependencies
 .venv
+node_modules/
 .env
+*.log
 
-# LlamaIndex vector stores (large files, stored in Dropbox)
+# 文献データ・ベクトルストアは Dropbox(obsidian)/50_coding/llamaindex 配下に保存する。
+# 万一ローカルに生成されてもコミットしない。
 storage_all/
 storage*/
 RXFP1_rag/
+reference_sets/
+article_sets/
+raw_html/
+embeddings_cache/
 
 # 使い捨てのデバッグ／検証スクリプトとその入出力はコミットしない。
-# リポジトリ直下のみを対象にし、パッケージ内の正規ファイルは巻き込まない。
+# リポジトリ直下のみを対象にし、src/ や scripts/ 配下は巻き込まない。
 /patch_*.py
 /debug_*.py
 /debug_*.ts
@@ -27,5 +34,6 @@ RXFP1_rag/
 /test_*.cjs
 /check_*.js
 /check_*.cjs
+/import_*.js
 /*_raw.html
 /*_out.json
