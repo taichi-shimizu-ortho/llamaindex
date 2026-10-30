@@ -108,8 +108,10 @@ npm run dev
 UI:
 
 ```text
-http://localhost:5173
+http://localhost:5175
 ```
+
+50_article-json の viewer（5173）と同時に起動できるよう、UI は 5175 にしてある。
 
 API:
 
