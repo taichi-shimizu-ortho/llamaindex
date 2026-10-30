@@ -16,6 +16,8 @@ export interface ReferenceRecord {
   href: string;
   doi: string;
   pmid: string;
+  // HTMLの構造から確定できた論文タイトル（ScienceDirect等）。引用文からの推定より優先する
+  citationTitle?: string;
   pubmedFound: boolean;
   pubmed?: {
     pmid: string;
@@ -593,9 +595,22 @@ function extractScienceDirectReferences(html: string, sourceUrl: string): Refere
     
     for (const liMatch of liMatches) {
       const liContent = liMatch[1];
-      // Remove labels like <span class="label u-font-sans">1.</span>
-      let cleanContent = liContent.replace(/<span\b[^>]*class=["'][^"']*\blabel\b[^"']*["'][^>]*>[\s\S]*?<\/span>/i, "");
-      const text = cleanReferenceText(stripTags(cleanContent));
+      // 著者・タイトル・掲載誌は別々のdivに入っている。タグ除去で連結すると
+      // "…, H. Zhang Senescence in …" のように区切りが消え、タイトルを推定できなくなる
+      const part = (cls: string) =>
+        stripTags(liContent.match(new RegExp(`<div\\b[^>]*class=["'][^"']*\\b${cls}\\b[^"']*["'][^>]*>([\\s\\S]*?)<\\/div>`, "i"))?.[1] ?? "");
+      const citationTitle = part("title").replace(/\.$/, "");
+      let text: string;
+      if (citationTitle) {
+        text = [part("authors"), citationTitle, part("host")]
+          .filter(Boolean)
+          .map((s) => s.replace(/\.$/, ""))
+          .join(". ");
+      } else {
+        // Remove labels like <span class="label u-font-sans">1.</span>
+        const cleanContent = liContent.replace(/<span\b[^>]*class=["'][^"']*\blabel\b[^"']*["'][^>]*>[\s\S]*?<\/span>/i, "");
+        text = cleanReferenceText(stripTags(cleanContent));
+      }
       if (!text || text.length < 5) continue;
 
       const pmid = liContent.match(/[?&]pmid=(\d+)/i)?.[1] || extractPmid(liContent);
@@ -614,6 +629,7 @@ function extractScienceDirectReferences(html: string, sourceUrl: string): Refere
         href,
         doi,
         pmid,
+        ...(citationTitle ? { citationTitle } : {}),
         pubmedFound: false,
       });
     }
@@ -711,17 +727,21 @@ function extractGenericReferences(html: string, sourceUrl: string): ReferenceRec
 }
 
 async function fetchText(url: string, params: Record<string, string>): Promise<string> {
-  if (url.startsWith(ENTREZ_BASE)) {
-    const elapsed = Date.now() - lastEntrezRequestAt;
-    const wait = Math.max(0, 380 - elapsed);
-    if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
-    lastEntrezRequestAt = Date.now();
-  }
   const u = new URL(url);
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
-  const res = await fetch(u, { headers: { "User-Agent": `${TOOL}/1.0 (${EMAIL})` } });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.text();
+  // NCBIは混雑時に429/5xxを返す。そのまま失敗にすると「PubMedに無い」扱いで保存されるため、待って再試行する
+  for (let attempt = 0; ; attempt++) {
+    if (url.startsWith(ENTREZ_BASE)) {
+      const elapsed = Date.now() - lastEntrezRequestAt;
+      const wait = Math.max(0, 380 - elapsed);
+      if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+      lastEntrezRequestAt = Date.now();
+    }
+    const res = await fetch(u, { headers: { "User-Agent": `${TOOL}/1.0 (${EMAIL})` } });
+    if (res.ok) return res.text();
+    if (attempt >= 4 || !(res.status === 429 || res.status >= 500)) throw new Error(`${res.status} ${res.statusText}`);
+    await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+  }
 }
 
 async function doiToPmid(doi: string): Promise<string> {
@@ -954,6 +974,21 @@ function titleTokens(s: string): string[] {
   );
 }
 
+// タイトル語集合のJaccard係数（0〜1）
+function titleSimilarity(a: string, b: string): number {
+  const x = new Set(titleTokens(a));
+  const y = new Set(titleTokens(b));
+  const shared = [...y].filter((t) => x.has(t)).length;
+  return shared / (x.size + y.size - shared || 1);
+}
+
+// 確定したタイトルで検索し、PubMed側のタイトルがほぼ一致するものだけを採用する
+async function searchByExactTitle(title: string): Promise<string> {
+  const ids = await esearchIds(title.slice(0, 240), 3);
+  const titles = await fetchTitlesByIds(ids);
+  return ids.find((id) => titleSimilarity(title, titles[id] ?? "") >= 0.8) ?? "";
+}
+
 // 引用文から論文タイトル部分を抽出する（"著者, Title. Journal vol (year) pages." 形式想定）
 function extractCitationTitle(text: string): string {
   const s = cleanReferenceText(text).replace(/^\[?\d+\]?\.?\s*/, "").trim();
@@ -988,21 +1023,38 @@ async function fetchTitlesByIds(ids: string[]): Promise<Record<string, string>> 
 // 著者名+発行年でPMID候補を複数検索し、複数ヒット時はタイトルで絞り込む。
 // 同一著者が同年に複数論文を出している場合、[dp] は epub 年も拾うため
 // retmax=1 の単純採用では誤マッチする（例: Saltzman 2016）。
-async function searchByAuthorYear(author: string, year: string, refText: string): Promise<string> {
+async function searchByAuthorYear(
+  author: string,
+  year: string,
+  refText: string,
+  title = extractCitationTitle(refText),
+): Promise<string> {
   const ids = await esearchIds(`${author}[1au] AND ${year}[dp]`, 20);
   if (ids.length === 0) return "";
   if (ids.length === 1) return ids[0];
 
   // 複数ヒット → 引用文のタイトルで絞り込む
-  const title = extractCitationTitle(refText);
   const titleToks = titleTokens(title);
 
   // 1) タイトル検索（著者で限定）して候補集合と突き合わせる
   if (titleToks.length >= 3) {
     const titleIds = await esearchIds(`${author}[1au] AND ${title.slice(0, 200)}[Title]`, 5);
-    const inSet = titleIds.find((id) => ids.includes(id));
-    if (inSet) return inSet;
-    if (titleIds.length) return titleIds[0];
+    if (titleIds.length === 1) return titleIds[0];
+    if (titleIds.length > 1) {
+      // 同著者の似たタイトル（例: Salari 2021 の2本）が並ぶため、先頭ではなくタイトル語の一致度で選ぶ
+      const candTitles = await fetchTitlesByIds(titleIds);
+      let bestId = "";
+      let bestSim = -1;
+      for (const id of titleIds) {
+        const sim = titleSimilarity(title, candTitles[id] ?? "");
+        // 同点なら著者+年の候補集合に入っている方を優先する
+        if (sim > bestSim || (sim === bestSim && ids.includes(id) && !ids.includes(bestId))) {
+          bestSim = sim;
+          bestId = id;
+        }
+      }
+      return bestId;
+    }
   }
 
   // 2) 候補のタイトルを取得し、引用文に含まれる語の割合で一致度を評価する
@@ -1030,10 +1082,13 @@ async function enrichRecord(record: ReferenceRecord): Promise<ReferenceRecord> {
     let pmid = record.pmid;
     if (!pmid && record.doi) pmid = await doiToPmid(record.doi);
     if (!pmid) {
-      const parsed = parseReference(record.text);
+      // 構造上タイトルから始まる（著者なし。例: WOMAN trial）引用では、タイトル先頭語を著者と誤認しないよう著者検索を飛ばす
+      const authorless = Boolean(record.citationTitle && record.text.startsWith(record.citationTitle));
+      const parsed = authorless ? null : parseReference(record.text);
       if (parsed?.author && parsed?.year) {
-        pmid = await searchByAuthorYear(parsed.author, parsed.year, record.text);
+        pmid = await searchByAuthorYear(parsed.author, parsed.year, record.text, record.citationTitle);
       }
+      if (!pmid && record.citationTitle) pmid = await searchByExactTitle(record.citationTitle);
       if (!pmid) pmid = await titleToPmid(record.text);
     }
 
