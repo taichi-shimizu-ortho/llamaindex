@@ -196,14 +196,34 @@ function extractTagContent(html: string, startIndex: number, tag: string): strin
   return html.slice(startIndex, i);
 }
 
+// 開始タグにマッチする要素を、入れ子を数えて丸ごと取り除く。
+function removeBlocks(html: string, openTag: RegExp): string {
+  let out = html;
+  for (let m = out.match(openTag); m && m.index != null; m = out.match(openTag)) {
+    const tag = (m[0].match(/^<(\w+)/)?.[1] ?? "div").toLowerCase();
+    const start = m.index + m[0].length;
+    const inner = extractTagContent(out, start, tag);
+    const end = inner ? start + inner.length + `</${tag}>`.length : start;
+    out = out.slice(0, m.index) + out.slice(end);
+  }
+  return out;
+}
+
 function inferAbstractParagraphs(html: string): string[] {
+  // ScienceDirect は Highlights / Graphical abstract も class="abstract …" で包むので、先に外す。
+  const withoutHighlights = removeBlocks(
+    html,
+    /<(?:div|section)\b[^>]*class=["'][^"']*\b(?:author-highlights|graphical)\b[^"']*["'][^>]*>/i,
+  );
   // 1. Try to extract from known abstract sections in body
   const abstractIds = ["abstract", "abstracts", "structured-abstract", "editor-abstract", "abstract-content", "author-highlights"];
   for (const id of abstractIds) {
-    const sectionMatch = html.match(new RegExp(`<section\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
+    // author-highlights は本当の abstract が無いときの最後の手段なので、元の HTML から探す。
+    const source = id === "author-highlights" ? html : withoutHighlights;
+    const sectionMatch = source.match(new RegExp(`<section\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
     if (sectionMatch && sectionMatch.index != null) {
       const startIndex = sectionMatch.index + sectionMatch[0].length;
-      const inner = extractTagContent(html, startIndex, "section");
+      const inner = extractTagContent(source, startIndex, "section");
       if (inner) {
         const cleanInner = inner.replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, "");
         const paras = paragraphTexts(cleanInner);
@@ -211,10 +231,10 @@ function inferAbstractParagraphs(html: string): string[] {
       }
     }
     
-    const divMatch = html.match(new RegExp(`<div\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
+    const divMatch = source.match(new RegExp(`<div\\b[^>]*(?:id=["'](?:[^"']*[-_])?${id}["']|class=["'][^"']*\\b${id}\\b[^"']*["'])[^>]*>`, "i"));
     if (divMatch && divMatch.index != null) {
       const startIndex = divMatch.index + divMatch[0].length;
-      const inner = extractTagContent(html, startIndex, "div");
+      const inner = extractTagContent(source, startIndex, "div");
       if (inner) {
         const cleanInner = inner.replace(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi, "");
         const paras = paragraphTexts(cleanInner);
@@ -459,13 +479,22 @@ function paragraphTexts(html: string): string[] {
   const items: { index: number; text: string }[] = [];
   const processedRanges: [number, number][] = [];
 
-  const paraMatches = Array.from(
-    html.matchAll(/<(?:div|p)\b[^>]*(?:id=["'][a-z]*par\d+["']|role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:div|p)>|<p\b[^>]*>([\s\S]*?)<\/p>/gi)
-  );
-  for (const m of paraMatches) {
-    const text = stripTags(m[1] || m[2] || "");
+  // 段落の開始タグ。id は par0010 / p0010（ScienceDirect）/ abspara0010 などを拾う。
+  // div は入れ子を数えて閉じタグを探し、段落の中の段落（リスト項目など）は二重に拾わない。
+  const paraOpen = /<(div|p)\b[^>]*(?:id=["'](?:[a-z]*para?|p)\d+["']|role=["']paragraph["']|class=["'][^"']*(?:paragraph|para)[^"']*["'])[^>]*>|<(p)\b[^>]*>/gi;
+  let consumedUntil = 0;
+  for (const m of html.matchAll(paraOpen)) {
+    const start = m.index ?? 0;
+    if (start < consumedUntil) continue;
+    const tag = (m[1] || m[2] || "p").toLowerCase();
+    const innerStart = start + m[0].length;
+    const inner = extractTagContent(html, innerStart, tag);
+    // 段落を包むだけの入れ物（中に段落がある div）は飛ばし、中の段落を拾う。
+    if (tag === "div" && new RegExp(paraOpen.source, "i").test(inner)) continue;
+    consumedUntil = innerStart + inner.length;
+    const text = stripTags(inner);
     if (text && !isBoilerplateParagraph(text)) {
-      items.push({ index: m.index ?? 0, text });
+      items.push({ index: start, text });
     }
   }
 
