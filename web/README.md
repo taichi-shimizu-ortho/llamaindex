@@ -119,7 +119,11 @@ API:
 http://localhost:5174
 ```
 
-`OPENAI_API_KEY` はリポジトリ直下の `.env` または `web/.env` から読み込みます。
+`OPENAI_API_KEY` と `ANTHROPIC_API_KEY` は、リポジトリ直下の `.env` または `web/.env` から読み込みます。
+
+- 回答の生成は Claude Sonnet 5.5（`claude-sonnet-5-5`、`ANTHROPIC_API_KEY`）。安全上の理由で断られたときは、サーバ側で代替モデルに回します（`fallbacks: "default"`）。
+- 埋め込み（`text-embedding-3-small`）と JA→EN 翻訳は OpenAI（`OPENAI_API_KEY`）。
+- 使っているモデルは画面右上に表示し、回答ごとのモデルは回答欄と保存する md に残します。
 
 ## 旧RXFP1 RAG
 

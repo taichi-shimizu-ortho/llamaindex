@@ -2,6 +2,7 @@ import { SentenceSplitter } from "llamaindex";
 import OpenAIClient from "openai";
 import { MODELS } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
+import { generateAnswer, type LlmAnswer } from "./llm.js";
 import { loadReferenceSet, type ReferenceRecord, type ReferenceSet } from "./referenceHarvester.js";
 
 // アブストラクトを文単位の小チャンクへ分割する（検索精度向上のため）。
@@ -122,8 +123,7 @@ function recordToSource(record: ReferenceRecord, score: number): ReferenceSource
 async function synthesizeAnswerWithCitations(
   enQuery: string,
   sources: ReferenceSource[],
-): Promise<string> {
-  const client = new OpenAIClient();
+): Promise<LlmAnswer> {
   const context = sources
     .map((source) => {
       const title = source.title ? `Title: ${source.title}` : "";
@@ -148,15 +148,7 @@ async function synthesizeAnswerWithCitations(
     "Always answer in English, regardless of the language of the user's query."
   ].join(" ");
 
-  const input = `System Instructions:\n${systemInstruction}\n\nReferences:\n\n${context}\n\nQuestion: ${enQuery}`;
-
-  const res = await (client as any).responses.create({
-    model: MODELS.llm,
-    reasoning: { effort: "high" },
-    input,
-  });
-
-  return res.output_text?.trim() ?? "";
+  return generateAnswer(systemInstruction, `References:\n\n${context}\n\nQuestion: ${enQuery}`);
 }
 
 export interface ReferenceQueryResult {
@@ -164,6 +156,8 @@ export interface ReferenceQueryResult {
   originalQuery: string;
   enQuery: string;
   answer: string;
+  // 回答を生成したモデル
+  model: string;
   sources: {
     score: number;
     refIndex: number | string;
@@ -209,13 +203,14 @@ export async function runReferenceQuery(
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 
-  const answer = await synthesizeAnswerWithCitations(enQuery, sources);
+  const { text: answer, model } = await synthesizeAnswerWithCitations(enQuery, sources);
 
   return {
     setId,
     originalQuery,
     enQuery,
     answer,
+    model,
     sources,
   };
 }

@@ -137,10 +137,17 @@ export function App() {
           >
             {theme === "dark" ? "Light" : "Dark"}
           </button>
+          {status?.llmModel && (
+            <span className="badge badge-model" title={`Answer model: ${status.llmModel}`}>
+              {status.llmLabel}
+            </span>
+          )}
           {status?.hasApiKey ? (
             <span className="badge badge-ok">API ready</span>
           ) : (
-            <span className="badge badge-warn">API key</span>
+            <span className="badge badge-warn" title={status?.missingKeys?.length ? `Missing: ${status.missingKeys.join(", ")}` : undefined}>
+              API key
+            </span>
           )}
         </div>
       </header>

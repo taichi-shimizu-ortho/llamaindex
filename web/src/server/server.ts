@@ -9,7 +9,8 @@ import { runArticleQuery } from "./articleRag.js";
 import { runIntegratedQuery } from "./integratedRag.js";
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
-import { PATHS } from "./config.js";
+import { MODELS, PATHS } from "./config.js";
+import { modelLabel } from "../shared/modelLabel.js";
 
 const app = express();
 app.use((req, res, next) => {
@@ -33,7 +34,14 @@ if (fs.existsSync(PATHS.rawHtmlDir)) {
 // 状態確認
 app.get("/api/status", (_req, res) => {
   res.json({
-    hasApiKey: Boolean(process.env.OPENAI_API_KEY),
+    // 回答生成は Anthropic、埋め込みと翻訳は OpenAI なので両方の鍵が要る。
+    hasApiKey: Boolean(process.env.OPENAI_API_KEY && process.env.ANTHROPIC_API_KEY),
+    missingKeys: [
+      process.env.OPENAI_API_KEY ? "" : "OPENAI_API_KEY",
+      process.env.ANTHROPIC_API_KEY ? "" : "ANTHROPIC_API_KEY",
+    ].filter(Boolean),
+    llmModel: MODELS.llm,
+    llmLabel: modelLabel(MODELS.llm),
   });
 });
 
@@ -303,6 +311,10 @@ function resultMarkdown(result: any): string {
   if (result.enQuery && result.enQuery !== result.originalQuery) {
     parts.push("", `*EN: ${result.enQuery}*`);
   }
+  if (result.model) {
+    const ids = String(result.model).split(/,\s*/);
+    parts.push("", `*Model: ${ids.map((id) => `${modelLabel(id)} (${id})`).join(", ")}*`);
+  }
   if (Array.isArray(result.sections) && result.sections.length) {
     parts.push("", `*Sections: ${result.sections.join(", ")}*`);
   }
@@ -363,5 +375,7 @@ if (fs.existsSync(clientDist)) {
 
 app.listen(PORT, () => {
   console.log(`[server] http://localhost:${PORT}`);
-  console.log(`[server] api ready: ${Boolean(process.env.OPENAI_API_KEY) ? "with OPENAI_API_KEY" : "missing OPENAI_API_KEY"}`);
+  const missing = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"].filter((key) => !process.env[key]);
+  console.log(`[server] answer model: ${modelLabel(MODELS.llm)} (${MODELS.llm})`);
+  console.log(`[server] api ready: ${missing.length ? `missing ${missing.join(", ")}` : "with OPENAI_API_KEY and ANTHROPIC_API_KEY"}`);
 });

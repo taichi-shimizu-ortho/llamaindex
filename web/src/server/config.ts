@@ -45,7 +45,8 @@ export const PATHS = {
 };
 
 export const MODELS = {
-  llm: "gpt-5.6-terra",
+  // 回答生成は Claude（ANTHROPIC_API_KEY）。埋め込みと翻訳は OpenAI（OPENAI_API_KEY）。
+  llm: "claude-sonnet-5-5",
   embed: "text-embedding-3-small",
   translate: "gpt-5.6-terra",
 };

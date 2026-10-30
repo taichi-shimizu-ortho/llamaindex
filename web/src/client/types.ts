@@ -1,5 +1,8 @@
 export interface Status {
   hasApiKey: boolean;
+  missingKeys: string[];
+  llmModel: string;
+  llmLabel: string;
 }
 
 export interface ReferenceRecord {
@@ -50,6 +53,7 @@ export interface ReferenceQueryResult {
   originalQuery: string;
   enQuery: string;
   answer: string;
+  model?: string;
   sources: {
     score: number;
     refIndex: number | string;
@@ -102,6 +106,7 @@ export interface ArticleQueryResult {
   enQuery: string;
   sections?: string[];
   answer: string;
+  model?: string;
   sources: {
     scope: "main_article";
     score: number;
@@ -127,6 +132,7 @@ export interface IntegratedQueryResult {
   enQuery: string;
   sections?: string[];
   answer: string;
+  model?: string;
   articleAnswer: string;
   referenceAnswer: string;
   sources: {

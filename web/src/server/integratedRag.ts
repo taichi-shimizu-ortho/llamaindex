@@ -30,6 +30,8 @@ export interface IntegratedQueryResult {
   originalQuery: string;
   enQuery: string;
   sections: string[];
+  // 回答を生成したモデル（本文側と抄録側で違えば両方）
+  model: string;
   answer: string;
   articleAnswer: string;
   referenceAnswer: string;
@@ -98,6 +100,7 @@ export async function runIntegratedQuery(
     originalQuery,
     enQuery,
     sections: article.sections,
+    model: [...new Set([article.model, references.model])].join(", "),
     answer: [
       "## Main article",
       article.answer,

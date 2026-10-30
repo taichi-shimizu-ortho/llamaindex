@@ -1,6 +1,7 @@
 import OpenAIClient from "openai";
 import { MODELS, EXCLUDE_FROM_ARTICLE_INDEX } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
+import { generateAnswer, type LlmAnswer } from "./llm.js";
 import { loadArticleSet, type ArticleSet } from "./articleHarvester.js";
 
 // 1パラグラフ = 1検索・表示単位。テキストとメタデータを保持する。
@@ -146,12 +147,13 @@ export interface ArticleQueryResult {
   // 絞り込んだ大見出し（未指定なら空 = 全セクション）
   sections: string[];
   answer: string;
+  // 回答を生成したモデル
+  model: string;
   sources: ArticleQuerySource[];
 }
 
-async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySource[]): Promise<string> {
-  if (!sources.length) return "";
-  const client = new OpenAIClient();
+async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySource[]): Promise<LlmAnswer> {
+  if (!sources.length) return { text: "", model: MODELS.llm };
   const context = sources
     .map((source, i) => {
       const section = source.subsection ? `${source.section} > ${source.subsection}` : source.section;
@@ -166,15 +168,7 @@ async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySou
     "Always answer in English, regardless of the language of the user's query."
   ].join(" ");
 
-  const input = `System Instructions:\n${systemInstruction}\n\nArticle Passages:\n\n${context}\n\nQuestion: ${enQuery}`;
-
-  const res = await (client as any).responses.create({
-    model: MODELS.llm,
-    reasoning: { effort: "high" },
-    input,
-  });
-
-  return res.output_text?.trim() ?? "";
+  return generateAnswer(systemInstruction, `Article Passages:\n\n${context}\n\nQuestion: ${enQuery}`);
 }
 
 export async function runArticleQuery(
@@ -214,9 +208,9 @@ export async function runArticleQuery(
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
 
-  const answer = await synthesizeArticleAnswer(enQuery, sources);
+  const { text: answer, model } = await synthesizeArticleAnswer(enQuery, sources);
 
-  return { articleId, originalQuery, enQuery, sections, answer, sources };
+  return { articleId, originalQuery, enQuery, sections, answer, model, sources };
 }
 
 function normalizeSections(value: unknown): string[] {

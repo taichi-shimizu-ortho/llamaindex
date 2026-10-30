@@ -94,6 +94,7 @@ body {
 }
 .badge-ok { background: rgba(110, 231, 183, 0.15); color: var(--accent-2); }
 .badge-warn { background: rgba(240, 180, 41, 0.15); color: var(--warn); }
+.badge-model { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot-gray { background: var(--muted); }
 

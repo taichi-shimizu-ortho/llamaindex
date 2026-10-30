@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage, safeJson } from "./api.js";
 import { ArticleContentBrowser } from "./ArticleBrowser.js";
 import { MarkdownText, ReferenceMapContext } from "./markdown.js";
+import { modelLabel } from "../shared/modelLabel.js";
 import {
   AnswerBlock,
   ArticleResultSource,
@@ -288,6 +289,11 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
             <div className="answer-card">
               <div className="answer-head">
                 <h2>Answer</h2>
+                {result.model && (
+                  <span className="trans" title={result.model}>
+                    {result.model.split(/,\s*/).map(modelLabel).join(", ")}
+                  </span>
+                )}
                 {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
                 {"sections" in result && result.sections?.length ? (
                   <span className="trans">Sections: {result.sections.join(", ")}</span>
