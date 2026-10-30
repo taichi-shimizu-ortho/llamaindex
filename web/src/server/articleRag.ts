@@ -143,6 +143,8 @@ export interface ArticleQueryResult {
   articleId: string;
   originalQuery: string;
   enQuery: string;
+  // 絞り込んだ大見出し（未指定なら空 = 全セクション）
+  sections: string[];
   answer: string;
   sources: ArticleQuerySource[];
 }
@@ -178,17 +180,22 @@ async function synthesizeArticleAnswer(enQuery: string, sources: ArticleQuerySou
 export async function runArticleQuery(
   articleId: string,
   originalQuery: string,
-  opts: { topK?: number; translate?: boolean; enQuery?: string } = {},
+  opts: { topK?: number; translate?: boolean; enQuery?: string; sections?: string[] } = {},
 ): Promise<ArticleQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
   const { items, embeddings } = await getArticleIndex(articleId);
+  // 大見出しのタイトルで検索対象を絞る。埋め込みは全段落分を共有し、候補だけを減らす。
+  const sections = normalizeSections(opts.sections);
+  const allowed = sections.length ? new Set(sections) : null;
+  const candidates = items.map((item, i) => ({ item, i })).filter(({ item }) => !allowed || allowed.has(item.meta.section));
+  if (!candidates.length) throw new Error(`No paragraphs in the selected sections: ${sections.join(", ")}`);
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = opts.enQuery ?? (shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery);
 
   // クエリを埋め込み、各パラグラフとのコサイン類似度で上位topKを選ぶ。
   const queryVec = await embedModel().getTextEmbedding(enQuery);
-  const sources: ArticleQuerySource[] = items
-    .map((item, i): ArticleQuerySource => ({
+  const sources: ArticleQuerySource[] = candidates
+    .map(({ item, i }): ArticleQuerySource => ({
       scope: "main_article",
       score: cosineSimilarity(queryVec, embeddings[i]),
       title: item.meta.title,
@@ -209,5 +216,10 @@ export async function runArticleQuery(
 
   const answer = await synthesizeArticleAnswer(enQuery, sources);
 
-  return { articleId, originalQuery, enQuery, answer, sources };
+  return { articleId, originalQuery, enQuery, sections, answer, sources };
+}
+
+function normalizeSections(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.map((v) => String(v ?? "").trim()).filter(Boolean))];
 }

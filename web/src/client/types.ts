@@ -100,6 +100,7 @@ export interface ArticleQueryResult {
   articleId: string;
   originalQuery: string;
   enQuery: string;
+  sections?: string[];
   answer: string;
   sources: {
     scope: "main_article";
@@ -124,6 +125,7 @@ export interface IntegratedQueryResult {
   referenceSetId: string;
   originalQuery: string;
   enQuery: string;
+  sections?: string[];
   answer: string;
   articleAnswer: string;
   referenceAnswer: string;

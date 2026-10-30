@@ -29,6 +29,7 @@ export interface IntegratedQueryResult {
   referenceSetId: string;
   originalQuery: string;
   enQuery: string;
+  sections: string[];
   answer: string;
   articleAnswer: string;
   referenceAnswer: string;
@@ -60,14 +61,14 @@ export async function runIntegratedQuery(
   articleId: string,
   referenceSetId: string,
   originalQuery: string,
-  opts: { topK?: number; translate?: boolean } = {},
+  opts: { topK?: number; translate?: boolean; sections?: string[] } = {},
 ): Promise<IntegratedQueryResult> {
   const topK = Math.max(1, Math.min(20, Number(opts.topK ?? 5)));
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery;
 
   const [article, references] = await Promise.all([
-    runArticleQuery(articleId, originalQuery, { topK, translate: false, enQuery }),
+    runArticleQuery(articleId, originalQuery, { topK, translate: false, enQuery, sections: opts.sections }),
     runReferenceQuery(referenceSetId, originalQuery, { topK, translate: false, enQuery }),
   ]);
 
@@ -96,6 +97,7 @@ export async function runIntegratedQuery(
     referenceSetId,
     originalQuery,
     enQuery,
+    sections: article.sections,
     answer: [
       "## Main article",
       article.answer,

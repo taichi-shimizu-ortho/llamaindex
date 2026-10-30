@@ -174,10 +174,10 @@ app.post("/api/article/harvest", async (req, res) => {
 });
 
 app.post("/api/article/query", async (req, res) => {
-  const { articleId, query, topK, translate } = req.body ?? {};
+  const { articleId, query, topK, translate, sections } = req.body ?? {};
   if (!articleId || !query) return res.status(400).json({ error: "Specify an article JSON and a query" });
   try {
-    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate });
+    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate, sections });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -186,12 +186,12 @@ app.post("/api/article/query", async (req, res) => {
 });
 
 app.post("/api/integrated/query", async (req, res) => {
-  const { articleId, referenceSetId, query, topK, translate } = req.body ?? {};
+  const { articleId, referenceSetId, query, topK, translate, sections } = req.body ?? {};
   if (!articleId || !referenceSetId || !query) {
     return res.status(400).json({ error: "Specify an article JSON, a reference set, and a query" });
   }
   try {
-    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate });
+    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate, sections });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -302,6 +302,9 @@ function resultMarkdown(result: any): string {
   ];
   if (result.enQuery && result.enQuery !== result.originalQuery) {
     parts.push("", `*EN: ${result.enQuery}*`);
+  }
+  if (Array.isArray(result.sections) && result.sections.length) {
+    parts.push("", `*Sections: ${result.sections.join(", ")}*`);
   }
 
   if ("articleAnswer" in result) {

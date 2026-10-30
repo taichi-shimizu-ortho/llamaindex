@@ -12,6 +12,7 @@ import {
 } from "./Sources.js";
 import type {
   ArticleQueryResult,
+  ArticleSection,
   ArticleSet,
   IntegratedQueryResult,
   ReferenceQueryResult,
@@ -21,6 +22,15 @@ import type {
 
 type SearchMode = "integrated" | "article" | "reference";
 type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult;
+
+// 検索対象にできる大見出し。サーバの索引と同じく abstract を除き、本文が無いときだけ abstract を残す。
+function searchableSections(sections: ArticleSection[]): string[] {
+  const hasText = (section: ArticleSection) =>
+    section.paragraphs.length > 0 || section.subsections.some((sub) => sub.paragraphs.length > 0);
+  const withText = sections.filter(hasText);
+  const body = withText.filter((section) => section.type !== "abstract");
+  return [...new Set((body.length ? body : withText).map((section) => section.title))];
+}
 
 function sessionStamp(): string {
   const d = new Date();
@@ -53,6 +63,8 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
   const [topK, setTopK] = useState(5);
   const [translate, setTranslate] = useState(true);
   const [searchMode, setSearchMode] = useState<SearchMode>("integrated");
+  // 空 = 全セクション
+  const [sections, setSections] = useState<string[]>([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [savedFile, setSavedFile] = useState("");
@@ -65,8 +77,15 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
     return map;
   }, [referenceSet]);
 
+  const sectionOptions = useMemo(() => searchableSections(article?.sections ?? []), [article]);
+
+  function toggleSection(title: string) {
+    setSections((prev) => (prev.includes(title) ? prev.filter((s) => s !== title) : [...prev, title]));
+  }
+
   // 対象ドキュメントが変わったら前の検索結果は破棄する。
   useEffect(() => {
+    setSections([]);
     setResult(null);
     setSavedFile("");
     setError("");
@@ -88,9 +107,9 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
             : "/api/reference/query";
       const payload =
         searchMode === "article"
-          ? { articleId: article?.id, query: query.trim(), topK, translate }
+          ? { articleId: article?.id, query: query.trim(), topK, translate, sections }
           : searchMode === "integrated"
-            ? { articleId: article?.id, referenceSetId: referenceSet?.id, query: query.trim(), topK, translate }
+            ? { articleId: article?.id, referenceSetId: referenceSet?.id, query: query.trim(), topK, translate, sections }
             : { setId: referenceSet?.id, query: query.trim(), topK, translate };
       const res = await fetch(endpoint, {
         method: "POST",
@@ -243,6 +262,23 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
               Search
             </button>
           </div>
+          {searchMode !== "reference" && sectionOptions.length > 1 && (
+            <div className="section-filter">
+              <span className="section-filter-label">Sections</span>
+              <button className={sections.length ? "fchip" : "fchip active"} onClick={() => setSections([])}>
+                All
+              </button>
+              {sectionOptions.map((title) => (
+                <button
+                  key={title}
+                  className={sections.includes(title) ? "fchip active" : "fchip"}
+                  onClick={() => toggleSection(title)}
+                >
+                  {title}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {article && <ArticleContentBrowser article={article} />}
@@ -253,6 +289,9 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
               <div className="answer-head">
                 <h2>Answer</h2>
                 {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
+                {"sections" in result && result.sections?.length ? (
+                  <span className="trans">Sections: {result.sections.join(", ")}</span>
+                ) : null}
               </div>
               {"articleAnswer" in result ? (
                 <div className="answer-split">
