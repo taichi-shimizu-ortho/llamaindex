@@ -74,7 +74,7 @@ function ReportView({ report }: { report: ZoteroSyncReport }) {
               <li key={entry.documentId}>
                 <span className="doc-id">{entry.documentId}</span>
                 <span className="panel-note">
-                  filed under {entry.chosen} (also in {entry.others.join(", ")})
+                  filed under {entry.chosen}; also listed and searched in {entry.others.join(", ")}
                 </span>
               </li>
             ))}
@@ -238,7 +238,7 @@ export function ZoteroPanel({
 
       <p className="panel-note zotero-hint">
         Folders from Zotero follow your collections; Zotero is never written to. Documents in several collections are
-        filed under the first one in the collection tree.
+        filed under the first one in the collection tree, but still appear in (and are searched with) every collection.
       </p>
     </section>
   );

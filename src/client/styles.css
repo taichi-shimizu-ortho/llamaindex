@@ -1237,6 +1237,10 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
 }
+.rag-toolbar .rag-scope {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
 .empty-state .primary { margin: 14px auto 0; display: block; }
 
 @media (max-width: 720px) {

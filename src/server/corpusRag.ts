@@ -247,6 +247,8 @@ export interface CorpusSource {
 
 export interface CorpusQueryResult {
   scope: "corpus";
+  // 検索対象の説明（例: "Folder: Rxfp1 / Clinical"）。md の見出しに残す。
+  scopeLabel: string;
   articleIds: string[];
   papers: CorpusPaper[];
   skipped: CorpusSkipped[];
@@ -267,6 +269,7 @@ export interface CorpusQueryOptions {
   perPaper?: number;
   sectionGroups?: unknown;
   translate?: boolean;
+  scopeLabel?: unknown;
 }
 
 const ALL_GROUPS: SectionGroup[] = ["intro", "methods", "results", "discussion", "conclusion", "figure", "table", "other"];
@@ -383,6 +386,7 @@ export async function runCorpusQuery(
 
   return {
     scope: "corpus",
+    scopeLabel: String(opts.scopeLabel ?? "").replace(/\s+/g, " ").trim().slice(0, 200),
     articleIds: papers.map((p) => p.id),
     papers,
     skipped,
