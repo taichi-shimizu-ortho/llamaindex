@@ -1,23 +1,24 @@
-// アプリのシェル。ドキュメント選択画面（Documents）とRAG画面（RAG）を切り替える。
-// データの読み込みはここに集約し、各画面は受け取った値の表示に専念する。
-import { useEffect, useState } from "react";
+// アプリのシェル。ドキュメント選択画面（Documents）と複数論文RAG画面（RAG）を切り替える。
+// データの読み込みと、RAG の対象にする論文の選択（corpus）はここに集約する。
+import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
-import { matchingReferenceSet } from "./documents.js";
 import { LibraryScreen } from "./LibraryScreen.js";
 import { RagScreen } from "./RagScreen.js";
-import type {
-  ArticleSet,
-  ArticleSetSummary,
-  LibraryState,
-  ReferenceSet,
-  ReferenceSetSummary,
-  Status,
-} from "./types.js";
+import type { ArticleSetSummary, LibraryState, ReferenceSetSummary, Status } from "./types.js";
 
 type Theme = "light" | "dark";
 type Screen = "library" | "rag";
 
-const LAST_DOCUMENT_KEY = "lastDocumentId";
+const CORPUS_KEY = "corpusIds";
+
+function initialCorpus(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CORPUS_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 function initialTheme(): Theme {
   const saved = localStorage.getItem("theme");
@@ -34,10 +35,8 @@ export function App() {
   const [articleSets, setArticleSets] = useState<ArticleSetSummary[]>([]);
   const [referenceSets, setReferenceSets] = useState<ReferenceSetSummary[]>([]);
   const [library, setLibrary] = useState<LibraryState>(EMPTY_LIBRARY);
-  const [selectedDocumentId, setSelectedDocumentId] = useState("");
-  const [currentArticle, setCurrentArticle] = useState<ArticleSet | null>(null);
-  const [currentSet, setCurrentSet] = useState<ReferenceSet | null>(null);
-  const [loading, setLoading] = useState("");
+  const [corpusIds, setCorpusIds] = useState<string[]>(initialCorpus);
+  const [loading, setLoading] = useState("Loading documents...");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -45,7 +44,11 @@ export function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  async function refreshLists(): Promise<{ articles: ArticleSetSummary[]; references: ReferenceSetSummary[] }> {
+  useEffect(() => {
+    localStorage.setItem(CORPUS_KEY, JSON.stringify(corpusIds));
+  }, [corpusIds]);
+
+  async function refreshLists(): Promise<void> {
     const [articles, references, nextLibrary] = await Promise.all([
       api.articleSets(),
       api.referenceSets(),
@@ -54,51 +57,29 @@ export function App() {
     setArticleSets(articles);
     setReferenceSets(references);
     setLibrary(nextLibrary);
-    return { articles, references };
-  }
-
-  // ドキュメントを選び直す。主論文JSONと、対応する参照文献JSONをまとめて読み込む。
-  async function loadDocument(id: string, summaries?: ReferenceSetSummary[]): Promise<void> {
-    setError("");
-    setLoading("Loading document...");
-    try {
-      const article = await api.articleSet(id);
-      setCurrentArticle(article);
-      setSelectedDocumentId(id);
-      localStorage.setItem(LAST_DOCUMENT_KEY, id);
-
-      const references = summaries ?? (referenceSets.length ? referenceSets : await api.referenceSets());
-      const match = matchingReferenceSet(id, references);
-      setCurrentSet(match ? await api.referenceSet(match.id) : null);
-    } catch (e) {
-      setError(errorMessage(e));
-      throw e;
-    } finally {
-      setLoading("");
-    }
-  }
-
-  function openDocument(id: string) {
-    loadDocument(id)
-      .then(() => setScreen("rag"))
-      .catch(() => undefined);
   }
 
   useEffect(() => {
     api.status().then(setStatus).catch(() => setStatus(null));
     refreshLists()
-      .then(({ articles, references }) => {
-        // 前回開いていたドキュメントがまだあれば、画面は移さずに読み込んでおく。
-        const last = localStorage.getItem(LAST_DOCUMENT_KEY) ?? "";
-        if (last && articles.some((set) => set.id === last)) {
-          return loadDocument(last, references).catch(() => undefined);
-        }
-        return undefined;
-      })
-      .catch((e) => setError(errorMessage(e)));
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setLoading(""));
   }, []);
 
-  const hasDocument = Boolean(currentArticle || currentSet);
+  // 消えた論文（再取り込みで ID が変わった等）は選択から外す。選択順は保つ。
+  const corpusPapers = useMemo(() => {
+    const byId = new Map(articleSets.map((set) => [set.id, set]));
+    return corpusIds.flatMap((id) => byId.get(id) ?? []);
+  }, [articleSets, corpusIds]);
+
+  function setSelected(ids: string[], selected: boolean) {
+    setCorpusIds((prev) => {
+      if (!selected) return prev.filter((id) => !ids.includes(id));
+      const next = [...prev];
+      for (const id of ids) if (!next.includes(id)) next.push(id);
+      return next;
+    });
+  }
 
   return (
     <div className="app">
@@ -106,8 +87,8 @@ export function App() {
         <div className="brand">
           <span className="logo-mark">R</span>
           <div>
-            <h1>Reference Abstract RAG</h1>
-            <p className="subtitle">HTML references → PubMed abstracts → JSON search</p>
+            <h1>Corpus RAG</h1>
+            <p className="subtitle">Ask across 10–30 papers · paragraph search with paper metadata</p>
           </div>
         </div>
 
@@ -121,10 +102,10 @@ export function App() {
           <button
             className={screen === "rag" ? "nav-btn active" : "nav-btn"}
             onClick={() => setScreen("rag")}
-            disabled={!hasDocument}
-            title={hasDocument ? undefined : "Select a document first"}
+            disabled={!corpusPapers.length}
+            title={corpusPapers.length ? undefined : "Select papers first"}
           >
-            RAG
+            RAG{corpusPapers.length ? ` (${corpusPapers.length})` : ""}
           </button>
         </nav>
 
@@ -161,22 +142,22 @@ export function App() {
             articleSets={articleSets}
             referenceSets={referenceSets}
             library={library}
-            selectedDocumentId={selectedDocumentId}
+            selectedIds={corpusIds}
             loading={loading}
             onLibraryChange={setLibrary}
-            onRefresh={async () => {
-              await refreshLists();
-            }}
-            onOpenDocument={openDocument}
+            onRefresh={refreshLists}
+            onSelect={setSelected}
+            onClearSelection={() => setCorpusIds([])}
+            onAsk={() => setScreen("rag")}
             onError={setError}
           />
         </div>
 
         <div className="screen" hidden={screen !== "rag"}>
           <RagScreen
-            article={currentArticle}
-            referenceSet={currentSet}
-            loading={loading}
+            papers={corpusPapers}
+            active={screen === "rag"}
+            onRemove={(id) => setSelected([id], false)}
             onBackToLibrary={() => setScreen("library")}
           />
         </div>

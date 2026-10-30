@@ -1,11 +1,12 @@
 // サーバAPIの薄いラッパ。エラーはすべて Error として投げ直す。
 import type {
-  ArticleSet,
   ArticleSetSummary,
+  CorpusPrepareResult,
+  CorpusQueryResult,
   ImportReport,
   LibraryState,
-  ReferenceSet,
   ReferenceSetSummary,
+  SectionGroup,
   Status,
   ZoteroStatus,
   ZoteroSyncReport,
@@ -43,14 +44,20 @@ export interface ImportRequest {
   limit?: number;
 }
 
+export interface CorpusQueryRequest {
+  articleIds: string[];
+  query: string;
+  topK: number;
+  perPaper: number;
+  sectionGroups: SectionGroup[];
+  translate: boolean;
+}
+
 export const api = {
   status: () => requestJson<Status>("/api/status"),
 
   articleSets: () => requestJson<{ sets: ArticleSetSummary[] }>("/api/article/sets").then((d) => d.sets ?? []),
-  articleSet: (id: string) => requestJson<ArticleSet>(`/api/article/sets/${encodeURIComponent(id)}`),
-
   referenceSets: () => requestJson<{ sets: ReferenceSetSummary[] }>("/api/reference/sets").then((d) => d.sets ?? []),
-  referenceSet: (id: string) => requestJson<ReferenceSet>(`/api/reference/sets/${encodeURIComponent(id)}`),
 
   importDocument: (body: ImportRequest) => postJson<ImportReport>("/api/import/ors", body),
 
@@ -70,6 +77,10 @@ export const api = {
   // dryRun=true なら library.json は書かれず、同期結果の見込みだけ返る。
   zoteroSync: (dryRun: boolean) =>
     postJson<{ library: LibraryState; report: ZoteroSyncReport }>("/api/zotero/sync", { dryRun }),
+
+  // 選んだ論文の埋め込みを先に用意する（キャッシュ済みならすぐ返る）。
+  corpusPrepare: (articleIds: string[]) => postJson<CorpusPrepareResult>("/api/corpus/prepare", { articleIds }),
+  corpusQuery: (body: CorpusQueryRequest) => postJson<CorpusQueryResult>("/api/corpus/query", body),
 
   saveSession: (sessionId: string, result: unknown) =>
     postJson<{ file?: string }>("/api/session/save", { sessionId, result }),

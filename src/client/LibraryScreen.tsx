@@ -1,5 +1,5 @@
 // ドキュメント選択・取り込み画面。
-// 取り込んだ主論文JSONをフォルダに整理し、RAG画面へ渡す文献を選ぶ。
+// 取り込んだ主論文JSONをフォルダに整理し、複数論文RAGの対象にする論文をチェックで選ぶ。
 import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import type { ImportRequest } from "./api.js";
@@ -33,11 +33,14 @@ interface LibraryScreenProps {
   articleSets: ArticleSetSummary[];
   referenceSets: ReferenceSetSummary[];
   library: LibraryState;
-  selectedDocumentId: string;
+  // RAG の対象（corpus）に入っている論文
+  selectedIds: string[];
   loading: string;
   onLibraryChange: (next: LibraryState) => void;
   onRefresh: () => Promise<void>;
-  onOpenDocument: (id: string) => void;
+  onSelect: (ids: string[], selected: boolean) => void;
+  onClearSelection: () => void;
+  onAsk: () => void;
   onError: (message: string) => void;
 }
 
@@ -410,7 +413,7 @@ function DocumentCard({
   selected,
   zoteroKey,
   zoteroAdded,
-  onOpen,
+  onToggle,
   onAssign,
   onDragItem,
 }: {
@@ -421,7 +424,7 @@ function DocumentCard({
   selected: boolean;
   zoteroKey?: string;
   zoteroAdded?: string;
-  onOpen: () => void;
+  onToggle: () => void;
   onAssign: (folderId: string) => void;
   onDragItem: (item: DragItem | null) => void;
 }) {
@@ -433,13 +436,20 @@ function DocumentCard({
       onDragEnd={() => onDragItem(null)}
     >
       <div className="doc-card-head">
+        <input
+          className="doc-select"
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          aria-label={`Include ${set.id} in the RAG corpus`}
+        />
         <h3 className="doc-title">{documentLabel(set)}</h3>
         {zoteroKey && (
           <span className="pill zotero-pill" title={`Linked to Zotero item ${zoteroKey}`}>
             Zotero
           </span>
         )}
-        {selected && <span className="pill ok">In RAG</span>}
+        {selected && <span className="pill ok">In corpus</span>}
       </div>
 
       <div className="doc-meta">
@@ -464,9 +474,6 @@ function DocumentCard({
           Folder
           <FolderSelect folders={folders} value={folderId} onChange={onAssign} ariaLabel="Move document to folder" />
         </label>
-        <button className="primary" onClick={onOpen}>
-          Open in RAG
-        </button>
       </div>
     </article>
   );
@@ -476,11 +483,13 @@ export function LibraryScreen({
   articleSets,
   referenceSets,
   library,
-  selectedDocumentId,
+  selectedIds,
   loading,
   onLibraryChange,
   onRefresh,
-  onOpenDocument,
+  onSelect,
+  onClearSelection,
+  onAsk,
   onError,
 }: LibraryScreenProps) {
   const [view, setView] = useState<FolderView>("all");
@@ -547,6 +556,10 @@ export function LibraryScreen({
       return sortDir === "desc" ? vb - va : va - vb;
     });
   }, [articleSets, assignments, folders, view, includeSubfolders, filter, sortDir, zoteroDates]);
+
+  const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const visibleSelected = visibleDocuments.filter((set) => selected.has(set.id)).length;
+  const allVisibleSelected = visibleDocuments.length > 0 && visibleSelected === visibleDocuments.length;
 
   const viewTitle =
     view === "all" ? "All documents" : view === "unfiled" ? "Unfiled" : folderPath(folders, view) || "Folder";
@@ -771,6 +784,30 @@ export function LibraryScreen({
             </div>
           </div>
 
+          <div className="corpus-bar">
+            <label className="ctrl">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                disabled={!visibleDocuments.length}
+                onChange={(e) => onSelect(visibleDocuments.map((set) => set.id), e.target.checked)}
+              />
+              Select all {visibleDocuments.length} here
+            </label>
+            <span className="panel-note">
+              {selectedIds.length} selected for RAG
+              {selectedIds.length > visibleSelected ? ` (${selectedIds.length - visibleSelected} outside this view)` : ""}
+            </span>
+            {selectedIds.length > 0 && (
+              <button className="ghost" onClick={onClearSelection}>
+                Clear
+              </button>
+            )}
+            <button className="primary" onClick={onAsk} disabled={!selectedIds.length}>
+              Ask {selectedIds.length || ""} papers →
+            </button>
+          </div>
+
           {loading && (
             <div className="loading inline-loading">
               <div className="spinner" />
@@ -787,10 +824,10 @@ export function LibraryScreen({
                   folders={folders}
                   folderId={assignments[set.id] ?? ""}
                   referenceSet={referenceByDocument.get(set.id)}
-                  selected={set.id === selectedDocumentId}
+                  selected={selected.has(set.id)}
                   zoteroKey={library.zoteroLinks?.[set.id]}
                   zoteroAdded={zoteroDates[set.id]}
-                  onOpen={() => onOpenDocument(set.id)}
+                  onToggle={() => onSelect([set.id], !selected.has(set.id))}
                   onAssign={(folderId) => run(() => api.assignDocument(set.id, folderId || null))}
                   onDragItem={setDragItem}
                 />

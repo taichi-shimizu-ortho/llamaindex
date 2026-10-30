@@ -28,17 +28,6 @@ export interface ReferenceRecord {
   error?: string;
 }
 
-export interface ReferenceSet {
-  id: string;
-  sourceUrl: string;
-  title: string;
-  createdAt: string;
-  totalReferences: number;
-  pubmedFound: number;
-  abstractFound: number;
-  records: ReferenceRecord[];
-}
-
 export interface ReferenceSetSummary {
   id: string;
   title: string;
@@ -46,49 +35,6 @@ export interface ReferenceSetSummary {
   totalReferences: number;
   abstractFound: number;
   createdAt: string;
-}
-
-export interface ReferenceQueryResult {
-  setId: string;
-  originalQuery: string;
-  enQuery: string;
-  answer: string;
-  model?: string;
-  sources: {
-    score: number;
-    refIndex: number | string;
-    title: string;
-    authors: string;
-    journal: string;
-    year: string;
-    doi: string;
-    pmid: string;
-    href: string;
-    referenceText: string;
-    abstract: string;
-    citationLabel: string;
-  }[];
-}
-
-export interface ArticleSection {
-  title: string;
-  type: string;
-  content: string;
-  paragraphs: string[];
-  subsections: { title: string; type?: string; content: string; paragraphs: string[] }[];
-}
-
-export interface ArticleSet {
-  id: string;
-  sourceUrl: string;
-  title: string;
-  authors: string[];
-  journal: string;
-  year: string;
-  doi: string;
-  createdAt: string;
-  sections: ArticleSection[];
-  chunkCount: number;
 }
 
 export interface ArticleSetSummary {
@@ -100,59 +46,67 @@ export interface ArticleSetSummary {
   createdAt: string;
 }
 
-export interface ArticleQueryResult {
-  articleId: string;
-  originalQuery: string;
-  enQuery: string;
-  sections?: string[];
-  answer: string;
-  model?: string;
-  sources: {
-    scope: "main_article";
-    score: number;
-    title: string;
-    authors: string;
-    journal: string;
-    year: string;
-    doi: string;
-    sourceUrl: string;
-    section: string;
-    subsection: string;
-    sectionType: string;
-    paragraphIndex: number | string;
-    totalParagraphs: number | string;
-    text: string;
-  }[];
+// ---- 複数論文 RAG（corpus） ----
+
+export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "figure" | "table" | "other";
+
+export interface CorpusPaper {
+  id: string;
+  label: string;
+  title: string;
+  authors: string;
+  year: string;
+  journal: string;
+  doi: string;
+  sourceUrl: string;
+  paragraphs: number;
+  hits: number;
 }
 
-export interface IntegratedQueryResult {
+export interface CorpusSkipped {
+  id: string;
+  error: string;
+}
+
+export interface CorpusPrepareResult {
+  papers: CorpusPaper[];
+  skipped: CorpusSkipped[];
+  totalParagraphs: number;
+}
+
+export interface CorpusSource {
+  n: number;
   articleId: string;
-  referenceSetId: string;
+  label: string;
+  score: number;
+  cited: boolean;
+  title: string;
+  authors: string;
+  year: string;
+  journal: string;
+  doi: string;
+  sourceUrl: string;
+  section: string;
+  subsection: string;
+  sectionGroup: SectionGroup;
+  paragraphIndex: number;
+  totalParagraphs: number;
+  text: string;
+}
+
+export interface CorpusQueryResult {
+  scope: "corpus";
+  articleIds: string[];
+  papers: CorpusPaper[];
+  skipped: CorpusSkipped[];
   originalQuery: string;
   enQuery: string;
-  sections?: string[];
+  sectionGroups: SectionGroup[];
+  topK: number;
+  perPaper: number;
   answer: string;
-  model?: string;
-  articleAnswer: string;
-  referenceAnswer: string;
-  sources: {
-    scope: "main_article" | "reference_abstract";
-    score: number;
-    label: string;
-    title: string;
-    authors: string;
-    journal: string;
-    year: string;
-    doi: string;
-    pmid: string;
-    href: string;
-    citationLabel?: string;
-    section: string;
-    subsection: string;
-    paragraphIndex: number | string;
-    totalParagraphs: number | string;
-    text: string;
-  }[];
+  model: string;
+  sources: CorpusSource[];
 }
 
 // ---- ドキュメント選択画面（フォルダ管理） ----

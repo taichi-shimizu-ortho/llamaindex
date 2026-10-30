@@ -1,37 +1,14 @@
-// ドキュメントRAG画面。選択済みの主論文JSON／参照文献JSONに対して検索する。
-import { useEffect, useMemo, useState } from "react";
-import { api, errorMessage, safeJson } from "./api.js";
-import { ArticleContentBrowser } from "./ArticleBrowser.js";
-import { MarkdownText, ReferenceMapContext } from "./markdown.js";
+// 複数論文 RAG 画面。Documents で選んだ論文（10〜30本を想定）を段落単位で横断検索し、
+// 回答中の [S3] から根拠の段落へ飛べるようにする。単一論文の読解は 50_article-json 側の全文検索に任せる。
+import { useEffect, useMemo, useRef, useState } from "react";
+import { api, errorMessage } from "./api.js";
+import { documentLabel } from "./documents.js";
+import { MarkdownText, PassageMapContext, type PassageMap } from "./markdown.js";
 import { modelLabel } from "../shared/modelLabel.js";
-import {
-  AnswerBlock,
-  ArticleResultSource,
-  IntegratedSources,
-  ReferenceRow,
-  ResultSource,
-} from "./Sources.js";
-import type {
-  ArticleQueryResult,
-  ArticleSection,
-  ArticleSet,
-  IntegratedQueryResult,
-  ReferenceQueryResult,
-  ReferenceRecord,
-  ReferenceSet,
-} from "./types.js";
+import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
+import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, SectionGroup } from "./types.js";
 
-type SearchMode = "integrated" | "article" | "reference";
-type QueryResultUnion = ReferenceQueryResult | ArticleQueryResult | IntegratedQueryResult;
-
-// 検索対象にできる大見出し。サーバの索引と同じく abstract を除き、本文が無いときだけ abstract を残す。
-function searchableSections(sections: ArticleSection[]): string[] {
-  const hasText = (section: ArticleSection) =>
-    section.paragraphs.length > 0 || section.subsections.some((sub) => sub.paragraphs.length > 0);
-  const withText = sections.filter(hasText);
-  const body = withText.filter((section) => section.type !== "abstract");
-  return [...new Set((body.length ? body : withText).map((section) => section.title))];
-}
+const SECTION_GROUPS = Object.keys(SECTION_GROUP_LABEL) as SectionGroup[];
 
 function sessionStamp(): string {
   const d = new Date();
@@ -53,72 +30,75 @@ function initialSessionId(): string {
 }
 
 interface RagScreenProps {
-  article: ArticleSet | null;
-  referenceSet: ReferenceSet | null;
-  loading: string;
+  // 選択中の論文（corpus）
+  papers: ArticleSetSummary[];
+  active: boolean;
+  onRemove: (id: string) => void;
   onBackToLibrary: () => void;
 }
 
-export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: RagScreenProps) {
+export function RagScreen({ papers, active, onRemove, onBackToLibrary }: RagScreenProps) {
   const [query, setQuery] = useState("");
-  const [topK, setTopK] = useState(5);
+  const [topK, setTopK] = useState(10);
+  const [perPaper, setPerPaper] = useState(3);
   const [translate, setTranslate] = useState(true);
-  const [searchMode, setSearchMode] = useState<SearchMode>("integrated");
-  // 空 = 全セクション
-  const [sections, setSections] = useState<string[]>([]);
+  // 空 = すべての節
+  const [groups, setGroups] = useState<SectionGroup[]>([]);
+  const [prepared, setPrepared] = useState<CorpusPrepareResult | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [savedFile, setSavedFile] = useState("");
   const [sessionId] = useState(initialSessionId);
-  const [result, setResult] = useState<QueryResultUnion | null>(null);
+  const [result, setResult] = useState<CorpusQueryResult | null>(null);
+  const [flash, setFlash] = useState(0);
+  const flashTimer = useRef<number | undefined>(undefined);
 
-  const referenceMap = useMemo(() => {
-    const map = new Map<number, ReferenceRecord>();
-    referenceSet?.records.forEach((record) => map.set(record.index, record));
-    return map;
-  }, [referenceSet]);
+  const ids = useMemo(() => papers.map((p) => p.id), [papers]);
+  const idsKey = ids.join("|");
 
-  const sectionOptions = useMemo(() => searchableSections(article?.sections ?? []), [article]);
+  // 画面を開いた時点で埋め込みを用意しておく（初回だけ時間がかかる）。
+  useEffect(() => {
+    if (!active || !ids.length) return;
+    let cancelled = false;
+    setPreparing(true);
+    setError("");
+    api
+      .corpusPrepare(ids)
+      .then((data) => !cancelled && setPrepared(data))
+      .catch((e) => !cancelled && setError(errorMessage(e)))
+      .finally(() => !cancelled && setPreparing(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [active, idsKey]);
 
-  function toggleSection(title: string) {
-    setSections((prev) => (prev.includes(title) ? prev.filter((s) => s !== title) : [...prev, title]));
+  const preparedById = useMemo(() => new Map(prepared?.papers.map((p) => [p.id, p]) ?? []), [prepared]);
+  const hitsById = useMemo(() => new Map(result?.papers.map((p) => [p.id, p.hits]) ?? []), [result]);
+
+  const passageMap = useMemo<PassageMap>(
+    () => ({
+      sources: new Map(result?.sources.map((s) => [s.n, s]) ?? []),
+      onOpen: (n) => {
+        document.getElementById(`passage-${n}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setFlash(n);
+        window.clearTimeout(flashTimer.current);
+        flashTimer.current = window.setTimeout(() => setFlash(0), 1600);
+      },
+    }),
+    [result],
+  );
+
+  function toggleGroup(group: SectionGroup) {
+    setGroups((prev) => (prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]));
   }
 
-  // 対象ドキュメントが変わったら前の検索結果は破棄する。
-  useEffect(() => {
-    setSections([]);
-    setResult(null);
-    setSavedFile("");
-    setError("");
-  }, [article?.id, referenceSet?.id]);
-
   async function search() {
-    if (!query.trim() || busy) return;
-    if (searchMode === "reference" && !referenceSet) return;
-    if (searchMode === "article" && !article) return;
-    if (searchMode === "integrated" && (!article || !referenceSet)) return;
+    if (!query.trim() || busy || !ids.length) return;
     setBusy(translate ? "Translating & searching..." : "Searching...");
     setError("");
     try {
-      const endpoint =
-        searchMode === "article"
-          ? "/api/article/query"
-          : searchMode === "integrated"
-            ? "/api/integrated/query"
-            : "/api/reference/query";
-      const payload =
-        searchMode === "article"
-          ? { articleId: article?.id, query: query.trim(), topK, translate, sections }
-          : searchMode === "integrated"
-            ? { articleId: article?.id, referenceSetId: referenceSet?.id, query: query.trim(), topK, translate, sections }
-            : { setId: referenceSet?.id, query: query.trim(), topK, translate };
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data: any = await safeJson(res);
-      if (!res.ok) throw new Error(data.error ?? "Search failed");
+      const data = await api.corpusQuery({ articleIds: ids, query: query.trim(), topK, perPaper, sectionGroups: groups, translate });
       setResult(data);
       const saved = await api.saveSession(sessionId, data);
       setSavedFile(saved.file ?? "");
@@ -136,155 +116,122 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
     }
   }
 
-  if (!article && !referenceSet) {
+  if (!papers.length) {
     return (
       <section className="main-panel">
-        {loading ? (
-          <div className="loading inline-loading">
-            <div className="spinner" />
-            <span>{loading}</span>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <h2>No document selected</h2>
-            <p>Pick a document on the Documents screen to start searching.</p>
-            <button className="primary" onClick={onBackToLibrary}>
-              Go to Documents
-            </button>
-          </div>
-        )}
+        <div className="empty-state">
+          <h2>No papers selected</h2>
+          <p>Tick papers on the Documents screen (or select a whole folder), then ask across them.</p>
+          <button className="primary" onClick={onBackToLibrary}>
+            Go to Documents
+          </button>
+        </div>
       </section>
     );
   }
 
+  const skipped = result?.skipped ?? prepared?.skipped ?? [];
+
   return (
-    <ReferenceMapContext.Provider value={referenceMap}>
-      <section className="main-panel">
-        <div className="rag-toolbar">
-          <button className="ghost" onClick={onBackToLibrary}>
-            ← Documents
-          </button>
-          <span className="panel-note">
-            {article?.id ?? "No article JSON"}
-            {referenceSet ? ` · ${referenceSet.id}` : " · no reference JSON"}
-          </span>
+    <section className="main-panel">
+      <div className="rag-toolbar">
+        <button className="ghost" onClick={onBackToLibrary}>
+          ← Documents
+        </button>
+        <span className="panel-note">
+          {papers.length} papers
+          {prepared ? ` · ${prepared.totalParagraphs} paragraphs indexed` : ""}
+        </span>
+      </div>
+
+      {preparing && (
+        <div className="loading inline-loading">
+          <div className="spinner" />
+          <span>Embedding {papers.length} papers (cached papers are instant)...</span>
         </div>
-
-        {loading && (
-          <div className="loading inline-loading">
-            <div className="spinner" />
-            <span>{loading}</span>
-          </div>
-        )}
-        {busy && (
-          <div className="loading inline-loading">
-            <div className="spinner" />
-            <span>{busy}</span>
-          </div>
-        )}
-        {error && <div className="error">{error}</div>}
-
-        <div className="dataset-summary">
-          <div className="article-meta-header">
-            {article && article.year && <div className="article-year">{article.year}</div>}
-            <h2>{article?.title || referenceSet?.title || referenceSet?.id}</h2>
-            {article && article.authors && article.authors.length > 0 && (
-              <div className="article-authors">{article.authors.join(", ")}</div>
-            )}
-            <p className="article-source-url">
-              <a href={article?.sourceUrl || referenceSet?.sourceUrl} target="_blank" rel="noreferrer">
-                {article?.sourceUrl || referenceSet?.sourceUrl}
-              </a>
-            </p>
-          </div>
-          <div className="summary-grid">
-            <div>
-              <strong>{article?.sections.length ?? 0}</strong>
-              <span>sections</span>
-            </div>
-            <div>
-              <strong>{article?.chunkCount ?? 0}</strong>
-              <span>paragraphs</span>
-            </div>
-            <div>
-              <strong>
-                {referenceSet?.abstractFound ?? 0}
-                <span className="summary-subvalue">/{referenceSet?.totalReferences ?? 0}</span>
-              </strong>
-              <span>abstract</span>
-            </div>
-          </div>
+      )}
+      {busy && (
+        <div className="loading inline-loading">
+          <div className="spinner" />
+          <span>{busy}</span>
         </div>
+      )}
+      {error && <div className="error">{error}</div>}
+      {skipped.length > 0 && (
+        <div className="error">
+          Skipped: {skipped.map((s) => `${s.id} (${s.error})`).join(", ")}
+        </div>
+      )}
 
-        <section className="query-panel embedded-query">
-          <textarea
-            className="query-input"
-            placeholder="Enter your question"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={onQueryKey}
-            rows={3}
-          />
-          <div className="controls">
-            <label className="ctrl">
-              Scope
-              <select value={searchMode} onChange={(e) => setSearchMode(e.target.value as SearchMode)}>
-                <option value="integrated">Integrated</option>
-                <option value="article">Article</option>
-                <option value="reference">Abstract</option>
-              </select>
-            </label>
-            <label className="ctrl">
-              <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
-              JA→EN
-            </label>
-            <label className="ctrl">
-              Top-K
-              <input
-                className="topk"
-                type="number"
-                min={1}
-                max={20}
-                value={topK}
-                onChange={(e) => setTopK(Number(e.target.value))}
-              />
-            </label>
-            <button
-              className="primary"
-              onClick={search}
-              disabled={
-                Boolean(busy) ||
-                !query.trim() ||
-                (searchMode === "article" && !article) ||
-                (searchMode === "reference" && !referenceSet) ||
-                (searchMode === "integrated" && (!article || !referenceSet))
-              }
-            >
-              Search
-            </button>
-          </div>
-          {searchMode !== "reference" && sectionOptions.length > 1 && (
-            <div className="section-filter">
-              <span className="section-filter-label">Sections</span>
-              <button className={sections.length ? "fchip" : "fchip active"} onClick={() => setSections([])}>
-                All
-              </button>
-              {sectionOptions.map((title) => (
-                <button
-                  key={title}
-                  className={sections.includes(title) ? "fchip active" : "fchip"}
-                  onClick={() => toggleSection(title)}
-                >
-                  {title}
+      <details className="corpus-papers" open={papers.length <= 12}>
+        <summary>
+          <h2>Papers ({papers.length})</h2>
+          <span className="panel-note">Remove a paper to leave it out of the search</span>
+        </summary>
+        <ul className="paper-list">
+          {papers.map((paper) => {
+            const info = preparedById.get(paper.id);
+            const hits = hitsById.get(paper.id) ?? 0;
+            return (
+              <li key={paper.id} className={hits ? "paper-row hit" : "paper-row"}>
+                <span className="paper-label">{info?.label ?? paper.id}</span>
+                <span className="paper-title" title={documentLabel(paper)}>
+                  {documentLabel(paper)}
+                </span>
+                <span className="paper-meta">
+                  {[info?.year, info ? `${info.paragraphs} ¶` : ""].filter(Boolean).join(" · ")}
+                </span>
+                {result && <span className={hits ? "pill ok" : "pill"}>{hits} hits</span>}
+                <button className="link-btn" onClick={() => onRemove(paper.id)} aria-label={`Remove ${paper.id}`}>
+                  ×
                 </button>
-              ))}
-            </div>
-          )}
-        </section>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
 
-        {article && <ArticleContentBrowser article={article} />}
+      <section className="query-panel embedded-query">
+        <textarea
+          className="query-input"
+          placeholder="Ask across the selected papers (Ctrl/⌘+Enter)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onQueryKey}
+          rows={3}
+        />
+        <div className="controls">
+          <label className="ctrl">
+            <input type="checkbox" checked={translate} onChange={(e) => setTranslate(e.target.checked)} />
+            JA→EN
+          </label>
+          <label className="ctrl" title="Paragraphs passed to the answer model">
+            Top-K
+            <input className="topk" type="number" min={1} max={40} value={topK} onChange={(e) => setTopK(Number(e.target.value))} />
+          </label>
+          <label className="ctrl" title="Most paragraphs taken from one paper (0 = no limit)">
+            Per paper
+            <input className="topk" type="number" min={0} max={40} value={perPaper} onChange={(e) => setPerPaper(Number(e.target.value))} />
+          </label>
+          <button className="primary" onClick={search} disabled={Boolean(busy) || !query.trim()}>
+            Search
+          </button>
+        </div>
+        <div className="section-filter">
+          <span className="section-filter-label">Sections</span>
+          <button className={groups.length ? "fchip" : "fchip active"} onClick={() => setGroups([])}>
+            All
+          </button>
+          {SECTION_GROUPS.map((group) => (
+            <button key={group} className={groups.includes(group) ? "fchip active" : "fchip"} onClick={() => toggleGroup(group)}>
+              {SECTION_GROUP_LABEL[group]}
+            </button>
+          ))}
+        </div>
+      </section>
 
-        {result && (
+      {result && (
+        <PassageMapContext.Provider value={passageMap}>
           <section className="result">
             <div className="answer-card">
               <div className="answer-head">
@@ -295,58 +242,26 @@ export function RagScreen({ article, referenceSet, loading, onBackToLibrary }: R
                   </span>
                 )}
                 {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
-                {"sections" in result && result.sections?.length ? (
-                  <span className="trans">Sections: {result.sections.join(", ")}</span>
+                {result.sectionGroups.length ? (
+                  <span className="trans">Sections: {result.sectionGroups.map((g) => SECTION_GROUP_LABEL[g]).join(", ")}</span>
                 ) : null}
               </div>
-              {"articleAnswer" in result ? (
-                <div className="answer-split">
-                  <AnswerBlock title="Main Article" text={result.articleAnswer} cite />
-                  <AnswerBlock title="Reference Abstracts" text={result.referenceAnswer} cite />
-                </div>
-              ) : (
-                <MarkdownText className="answer-text" text={result.answer} cite />
-              )}
+              <MarkdownText className="answer-text" text={result.answer} cite />
               {savedFile && <div className="saved-note">Saved: {savedFile}</div>}
             </div>
-            {"articleAnswer" in result ? (
-              <IntegratedSources sources={result.sources} />
-            ) : (
-              <>
-                <div className="sources-head">
-                  <h2>Sources ({result.sources.length})</h2>
-                </div>
-                <div className="sources">
-                  {"articleId" in result
-                    ? result.sources.map((source, idx) => (
-                        <ArticleResultSource
-                          key={`${source.section}-${source.subsection}-${source.paragraphIndex}-${idx}`}
-                          source={source}
-                          idx={idx}
-                        />
-                      ))
-                    : result.sources.map((source, idx) => (
-                        <ResultSource key={`${source.pmid}-${idx}`} source={source} idx={idx} />
-                      ))}
-                </div>
-              </>
-            )}
-          </section>
-        )}
-
-        {referenceSet && (
-          <>
             <div className="sources-head">
-              <h2>References ({referenceSet.records.length})</h2>
+              <h2>
+                Passages ({result.sources.length}) · {result.sources.filter((s) => s.cited).length} cited
+              </h2>
             </div>
-            <div className="ref-list">
-              {referenceSet.records.map((record) => (
-                <ReferenceRow key={`${record.index}-${record.pmid}-${record.href}`} record={record} />
+            <div className="sources">
+              {result.sources.map((source) => (
+                <CorpusSourceCard key={source.n} source={source} flash={flash === source.n} />
               ))}
             </div>
-          </>
-        )}
-      </section>
-    </ReferenceMapContext.Provider>
+          </section>
+        </PassageMapContext.Provider>
+      )}
+    </section>
   );
 }

@@ -1,6 +1,6 @@
-// 回答生成の LLM 呼び出し（Claude）。article / reference の両 RAG で共有する。
-// 埋め込みと JA→EN 翻訳は OpenAI のまま（config.ts の MODELS.embed / MODELS.translate）。
+// LLM 呼び出し。回答生成は Claude、JA→EN 翻訳は OpenAI（config.ts の MODELS.llm / MODELS.translate）。
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAIClient from "openai";
 import { MODELS } from "./config.js";
 
 let client: Anthropic | null = null;
@@ -36,4 +36,19 @@ export async function generateAnswer(system: string, user: string): Promise<LlmA
     .join("")
     .trim();
   return { text, model: res.model };
+}
+
+export function hasJapanese(s: string): boolean {
+  return /[぀-ヿ㐀-鿿]/.test(s);
+}
+
+// 検索クエリの JA→EN 翻訳（OpenAI）。索引の本文が英語なので、埋め込みは英語クエリで引く。
+export async function translateToEnglish(text: string): Promise<string> {
+  const client = new OpenAIClient();
+  const res = await (client as any).responses.create({
+    model: MODELS.translate,
+    reasoning: { effort: "low" },
+    input: `Translate the following Japanese text to English. Return only the translation:\n\n${text}`,
+  });
+  return res.output_text?.trim() ?? text;
 }

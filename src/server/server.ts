@@ -3,10 +3,8 @@ import path from "node:path";
 import fs from "node:fs";
 import express from "express";
 import { harvestReferences, listReferenceSets, loadReferenceSet } from "./referenceHarvester.js";
-import { runReferenceQuery } from "./referenceRag.js";
 import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
-import { runArticleQuery } from "./articleRag.js";
-import { runIntegratedQuery } from "./integratedRag.js";
+import { prepareCorpus, runCorpusQuery, type CorpusQueryResult, type CorpusSource } from "./corpusRag.js";
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
 import { MODELS, PATHS } from "./config.js";
@@ -65,18 +63,6 @@ app.post("/api/reference/harvest", async (req, res) => {
   const { sourceUrl, html, title, limit } = req.body ?? {};
   try {
     const result = await harvestReferences({ sourceUrl, html, title, limit });
-    res.json(result);
-  } catch (e: any) {
-    console.error(e);
-    res.status(500).json({ error: String(e?.message ?? e) });
-  }
-});
-
-app.post("/api/reference/query", async (req, res) => {
-  const { setId, query, topK, translate } = req.body ?? {};
-  if (!setId || !query) return res.status(400).json({ error: "Specify a dataset and a query" });
-  try {
-    const result = await runReferenceQuery(String(setId), String(query).trim(), { topK, translate });
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -181,26 +167,22 @@ app.post("/api/article/harvest", async (req, res) => {
   }
 });
 
-app.post("/api/article/query", async (req, res) => {
-  const { articleId, query, topK, translate, sections } = req.body ?? {};
-  if (!articleId || !query) return res.status(400).json({ error: "Specify an article JSON and a query" });
+// ---- 複数論文 RAG（corpus） ----
+// prepare は埋め込みを先に用意するだけ（初回の検索待ちを減らす）。
+app.post("/api/corpus/prepare", async (req, res) => {
   try {
-    const result = await runArticleQuery(String(articleId), String(query).trim(), { topK, translate, sections });
-    res.json(result);
+    res.json(await prepareCorpus(req.body?.articleIds));
   } catch (e: any) {
     console.error(e);
-    res.status(500).json({ error: String(e?.message ?? e) });
+    res.status(400).json({ error: String(e?.message ?? e) });
   }
 });
 
-app.post("/api/integrated/query", async (req, res) => {
-  const { articleId, referenceSetId, query, topK, translate, sections } = req.body ?? {};
-  if (!articleId || !referenceSetId || !query) {
-    return res.status(400).json({ error: "Specify an article JSON, a reference set, and a query" });
-  }
+app.post("/api/corpus/query", async (req, res) => {
+  const { articleIds, query, topK, perPaper, sectionGroups, translate } = req.body ?? {};
+  if (!query) return res.status(400).json({ error: "Enter a question" });
   try {
-    const result = await runIntegratedQuery(String(articleId), String(referenceSetId), String(query).trim(), { topK, translate, sections });
-    res.json(result);
+    res.json(await runCorpusQuery(articleIds, String(query).trim(), { topK, perPaper, sectionGroups, translate }));
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
@@ -258,102 +240,55 @@ function safeSessionId(value: unknown): string {
   return /^\d{6}_\d{6}/.test(id) ? id : new Date().toISOString().slice(2, 19).replace(/[-:T]/g, "");
 }
 
-function mainArticleLabel(source: any): string {
-  const section = source.section || source.label || "Main article";
-  const subsection = source.subsection || "";
-  return subsection ? `${section} > ${subsection}` : section;
-}
-
-function sourceBody(source: any): string {
-  return source.text || source.abstract || "";
-}
-
-function sourceMarkdown(source: any, index: number): string {
-  const scope = source.scope === "reference_abstract" ? "Reference Abstract" : source.scope === "main_article" ? "Main Article" : "Source";
-  if (source.scope === "main_article") {
-    const paragraph = source.paragraphIndex && source.totalParagraphs
-      ? `Paragraph ${source.paragraphIndex}/${source.totalParagraphs}`
-      : "Paragraph";
-    return [
-      `#### ${index}. ${scope}: ${mainArticleLabel(source)}`,
-      source.score != null ? `- Score: ${Number(source.score).toFixed(4)}` : "",
-      `- ${paragraph}`,
-      "",
-      sourceBody(source),
-    ].filter((line) => line !== "").join("\n");
-  }
-
-  const heading = source.label || source.title || `Source ${index}`;
-  const cite = [source.journal, source.year || source.published].filter(Boolean).join(" · ");
+function sourceMarkdown(source: CorpusSource): string {
+  const section = source.subsection ? `${source.section} > ${source.subsection}` : source.section;
+  const cite = [source.journal, source.year].filter(Boolean).join(" · ");
   const links = [
-    source.pmid ? `[PubMed](https://pubmed.ncbi.nlm.nih.gov/${source.pmid})` : "",
     source.doi ? `[DOI](https://doi.org/${source.doi})` : "",
+    source.sourceUrl ? `[Source](${source.sourceUrl})` : "",
   ].filter(Boolean).join(" ");
   return [
-    `#### ${index}. ${scope}: ${heading}`,
-    source.score != null ? `- Score: ${Number(source.score).toFixed(4)}` : "",
-    source.citationLabel ? `- Citation: ${source.citationLabel}` : "",
+    `#### S${source.n}. ${source.label} — ${section}${source.cited ? " (cited)" : ""}`,
+    `- Score: ${source.score.toFixed(4)} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
     source.title ? `- Title: ${source.title}` : "",
     cite ? `- Journal: ${cite}` : "",
-    source.authors ? `- Authors: ${source.authors}` : "",
     links ? `- Links: ${links}` : "",
     "",
-    sourceBody(source),
+    source.text,
   ].filter((line) => line !== "").join("\n");
 }
 
-function resultMarkdown(result: any): string {
-  const parts = [
-    "---",
-    "",
-    `## Q: ${result.originalQuery || result.original_query || ""}`,
-  ];
-  if (result.enQuery && result.enQuery !== result.originalQuery) {
-    parts.push("", `*EN: ${result.enQuery}*`);
-  }
+function resultMarkdown(result: CorpusQueryResult): string {
+  const parts = ["---", "", `## Q: ${result.originalQuery}`];
+  if (result.enQuery && result.enQuery !== result.originalQuery) parts.push("", `*EN: ${result.enQuery}*`);
   if (result.model) {
     const ids = String(result.model).split(/,\s*/);
     parts.push("", `*Model: ${ids.map((id) => `${modelLabel(id)} (${id})`).join(", ")}*`);
   }
-  if (Array.isArray(result.sections) && result.sections.length) {
-    parts.push("", `*Sections: ${result.sections.join(", ")}*`);
-  }
-
-  if ("articleAnswer" in result) {
-    parts.push("", "### Main Article", "", result.articleAnswer || "", "", "### Reference Abstracts", "", result.referenceAnswer || "");
-  } else {
-    parts.push("", "### Answer", "", result.answer || "");
-  }
-
-  const sources = Array.isArray(result.sources) ? result.sources : [];
-  if (sources.length) {
-    if ("articleAnswer" in result) {
-      const mainSources = sources.filter((source: any) => source.scope === "main_article");
-      const referenceSources = sources.filter((source: any) => source.scope === "reference_abstract");
-      if (mainSources.length) {
-        parts.push("", `### Main Article Sources (${mainSources.length})`, "", mainSources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
-      }
-      if (referenceSources.length) {
-        parts.push("", `### Reference Abstract Sources (${referenceSources.length})`, "", referenceSources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
-      }
-    } else {
-      parts.push("", "### Sources", "", sources.map((source: any, i: number) => sourceMarkdown(source, i + 1)).join("\n\n"));
-    }
+  const settings = [
+    `Top-K ${result.topK}`,
+    result.perPaper ? `max ${result.perPaper}/paper` : "",
+    result.sectionGroups?.length ? `sections: ${result.sectionGroups.join(", ")}` : "",
+  ].filter(Boolean).join(" · ");
+  parts.push("", `*Papers (${result.papers.length}): ${result.papers.map((p) => p.label).join(", ")} — ${settings}*`);
+  parts.push("", "### Answer", "", result.answer || "");
+  if (result.sources.length) {
+    parts.push("", `### Sources (${result.sources.length})`, "", result.sources.map(sourceMarkdown).join("\n\n"));
   }
   parts.push("");
   return parts.join("\n");
 }
 
+// 1回の画面セッション（タブ）ごとに 1つの md へ追記する。論文の組み合わせは各回の見出しに残す。
 app.post("/api/session/save", (req, res) => {
   const { sessionId, result } = req.body ?? {};
   if (!result) return res.status(400).json({ error: "No search result to save" });
   try {
     fs.mkdirSync(PATHS.outputDir, { recursive: true });
     const id = safeSessionId(sessionId);
-    const file = path.join(PATHS.outputDir, `${id}_rag.md`);
+    const file = path.join(PATHS.outputDir, `${id}_corpus_rag.md`);
     if (!fs.existsSync(file)) {
-      const title = result.articleId || result.referenceSetId || result.setId || "RAG session";
-      fs.writeFileSync(file, `# RAG Session\n\n- Session: ${id}\n- Target: ${title}\n\n`, "utf-8");
+      fs.writeFileSync(file, `# Corpus RAG Session\n\n- Session: ${id}\n\n`, "utf-8");
     }
     fs.appendFileSync(file, resultMarkdown(result), "utf-8");
     res.json({ ok: true, file });

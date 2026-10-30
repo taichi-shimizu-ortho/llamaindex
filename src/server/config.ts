@@ -1,4 +1,4 @@
-// パス・モデル設定（Python版と同じ場所を参照）
+// パス・モデル設定
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -28,9 +28,6 @@ const BASE = path.join(CODING, "llamaindex");
 // Dropbox同期されるObsidianルート配下に置くことで、複数端末で共有する。
 
 export const PATHS = {
-  mdSourceDir: path.join(OBSIDIAN, "10_article", "RXFP1"),
-  articlesJson: path.join(BASE, "articles_all3.json"),
-  storageAll: path.join(BASE, "storage_all_ts"),
   outputDir: BASE,
   referenceOutputDir: path.join(BASE, "reference_sets"),
   articleOutputDir: path.join(BASE, "article_sets"),
@@ -48,17 +45,3 @@ export const MODELS = {
   embed: "text-embedding-3-small",
   translate: "gpt-5.6-terra",
 };
-
-// 主論文RAG（articleRag）の本文インデックスから除くセクションタイプ。
-// abstractは本文各節（Results/Conclusionなど）とほぼ同一の文を含むため、
-// 同じ内容が2件ヒットしてtop-Kを食いつぶす。要約は本文側から引く。
-export const EXCLUDE_FROM_ARTICLE_INDEX = new Set(["abstract"]);
-
-// 検索対象から除外するセクションタイプ（Python版 40 と一致）
-export const EXCLUDE_FROM_INDEX = new Set([
-  "references",
-  "acknowledgements",
-  "abbreviations",
-  "keywords",
-  "other",
-]);
