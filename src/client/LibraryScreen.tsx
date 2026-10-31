@@ -461,14 +461,20 @@ function DocumentCard({
           aria-label={`Include ${set.id} in the RAG corpus`}
         />
         <h3 className="doc-title">{documentLabel(set)}</h3>
-        <ArticleTypeBadge type={set.articleType} />
-        {zoteroKey && (
-          <span className="pill zotero-pill" title={`Linked to Zotero item ${zoteroKey}`}>
-            Zotero
-          </span>
-        )}
-        {selected && <span className="pill ok">In corpus</span>}
       </div>
+
+      {/* ラベルはタイトルの横に並べると幅を食うので、タイトルの下に別の行で出す */}
+      {(set.articleType || zoteroKey || selected) && (
+        <div className="doc-tags">
+          <ArticleTypeBadge type={set.articleType} />
+          {zoteroKey && (
+            <span className="pill zotero-pill" title={`Linked to Zotero item ${zoteroKey}`}>
+              Zotero
+            </span>
+          )}
+          {selected && <span className="pill ok">In corpus</span>}
+        </div>
+      )}
 
       <div className="doc-meta">
         <span className="doc-id">{set.id}</span>

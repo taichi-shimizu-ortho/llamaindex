@@ -257,6 +257,7 @@ export function App() {
           <PreviewScreen
             articleSets={articleSets}
             referenceSets={referenceSets}
+            library={library}
             target={previewTarget}
             recentIds={recentIds}
             active={screen === "preview"}

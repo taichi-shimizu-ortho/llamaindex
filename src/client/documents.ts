@@ -20,6 +20,18 @@ export function documentLabel(set: { title?: string; id: string }): string {
   return set.title?.trim() || set.id;
 }
 
+// 「Altschuler et al., 2026」形式。著者が取れていない論文は id（取り込み時の AuthorYear）で代用する。
+export function authorYearLabel(set: { id: string; authors?: string[]; year?: string }): string {
+  const surnames = (set.authors ?? [])
+    .map((name) => name.trim().split(/\s+/).filter((part) => !/^(jr|sr|ii|iii|iv)\.?$/i.test(part)).at(-1) ?? "")
+    .filter(Boolean);
+  if (!surnames.length) return set.id;
+  const who =
+    surnames.length === 1 ? surnames[0] : surnames.length === 2 ? `${surnames[0]} & ${surnames[1]}` : `${surnames[0]} et al.`;
+  const year = set.year?.match(/\d{4}/)?.[0];
+  return year ? `${who}, ${year}` : who;
+}
+
 export function formatDate(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString();

@@ -711,6 +711,9 @@ export function listArticleSets() {
       return {
         id: set.id,
         title: set.title,
+        // Preview の論文選択で「著者 年」表示に使う。
+        authors: set.authors ?? [],
+        year: set.year ?? "",
         sourceUrl: set.sourceUrl,
         // Zotero同期の突き合わせキー。
         doi: set.doi ?? "",

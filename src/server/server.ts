@@ -90,6 +90,8 @@ function articleSummary(article: ArticleSet) {
   return {
     id: article.id,
     title: article.title,
+    authors: article.authors,
+    year: article.year,
     sourceUrl: article.sourceUrl,
     articleType: article.articleType ?? null,
     chunkCount: article.chunkCount,

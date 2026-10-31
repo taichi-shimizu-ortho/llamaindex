@@ -47,6 +47,8 @@ export interface ReferenceSet extends ReferenceSetSummary {
 export interface ArticleSetSummary {
   id: string;
   title: string;
+  authors?: string[];
+  year?: string;
   sourceUrl: string;
   doi?: string;
   // PubMed での分類（未確認・PubMed に無ければ null）

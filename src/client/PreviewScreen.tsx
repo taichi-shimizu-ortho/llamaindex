@@ -4,13 +4,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { ArticleContentBrowser, locateParagraph, ReferenceRow, TARGET_PARAGRAPH_ID } from "./ArticleBrowser.js";
 import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
-import { documentLabel, matchingReferenceSet } from "./documents.js";
+import { authorYearLabel, documentLabel, documentsInFolder, flattenFolders, matchingReferenceSet } from "./documents.js";
 import { ReferenceMapContext } from "./markdown.js";
-import type { ArticleSet, ArticleSetSummary, PreviewTarget, ReferenceRecord, ReferenceSet, ReferenceSetSummary } from "./types.js";
+import type {
+  ArticleSet,
+  ArticleSetSummary,
+  LibraryState,
+  PreviewTarget,
+  ReferenceRecord,
+  ReferenceSet,
+  ReferenceSetSummary,
+} from "./types.js";
 
 interface PreviewScreenProps {
   articleSets: ArticleSetSummary[];
   referenceSets: ReferenceSetSummary[];
+  library: LibraryState;
   target: PreviewTarget | null;
   // 最近開いた論文（新しい順）。切り替え用のチップに出す。
   recentIds: string[];
@@ -19,7 +28,18 @@ interface PreviewScreenProps {
   onBackToLibrary: () => void;
 }
 
-export function PreviewScreen({ articleSets, referenceSets, target, recentIds, active, onOpen, onBackToLibrary }: PreviewScreenProps) {
+export function PreviewScreen({
+  articleSets,
+  referenceSets,
+  library,
+  target,
+  recentIds,
+  active,
+  onOpen,
+  onBackToLibrary,
+}: PreviewScreenProps) {
+  // 論文選択の絞り込み。"all" / "unfiled" / フォルダID（サブフォルダの分も含める）
+  const [folderView, setFolderView] = useState("all");
   const [article, setArticle] = useState<ArticleSet | null>(null);
   const [referenceSet, setReferenceSet] = useState<ReferenceSet | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,10 +94,24 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
     [referenceSet],
   );
 
-  const sortedSets = useMemo(
-    () => [...articleSets].sort((a, b) => documentLabel(a).localeCompare(documentLabel(b))),
-    [articleSets],
-  );
+  // フォルダで絞ってから「著者, 年」順に並べる。同じ表記が重なるときは id を添えて見分ける。
+  const folderSets = useMemo(() => {
+    const base =
+      folderView === "all"
+        ? articleSets
+        : folderView === "unfiled"
+          ? articleSets.filter((set) => !library.assignments[set.id])
+          : documentsInFolder(articleSets, library, folderView, true);
+    const labelCounts = new Map<string, number>();
+    for (const set of base) labelCounts.set(authorYearLabel(set), (labelCounts.get(authorYearLabel(set)) ?? 0) + 1);
+    return base
+      .map((set) => {
+        const label = authorYearLabel(set);
+        return { set, label: (labelCounts.get(label) ?? 0) > 1 ? `${label} (${set.id})` : label };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [articleSets, library, folderView]);
+  const inFolder = folderSets.some(({ set }) => set.id === articleId);
   const recent = recentIds
     .filter((id) => id !== articleId)
     .flatMap((id) => articleSets.find((set) => set.id === id) ?? [])
@@ -104,15 +138,34 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
           ← Documents
         </button>
         <select
+          className="preview-folder-picker"
+          value={folderView}
+          onChange={(e) => setFolderView(e.target.value)}
+          aria-label="Folder to pick a paper from"
+        >
+          <option value="all">All documents</option>
+          <option value="unfiled">Unfiled</option>
+          {flattenFolders(library.folders).map(({ folder, depth }) => (
+            <option key={folder.id} value={folder.id}>
+              {`${"\u00a0\u00a0".repeat(depth)}${folder.name}`}
+            </option>
+          ))}
+        </select>
+        <select
           className="preview-picker"
-          value={articleId}
-          onChange={(e) => onOpen(e.target.value)}
+          value={inFolder ? articleId : ""}
+          onChange={(e) => e.target.value && onOpen(e.target.value)}
           aria-label="Paper to preview"
         >
-          {!articleSets.some((set) => set.id === articleId) && <option value={articleId}>{articleId}</option>}
-          {sortedSets.map((set) => (
-            <option key={set.id} value={set.id}>
-              {documentLabel(set)}
+          {/* 開いている論文がこのフォルダに無いときは、未選択の見出しを出す */}
+          {!inFolder && (
+            <option value="" disabled>
+              {folderSets.length ? `Select a paper (${folderSets.length})` : "No papers in this folder"}
+            </option>
+          )}
+          {folderSets.map(({ set, label }) => (
+            <option key={set.id} value={set.id} title={documentLabel(set)}>
+              {label}
             </option>
           ))}
         </select>

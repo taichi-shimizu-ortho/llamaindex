@@ -1171,9 +1171,12 @@ body {
 
 .doc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 14px;
+}
+@media (max-width: 760px) {
+  .doc-grid { grid-template-columns: minmax(0, 1fr); }
 }
 .doc-card {
   background: var(--panel-2);
@@ -1348,6 +1351,8 @@ body {
 /* ---- 複数論文 RAG（corpus） ---- */
 .doc-select { flex: none; margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 .doc-card-head .doc-title { flex: 1; min-width: 0; }
+/* チェックボックス（16px）＋隙間（8px）だけ下げてタイトルの左端に揃える */
+.doc-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-left: 24px; margin-top: -2px; }
 
 .corpus-bar {
   display: flex;
@@ -1402,7 +1407,8 @@ body {
 
 /* ---- Preview（論文1本の本文・参照文献） ---- */
 .preview-toolbar { flex-wrap: wrap; }
-.preview-picker { flex: 1 1 320px; min-width: 0; max-width: 640px; }
+.preview-folder-picker { flex: 0 1 220px; min-width: 0; }
+.preview-picker { flex: 1 1 240px; min-width: 0; max-width: 360px; }
 .preview-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .preview-recent .fchip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .references-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 22px; }
