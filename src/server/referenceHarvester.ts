@@ -3,6 +3,7 @@ import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 import { inferMeta } from "./articleHarvester.js";
+import { classifyArticleType, type ArticleType } from "../shared/articleType.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
 const TOOL = "llamaindex-reference-web";
@@ -33,16 +34,6 @@ export interface ReferenceRecord {
     source?: string;
   };
   error?: string;
-}
-
-// 論文種別: review（review/systematic review/scoping review をまとめる）/ original（原著論文）/ other
-export type ArticleType = "review" | "original" | "other";
-
-export function classifyArticleType(publicationTypes: string[]): ArticleType {
-  const types = publicationTypes.map((p) => p.toLowerCase().replace(/-/g, " "));
-  if (types.some((p) => p.includes("review"))) return "review";
-  if (types.some((p) => p.includes("journal article"))) return "original";
-  return "other";
 }
 
 export interface ReferenceSet {

@@ -6,7 +6,7 @@ import { documentLabel } from "./documents.js";
 import { MarkdownText, PassageMapContext, type PassageMap } from "./markdown.js";
 import { modelLabel } from "../shared/modelLabel.js";
 import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
-import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, SectionGroup } from "./types.js";
+import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, PreviewTarget, SectionGroup } from "./types.js";
 
 const SECTION_GROUPS = Object.keys(SECTION_GROUP_LABEL) as SectionGroup[];
 // これを超えると上位段落が一部の論文に偏りやすい。検索は止めず注意だけ出す。
@@ -38,10 +38,12 @@ interface RagScreenProps {
   scopeLabel: string;
   active: boolean;
   onRemove: (id: string) => void;
+  // 論文を Preview で開く（段落から開いたときはその段落へ飛ぶ）
+  onPreview: (articleId: string, passage?: PreviewTarget["passage"]) => void;
   onBackToLibrary: () => void;
 }
 
-export function RagScreen({ papers, scopeLabel, active, onRemove, onBackToLibrary }: RagScreenProps) {
+export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onBackToLibrary }: RagScreenProps) {
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(10);
   const [perPaper, setPerPaper] = useState(3);
@@ -193,7 +195,9 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onBackToLibrar
             const hits = hitsById.get(paper.id) ?? 0;
             return (
               <li key={paper.id} className={hits ? "paper-row hit" : "paper-row"}>
-                <span className="paper-label">{info?.label ?? paper.id}</span>
+                <button className="paper-label" onClick={() => onPreview(paper.id)} title="Open in Preview">
+                  {info?.label ?? paper.id}
+                </button>
                 <span className="paper-title" title={documentLabel(paper)}>
                   {documentLabel(paper)}
                 </span>
@@ -275,7 +279,19 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onBackToLibrar
             </div>
             <div className="sources">
               {result.sources.map((source) => (
-                <CorpusSourceCard key={source.n} source={source} flash={flash === source.n} />
+                <CorpusSourceCard
+                  key={source.n}
+                  source={source}
+                  flash={flash === source.n}
+                  onPreview={() =>
+                    onPreview(source.articleId, {
+                      section: source.section,
+                      subsection: source.subsection,
+                      paragraphIndex: source.paragraphIndex,
+                      text: source.text,
+                    })
+                  }
+                />
               ))}
             </div>
           </section>

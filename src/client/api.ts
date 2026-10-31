@@ -1,10 +1,12 @@
 // サーバAPIの薄いラッパ。エラーはすべて Error として投げ直す。
 import type {
+  ArticleSet,
   ArticleSetSummary,
   CorpusPrepareResult,
   CorpusQueryResult,
   ImportReport,
   LibraryState,
+  ReferenceSet,
   ReferenceSetSummary,
   SectionGroup,
   Status,
@@ -59,6 +61,8 @@ export const api = {
 
   articleSets: () => requestJson<{ sets: ArticleSetSummary[] }>("/api/article/sets").then((d) => d.sets ?? []),
   referenceSets: () => requestJson<{ sets: ReferenceSetSummary[] }>("/api/reference/sets").then((d) => d.sets ?? []),
+  articleSet: (id: string) => requestJson<ArticleSet>(`/api/article/sets/${encodeURIComponent(id)}`),
+  referenceSet: (id: string) => requestJson<ReferenceSet>(`/api/reference/sets/${encodeURIComponent(id)}`),
 
   importDocument: (body: ImportRequest) => postJson<ImportReport>("/api/import/ors", body),
 

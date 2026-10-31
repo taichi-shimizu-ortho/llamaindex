@@ -37,6 +37,11 @@ export interface ReferenceSetSummary {
   createdAt: string;
 }
 
+export interface ReferenceSet extends ReferenceSetSummary {
+  pubmedFound: number;
+  records: ReferenceRecord[];
+}
+
 export interface ArticleSetSummary {
   id: string;
   title: string;
@@ -44,6 +49,44 @@ export interface ArticleSetSummary {
   doi?: string;
   chunkCount: number;
   createdAt: string;
+}
+
+// ---- 取り込み済み論文の本文（Preview 画面） ----
+
+export interface ArticleSubsection {
+  title: string;
+  type?: string;
+  content: string;
+  paragraphs: string[];
+}
+
+export interface ArticleSection {
+  title: string;
+  type: string;
+  content: string;
+  paragraphs: string[];
+  subsections: ArticleSubsection[];
+}
+
+export interface ArticleSet {
+  id: string;
+  sourceUrl: string;
+  title: string;
+  authors: string[];
+  journal: string;
+  year: string;
+  doi: string;
+  createdAt: string;
+  sections: ArticleSection[];
+  chunkCount: number;
+}
+
+/** Preview で開く論文と、RAG の段落から来たときの飛び先 */
+export interface PreviewTarget {
+  articleId: string;
+  passage?: { section: string; subsection: string; paragraphIndex: number; text: string };
+  /** 同じ論文を開き直したときも飛び先へスクロールし直すための連番 */
+  nonce: number;
 }
 
 // ---- 複数論文 RAG（corpus） ----

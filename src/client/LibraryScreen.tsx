@@ -51,6 +51,7 @@ interface LibraryScreenProps {
   onClearSelection: () => void;
   onAsk: () => void;
   onAskFolder: (scope: CorpusScope) => void;
+  onPreview: (articleId: string) => void;
   onError: (message: string) => void;
 }
 
@@ -426,6 +427,7 @@ function DocumentCard({
   otherFolderIds,
   onToggle,
   onAssign,
+  onPreview,
   onDragItem,
 }: {
   set: ArticleSetSummary;
@@ -439,6 +441,7 @@ function DocumentCard({
   zoteroAdded?: string;
   onToggle: () => void;
   onAssign: (folderId: string) => void;
+  onPreview: () => void;
   onDragItem: (item: DragItem | null) => void;
 }) {
   return (
@@ -492,6 +495,9 @@ function DocumentCard({
           Folder
           <FolderSelect folders={folders} value={folderId} onChange={onAssign} ariaLabel="Move document to folder" />
         </label>
+        <button className="ghost doc-preview-btn" onClick={onPreview}>
+          Preview
+        </button>
       </div>
     </article>
   );
@@ -511,6 +517,7 @@ export function LibraryScreen({
   onClearSelection,
   onAsk,
   onAskFolder,
+  onPreview,
   onError,
 }: LibraryScreenProps) {
   const [view, setView] = useState<FolderView>("all");
@@ -876,6 +883,7 @@ export function LibraryScreen({
                   otherFolderIds={documentFolderIds(library, set.id).filter((id) => id !== assignments[set.id])}
                   onToggle={() => onSelect([set.id], !selected.has(set.id))}
                   onAssign={(folderId) => run(() => api.assignDocument(set.id, folderId || null))}
+                  onPreview={() => onPreview(set.id)}
                   onDragItem={setDragItem}
                 />
               ))}

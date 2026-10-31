@@ -1399,3 +1399,22 @@ body {
   .paper-row .paper-meta, .paper-row .pill { display: none; }
   .corpus-bar .primary { margin-left: 0; width: 100%; }
 }
+
+/* ---- Preview（論文1本の本文・参照文献） ---- */
+.preview-toolbar { flex-wrap: wrap; }
+.preview-picker { flex: 1 1 320px; min-width: 0; max-width: 640px; }
+.preview-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.preview-recent .fchip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.references-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 22px; }
+.references-head .section-filter { margin: 0; }
+.article-paragraph.target,
+.figure-details.target {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2) 45%, transparent);
+}
+.doc-preview-btn { margin-left: auto; }
+button.paper-label {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+}
+button.paper-label:hover { text-decoration: underline; }
+.source-meta .source-preview { margin: 0 0 0 auto; }

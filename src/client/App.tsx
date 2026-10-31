@@ -1,4 +1,4 @@
-// アプリのシェル。ドキュメント選択画面（Documents）と複数論文RAG画面（RAG）を切り替える。
+// アプリのシェル。ドキュメント選択画面（Documents）、複数論文RAG画面（RAG）、論文1本を読む画面（Preview）を切り替える。
 // データの読み込みと、RAG の対象にする論文の選択（corpus）はここに集約する。
 // 対象は「フォルダ（Zotero コレクション）単位のスコープ」か「手動で選んだ論文」のどちらか。
 // フォルダスコープ中は中身を毎回フォルダから引き直すので、Zotero を同期し直しても対象が追従する。
@@ -6,14 +6,17 @@ import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { documentsInFolder, scopeLabel } from "./documents.js";
 import { LibraryScreen } from "./LibraryScreen.js";
+import { PreviewScreen } from "./PreviewScreen.js";
 import { RagScreen } from "./RagScreen.js";
-import type { ArticleSetSummary, CorpusScope, LibraryState, ReferenceSetSummary, Status } from "./types.js";
+import type { ArticleSetSummary, CorpusScope, LibraryState, PreviewTarget, ReferenceSetSummary, Status } from "./types.js";
 
 type Theme = "light" | "dark";
-type Screen = "library" | "rag";
+type Screen = "library" | "rag" | "preview";
 
 const CORPUS_KEY = "corpusIds";
 const SCOPE_KEY = "corpusScope";
+const PREVIEW_KEY = "previewIds";
+const RECENT_LIMIT = 8;
 
 function initialCorpus(): string[] {
   try {
@@ -35,6 +38,16 @@ function initialScope(): CorpusScope | null {
   }
 }
 
+// 最近 Preview で開いた論文（新しい順）。先頭を次回起動時に開いておく。
+function initialRecent(): string[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREVIEW_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, RECENT_LIMIT) : [];
+  } catch {
+    return [];
+  }
+}
+
 function initialTheme(): Theme {
   const saved = localStorage.getItem("theme");
   if (saved === "light" || saved === "dark") return saved;
@@ -52,6 +65,10 @@ export function App() {
   const [library, setLibrary] = useState<LibraryState>(EMPTY_LIBRARY);
   const [corpusIds, setCorpusIds] = useState<string[]>(initialCorpus);
   const [corpusScope, setCorpusScope] = useState<CorpusScope | null>(initialScope);
+  const [recentIds, setRecentIds] = useState<string[]>(initialRecent);
+  const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(() =>
+    recentIds[0] ? { articleId: recentIds[0], nonce: 0 } : null,
+  );
   const [loading, setLoading] = useState("Loading documents...");
   const [error, setError] = useState("");
 
@@ -67,6 +84,10 @@ export function App() {
   useEffect(() => {
     localStorage.setItem(SCOPE_KEY, JSON.stringify(corpusScope));
   }, [corpusScope]);
+
+  useEffect(() => {
+    localStorage.setItem(PREVIEW_KEY, JSON.stringify(recentIds));
+  }, [recentIds]);
 
   async function refreshLists(): Promise<void> {
     const [articles, references, nextLibrary] = await Promise.all([
@@ -119,6 +140,12 @@ export function App() {
     setScreen("rag");
   }
 
+  function openPreview(articleId: string, passage?: PreviewTarget["passage"]) {
+    setPreviewTarget((prev) => ({ articleId, passage, nonce: (prev?.nonce ?? 0) + 1 }));
+    setRecentIds((prev) => [articleId, ...prev.filter((id) => id !== articleId)].slice(0, RECENT_LIMIT));
+    setScreen("preview");
+  }
+
   function clearSelection() {
     setCorpusScope(null);
     setCorpusIds([]);
@@ -150,6 +177,13 @@ export function App() {
           >
             RAG{corpusPapers.length ? ` (${corpusPapers.length})` : ""}
           </button>
+          <button
+            className={screen === "preview" ? "nav-btn active" : "nav-btn"}
+            onClick={() => setScreen("preview")}
+            title={previewTarget ? previewTarget.articleId : "Open a paper to read its main text and references"}
+          >
+            Preview
+          </button>
         </nav>
 
         <div className="status">
@@ -179,7 +213,7 @@ export function App() {
       <main className="workspace">
         {error && <div className="error">{error}</div>}
 
-        {/* 両方マウントしたまま表示だけ切り替え、検索結果や入力を画面移動で失わないようにする。 */}
+        {/* すべてマウントしたまま表示だけ切り替え、検索結果や入力を画面移動で失わないようにする。 */}
         <div className="screen" hidden={screen !== "library"}>
           <LibraryScreen
             articleSets={articleSets}
@@ -195,6 +229,7 @@ export function App() {
             onClearSelection={clearSelection}
             onAsk={() => setScreen("rag")}
             onAskFolder={askFolder}
+            onPreview={(id) => openPreview(id)}
             onError={setError}
           />
         </div>
@@ -205,6 +240,19 @@ export function App() {
             scopeLabel={corpusLabel}
             active={screen === "rag"}
             onRemove={(id) => setSelected([id], false)}
+            onPreview={openPreview}
+            onBackToLibrary={() => setScreen("library")}
+          />
+        </div>
+
+        <div className="screen" hidden={screen !== "preview"}>
+          <PreviewScreen
+            articleSets={articleSets}
+            referenceSets={referenceSets}
+            target={previewTarget}
+            recentIds={recentIds}
+            active={screen === "preview"}
+            onOpen={(id) => openPreview(id)}
             onBackToLibrary={() => setScreen("library")}
           />
         </div>

@@ -24,7 +24,16 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-export function CorpusSourceCard({ source, flash }: { source: CorpusSource; flash: boolean }) {
+export function CorpusSourceCard({
+  source,
+  flash,
+  onPreview,
+}: {
+  source: CorpusSource;
+  flash: boolean;
+  // 論文の本文の中でこの段落を開く
+  onPreview: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const preview = source.text.length > 420 ? `${source.text.slice(0, 420)}...` : source.text;
   const section = source.subsection ? `${source.section} > ${source.subsection}` : source.section;
@@ -55,6 +64,9 @@ export function CorpusSourceCard({ source, flash }: { source: CorpusSource; flas
         {[source.journal, source.year].filter(Boolean).join(" · ") && (
           <span>{[source.journal, source.year].filter(Boolean).join(" · ")}</span>
         )}
+        <button className="link-btn source-preview" onClick={onPreview}>
+          Open in paper →
+        </button>
       </div>
       <CitedText className="source-text" text={open ? source.text : preview} />
       {source.text.length > 420 && (

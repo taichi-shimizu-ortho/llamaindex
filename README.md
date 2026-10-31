@@ -30,7 +30,7 @@ RAG を使うのは、本数が多く全文をそのまま渡せないときだ�
 
 ## 画面構成
 
-UIは2画面に分かれている。上部のナビゲーション（`Documents` / `RAG`）で切り替える。
+UIは3画面に分かれている。上部のナビゲーション（`Documents` / `RAG` / `Preview`）で切り替える。
 
 ### 1. Documents（ドキュメント選択・取り込み）
 
@@ -100,6 +100,15 @@ Documents で選んだフォルダ（または手動で選んだ論文）の本�
 - **埋め込み**: 論文ごとにディスクキャッシュする（`embeddings_cache/corpus/<id>.json`）。組み合わせを変えても再埋め込みしない。
   RAG 画面を開いた時点で未作成の分だけ作る。論文JSONを取り込み直すと（更新日時が変われば）作り直す。
 - 毎回の質問と回答・根拠段落は `<Obsidian>/50_coding/llamaindex/<日時>_corpus_rag.md` に追記する。
+- 対象論文一覧の論文ラベルを押すとその論文の Preview を、根拠段落の `Open in paper →` を押すと Preview の該当段落（図なら該当の図）を開く。
+
+### 3. Preview（取り込み済み論文を1本読む）
+
+Documents の文献カードの `Preview`、または RAG の論文ラベル・根拠段落から開く。上部のプルダウンで論文を切り替え、最近開いた論文はチップから戻れる。
+
+- **本文**: Abstract・Figures・Main Text を節・小見出し単位で開閉して読む。本文中の引用番号 `[12]` はホバーで参照文献の情報を出す。
+- **References**: 参照文献の一覧（PubMed のタイトル・著者・誌名・年・PMID・abstract・MeSH）。PubMed の Publication Type から
+  `Original` / `Review` / `Other` のバッジを付け、チップで絞り込める。種別を保存する前に取り込んだ参照文献JSONは Publication Type から判定する。
 
 ## 主なファイル
 
@@ -112,10 +121,12 @@ Documents で選んだフォルダ（または手動で選んだ論文）の本�
 | `src/server/server.ts` | Express API |
 | `src/server/library.ts` | フォルダ構成（library.json）の読み書き。ネスト・循環チェック・削除時の未分類化 |
 | `src/server/zotero.ts` | Zotero ローカルAPIの読み取りと、コレクション→フォルダ同期 |
-| `src/client/App.tsx` | 画面シェル（Documents / RAG の切り替え、データ読み込み） |
+| `src/client/App.tsx` | 画面シェル（Documents / RAG / Preview の切り替え、データ読み込み） |
 | `src/client/LibraryScreen.tsx` | ドキュメント選択・取り込み画面（フォルダツリー、Import、文献カード） |
 | `src/client/ZoteroPanel.tsx` | Zotero同期パネル（接続状態、プレビュー、適用） |
 | `src/client/RagScreen.tsx` | 複数論文RAG画面（対象論文一覧、検索、回答、根拠段落） |
+| `src/client/PreviewScreen.tsx` | 論文1本の Preview 画面（論文の切り替え、本文、参照文献の種別絞り込み） |
+| `src/client/ArticleBrowser.tsx` | 本文・図の節単位ブラウザ（RAG の段落への位置合わせ）と参照文献の行 |
 
 保存先（gitリポジトリ外。Dropbox同期で他端末と共有する）:
 
