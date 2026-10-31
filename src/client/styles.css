@@ -44,9 +44,8 @@ body {
 }
 
 .app {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 20px 80px;
+  width: 100%;
+  padding: 24px clamp(16px, 2.5vw, 40px) 80px;
 }
 
 /* ---- topbar ---- */
