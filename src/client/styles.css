@@ -761,7 +761,7 @@ body {
 .link-btn { margin-top: 8px; }
 .source-mesh { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
-/* 論文種別バッジ（Review / 原著論文 / その他） */
+/* 主論文の種別バッジ（Original / Review） */
 .ref-type {
   border-radius: 999px;
   padding: 1px 8px;
@@ -1406,7 +1406,6 @@ body {
 .preview-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .preview-recent .fchip { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .references-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 22px; }
-.references-head .section-filter { margin: 0; }
 .article-paragraph.target,
 .figure-details.target {
   border-color: var(--accent-2);

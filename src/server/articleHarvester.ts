@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
+import type { MainArticleType } from "../shared/articleType.js";
 
 const EXCLUDED_SECTION_TYPES = new Set(["references", "acknowledgements", "excluded"]);
 
@@ -31,6 +32,13 @@ export interface ArticleSet {
   sections: ArticleSection[];
   chunkCount: number;
   extractionSource?: string;
+  // PubMed での分類（articleClassifier.ts が書く）。見つからなければ articleType は null
+  pmid?: string;
+  publicationTypes?: string[];
+  articleType?: MainArticleType | null;
+  // "manual" は PubMed に未収載の論文（accept 直後の原稿など）に手で付けた種別。分類し直さない
+  articleTypeSource?: "pubmed" | "manual";
+  pubmedCheckedAt?: string;
 }
 
 export interface ArticleHarvestOptions {
@@ -130,8 +138,12 @@ async function fetchText(url: string): Promise<string> {
   return res.text();
 }
 
+// SAGE / Science（Atypon）のページは citation_* を持たず、Dublin Core（dc.Title / dc.Creator / dc.Date）だけを持つ。
+// <title> は「題名 - 著者, …, 年」や「題名 | Science」なので最後の手段にする。
 function inferTitle(html: string, fallback = ""): string {
-  const citationTitle = html.match(/<meta[^>]+name=["']citation_title["'][^>]+content=["']([^"']+)["']/i)?.[1];
+  const citationTitle =
+    html.match(/<meta[^>]+name=["']citation_title["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+    html.match(/<meta[^>]+name=["']dc\.title["'][^>]+content=["']([^"']+)["']/i)?.[1];
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
   const titleTag = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1];
   const title = stripTags(citationTitle ?? h1 ?? titleTag ?? fallback).slice(0, 260);
@@ -143,6 +155,11 @@ function inferAuthors(html: string): string[] {
     .map((m) => stripTags(m[1] ?? ""))
     .filter(Boolean);
   if (metas.length) return metas;
+
+  const dcCreators = Array.from(html.matchAll(/<meta[^>]+name=["']dc\.creator["'][^>]+content=["']([^"']+)["'][^>]*>/gi))
+    .map((m) => stripTags(m[1] ?? ""))
+    .filter(Boolean);
+  if (dcCreators.length) return dcCreators;
 
   const sdMatches = Array.from(
     html.matchAll(/<span\b[^>]*class=["'][^"']*given-name[^"']*["'][^>]*>([\s\S]*?)<\/span>\s*<span\b[^>]*class=["'][^"']*surname[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi),
@@ -159,8 +176,15 @@ function inferAuthors(html: string): string[] {
 export function inferMeta(html: string, sourceUrl: string) {
   const meta = (name: string) =>
     stripTags(html.match(new RegExp(`<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']+)["']`, "i"))?.[1] ?? "");
-  const doi = meta("citation_doi") || meta("dc.identifier") || sourceUrl.match(/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0] || "";
-  const year = meta("citation_publication_date").match(/\d{4}/)?.[0] ?? "";
+  // dc.Identifier は出版社の記事番号（例: Science の "aaa6090"）のこともあるので、DOI の形のものだけ採る。
+  const dcDoi = Array.from(html.matchAll(/<meta[^>]+name=["']dc\.identifier["'][^>]+content=["']([^"']+)["']/gi))
+    .map((m) => m[1].trim())
+    .find((value) => /^10\.\d{4,9}\//.test(value));
+  const doi = meta("citation_doi") || dcDoi || sourceUrl.match(/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i)?.[0] || "";
+  const year =
+    [meta("citation_publication_date"), meta("citation_date"), meta("citation_online_date"), meta("dc.Date")]
+      .map((value) => value.match(/\d{4}/)?.[0])
+      .find(Boolean) ?? "";
   return {
     journal: meta("citation_journal_title"),
     year,
@@ -690,6 +714,7 @@ export function listArticleSets() {
         sourceUrl: set.sourceUrl,
         // Zotero同期の突き合わせキー。
         doi: set.doi ?? "",
+        articleType: set.articleType ?? null,
         chunkCount: set.chunkCount,
         createdAt: set.createdAt,
       };

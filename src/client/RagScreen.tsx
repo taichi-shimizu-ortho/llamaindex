@@ -5,6 +5,7 @@ import { api, errorMessage } from "./api.js";
 import { documentLabel } from "./documents.js";
 import { MarkdownText, PassageMapContext, type PassageMap } from "./markdown.js";
 import { modelLabel } from "../shared/modelLabel.js";
+import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
 import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, PreviewTarget, SectionGroup } from "./types.js";
 
@@ -202,6 +203,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
                   {documentLabel(paper)}
                 </span>
                 <span className="paper-meta">
+                  <ArticleTypeBadge type={info?.articleType ?? paper.articleType} />{" "}
                   {[info?.year, info ? `${info.paragraphs} ¶` : ""].filter(Boolean).join(" · ")}
                 </span>
                 {result && <span className={hits ? "pill ok" : "pill"}>{hits} hits</span>}

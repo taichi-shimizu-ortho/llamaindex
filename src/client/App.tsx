@@ -107,6 +107,14 @@ export function App() {
       .finally(() => setLoading(""));
   }, []);
 
+  // 取り込み直しや改名で消えた論文を、最近開いた一覧と Preview から外す。
+  useEffect(() => {
+    if (loading) return;
+    const ids = new Set(articleSets.map((set) => set.id));
+    setRecentIds((prev) => (prev.every((id) => ids.has(id)) ? prev : prev.filter((id) => ids.has(id))));
+    setPreviewTarget((prev) => (prev && !ids.has(prev.articleId) ? null : prev));
+  }, [loading, articleSets]);
+
   // Zotero 同期などでスコープのフォルダが消えたら、フォルダスコープを外す（手動選択に戻る）。
   useEffect(() => {
     if (loading || !corpusScope) return;

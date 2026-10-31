@@ -1,22 +1,12 @@
 // 取り込み済み論文 1本の中身を読む画面。Abstract・図・本文（セクション単位）と、参照文献の一覧を出す。
-// 参照文献は PubMed の Publication Type から Original / Review / Other に分けて絞り込める。
 // Documents のカードか、RAG の段落・論文ラベルから開く。段落から来たときはその段落へ飛ぶ。
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, errorMessage } from "./api.js";
-import {
-  ARTICLE_TYPE_LABEL,
-  ArticleContentBrowser,
-  locateParagraph,
-  ReferenceRow,
-  referenceType,
-  TARGET_PARAGRAPH_ID,
-  type ArticleType,
-} from "./ArticleBrowser.js";
+import { ArticleContentBrowser, locateParagraph, ReferenceRow, TARGET_PARAGRAPH_ID } from "./ArticleBrowser.js";
+import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { documentLabel, matchingReferenceSet } from "./documents.js";
 import { ReferenceMapContext } from "./markdown.js";
 import type { ArticleSet, ArticleSetSummary, PreviewTarget, ReferenceRecord, ReferenceSet, ReferenceSetSummary } from "./types.js";
-
-const ARTICLE_TYPES: ArticleType[] = ["original", "review", "other"];
 
 interface PreviewScreenProps {
   articleSets: ArticleSetSummary[];
@@ -34,7 +24,6 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
   const [referenceSet, setReferenceSet] = useState<ReferenceSet | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [refFilter, setRefFilter] = useState<ArticleType | "all">("all");
   const scrolledNonce = useRef(-1);
 
   const articleId = target?.articleId ?? "";
@@ -45,7 +34,6 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
     let cancelled = false;
     setLoading(true);
     setError("");
-    setRefFilter("all");
     Promise.all([api.articleSet(articleId), refSummary ? api.referenceSet(refSummary.id) : Promise.resolve(null)])
       .then(([nextArticle, nextRefs]) => {
         if (cancelled) return;
@@ -84,17 +72,6 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
   const refMap = useMemo(
     () => new Map<number, ReferenceRecord>(referenceSet?.records.map((r) => [r.index, r]) ?? []),
     [referenceSet],
-  );
-  const typeCounts = useMemo(() => {
-    const counts: Record<ArticleType, number> = { original: 0, review: 0, other: 0 };
-    for (const record of referenceSet?.records ?? []) {
-      const type = referenceType(record);
-      if (type) counts[type] += 1;
-    }
-    return counts;
-  }, [referenceSet]);
-  const records = (referenceSet?.records ?? []).filter(
-    (record) => refFilter === "all" || referenceType(record) === refFilter,
   );
 
   const sortedSets = useMemo(
@@ -164,7 +141,9 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
           <div className="dataset-summary">
             <div className="article-meta-header">
               {shown.year && <div className="article-year">{[shown.year, shown.journal].filter(Boolean).join(" · ")}</div>}
-              <h2>{documentLabel(shown)}</h2>
+              <h2>
+                <ArticleTypeBadge type={shown.articleType} /> {documentLabel(shown)}
+              </h2>
               {shown.authors?.length > 0 && <div className="article-authors">{shown.authors.join(", ")}</div>}
               <p className="article-source-url">
                 <span className="doc-id">{shown.id}</span>
@@ -210,27 +189,10 @@ export function PreviewScreen({ articleSets, referenceSets, target, recentIds, a
 
           <div className="sources-head references-head">
             <h2>References ({referenceSet?.records.length ?? 0})</h2>
-            {referenceSet && (
-              <div className="section-filter">
-                <button className={refFilter === "all" ? "fchip active" : "fchip"} onClick={() => setRefFilter("all")}>
-                  All {referenceSet.records.length}
-                </button>
-                {ARTICLE_TYPES.map((type) => (
-                  <button
-                    key={type}
-                    className={refFilter === type ? "fchip active" : "fchip"}
-                    onClick={() => setRefFilter(type)}
-                    disabled={!typeCounts[type]}
-                  >
-                    {ARTICLE_TYPE_LABEL[type]} {typeCounts[type]}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
           {referenceSet ? (
             <div className="ref-list">
-              {records.map((record) => (
+              {referenceSet.records.map((record) => (
                 <ReferenceRow key={`${record.index}-${record.pmid}-${record.href}`} record={record} />
               ))}
             </div>

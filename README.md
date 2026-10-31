@@ -88,15 +88,18 @@ Zotero側には一切書き込まない。
 Documents で選んだフォルダ（または手動で選んだ論文）の本文を段落単位で横断検索し、上位の段落だけを Claude に渡して回答させる。
 画面上部と保存する md の各回に、対象のスコープ（例 `Folder: Rxfp1 / Clinical (with subfolders)` / `Custom selection`）を出す。
 
-- **索引の単位**: 1段落 = 1検索単位。各段落に論文メタデータ（引用ラベル・タイトル・著者・年・誌名・DOI）と構造メタデータ
-  （節・小見出し・節の種類・段落番号）を持たせる。abstract は本文とほぼ同じ文で top-K を食いつぶすので除く（本文が無い論文だけ残す）。
-  利益相反・著者貢献などの定型節も除く。
+- **索引に入れるもの**: 本文・図の legend・表だけ。abstract と参照文献は入れない（本文が無い論文は検索対象から外れる）。
+  構造化 abstract が Purpose / Methods … の節として本文側にも入っている論文は、abstract と同じ文の段落を除く。
+  利益相反・著者貢献などの定型節と、図の画像URLも除く。
+- **索引の単位**: 1段落 = 1検索単位。各段落に論文メタデータ（引用ラベル・種別・タイトル・著者・年・誌名・DOI）と構造メタデータ
+  （節・小見出し・節の種類・段落番号）を持たせる。表は1つの表を1単位にまとめ（1行ずつ取り込まれた表も Markdown の表に戻す）、
+  長い表は表題と列見出しを付けたまま行の束に分ける。
 - **引用ラベル**: 論文JSONのID（取り込み時の連番 `-2` などを落としたもの。例 `Li2026`）。同名があれば `Li2026a` / `Li2026b`。
 - **節の種類**: Intro / Methods / Results / Discussion / Conclusion / Figures / Tables / Other に揃える。
   取り込み元によって type が `body` や `other` のときは見出しから推定する。`Sections` チップで絞り込める。
 - **Top-K / Per paper**: 回答に渡す段落数と、1論文から取る上限（0 = 上限なし）。1本の論文が上位を独占しないよう既定は 3。
 - **回答**: Claude は根拠段落を `[S3]` / `[S2, S7]` で引用する。画面では論文ラベルのチップになり、ホバーで節・段落、クリックで該当段落へ飛ぶ。
-  論文間で結果が違うときは論文ラベルを添えて比べるよう指示している。
+  論文間で結果が違うときは論文ラベルを添えて比べ、総説に拠る記述はそう断るよう指示している。
 - **埋め込み**: 論文ごとにディスクキャッシュする（`embeddings_cache/corpus/<id>.json`）。組み合わせを変えても再埋め込みしない。
   RAG 画面を開いた時点で未作成の分だけ作る。論文JSONを取り込み直すと（更新日時が変われば）作り直す。
 - 毎回の質問と回答・根拠段落は `<Obsidian>/50_coding/llamaindex/<日時>_corpus_rag.md` に追記する。
@@ -107,8 +110,19 @@ Documents で選んだフォルダ（または手動で選んだ論文）の本�
 Documents の文献カードの `Preview`、または RAG の論文ラベル・根拠段落から開く。上部のプルダウンで論文を切り替え、最近開いた論文はチップから戻れる。
 
 - **本文**: Abstract・Figures・Main Text を節・小見出し単位で開閉して読む。本文中の引用番号 `[12]` はホバーで参照文献の情報を出す。
-- **References**: 参照文献の一覧（PubMed のタイトル・著者・誌名・年・PMID・abstract・MeSH）。PubMed の Publication Type から
-  `Original` / `Review` / `Other` のバッジを付け、チップで絞り込める。種別を保存する前に取り込んだ参照文献JSONは Publication Type から判定する。
+- **References**: 参照文献の一覧（PubMed のタイトル・著者・誌名・年・PMID・abstract・MeSH）。
+
+### 主論文の種別（Original / Review）
+
+取り込む主論文は原著か総説のどちらか（コメンタリー・エディトリアル等はそもそも取り込まない方針）なので、PubMed の Publication Type で
+`Original` / `Review` の2つに分ける（Review / Systematic Review / Meta-Analysis を含めば Review、それ以外は Original）。
+DOI で PubMed を引き、DOI が無ければタイトルが一致するときだけ採る。結果は論文JSONに `articleType` / `pmid` / `publicationTypes` として書き込み、
+Documents のカード・Preview・RAG の論文一覧と根拠段落にバッジで出す。RAG では回答モデルにも種別を渡す。
+
+- 取り込み時に分類する。分類前に取り込んだ論文は、サーバ起動時に裏でまとめて分類する（確認済みは飛ばす）。
+- PubMed に無い論文（原稿・プレプリントなど）は未分類のまま（バッジなし）。通信エラーなら次の起動で再試行する。
+- PubMed にまだ無い論文（accept 直後の原稿など）は、論文JSONに `"articleType": "review"` と `"articleTypeSource": "manual"` を書けば
+  その種別で表示し、分類し直さない（例: `Nishimura2026`）。
 
 ## 主なファイル
 
@@ -116,6 +130,7 @@ Documents の文献カードの `Preview`、または RAG の論文ラベル・�
 |---|---|
 | `src/server/articleHarvester.ts` | 論文ページのHTML/JATSから主論文JSON（節・段落・図表）を作る |
 | `src/server/referenceHarvester.ts` | HTMLから参考文献候補を抽出し、PubMed E-utilitiesでPMID/abstractを取得してJSON保存 |
+| `src/server/articleClassifier.ts` | 主論文を PubMed で Original / Review に分類して論文JSONに書き込む（取り込み時・起動時） |
 | `src/server/corpusRag.ts` | 複数論文の段落索引（メタデータ付き）、横断検索、Claude による引用付き回答 |
 | `src/server/embeddingStore.ts` | 埋め込みのディスクキャッシュとコサイン類似度 |
 | `src/server/server.ts` | Express API |
@@ -125,7 +140,7 @@ Documents の文献カードの `Preview`、または RAG の論文ラベル・�
 | `src/client/LibraryScreen.tsx` | ドキュメント選択・取り込み画面（フォルダツリー、Import、文献カード） |
 | `src/client/ZoteroPanel.tsx` | Zotero同期パネル（接続状態、プレビュー、適用） |
 | `src/client/RagScreen.tsx` | 複数論文RAG画面（対象論文一覧、検索、回答、根拠段落） |
-| `src/client/PreviewScreen.tsx` | 論文1本の Preview 画面（論文の切り替え、本文、参照文献の種別絞り込み） |
+| `src/client/PreviewScreen.tsx` | 論文1本の Preview 画面（論文の切り替え、本文、参照文献） |
 | `src/client/ArticleBrowser.tsx` | 本文・図の節単位ブラウザ（RAG の段落への位置合わせ）と参照文献の行 |
 
 保存先（gitリポジトリ外。Dropbox同期で他端末と共有する）:

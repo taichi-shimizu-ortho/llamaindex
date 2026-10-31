@@ -23,6 +23,7 @@ import type {
   LibraryState,
   ReferenceSetSummary,
 } from "./types.js";
+import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { ZoteroPanel } from "./ZoteroPanel.js";
 
 // corpus RAG が想定する本数の上限。超えても検索はできるが、ボタンで注意を出す。
@@ -460,6 +461,7 @@ function DocumentCard({
           aria-label={`Include ${set.id} in the RAG corpus`}
         />
         <h3 className="doc-title">{documentLabel(set)}</h3>
+        <ArticleTypeBadge type={set.articleType} />
         {zoteroKey && (
           <span className="pill zotero-pill" title={`Linked to Zotero item ${zoteroKey}`}>
             Zotero

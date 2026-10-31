@@ -1,5 +1,6 @@
 // 検索結果のソースカード（複数論文 RAG の 1段落）。
 import { useState } from "react";
+import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { CitedText } from "./markdown.js";
 import type { CorpusSource, SectionGroup } from "./types.js";
 
@@ -45,6 +46,7 @@ export function CorpusSourceCard({
         <div className="source-cite">
           <div className="source-citekey">
             {source.label}
+            <ArticleTypeBadge type={source.articleType} />
             <span className="pill group-pill">{SECTION_GROUP_LABEL[source.sectionGroup]}</span>
             {source.cited && <span className="pill ok">Cited</span>}
           </div>

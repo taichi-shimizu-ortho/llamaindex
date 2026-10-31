@@ -1,12 +1,14 @@
 // 複数論文（10〜30本）をまとめて検索する corpus RAG。
 // rxfp1 と同じく 1段落 = 1検索単位とし、各段落に論文メタデータ（引用ラベル・著者・年・誌名・DOI）と
 // 構造メタデータ（節・節の種類・小見出し・段落番号）を持たせて、全論文を横断して top-K を引く。
+// 索引に入れるのは本文・図の legend・表だけ。abstract と参照文献は入れない。
 // 埋め込みは論文ごとにディスクキャッシュするので、論文の組み合わせを変えても再埋め込みしない。
 import fs from "node:fs";
 import { MODELS } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { generateAnswer, hasJapanese, translateToEnglish } from "./llm.js";
 import { articleSetPath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
 
 // 節の種類を論文横断で揃えた分類。取り込み元によって type が "body" や "other" のこともあるので、
 // そのときは見出しから推定する。
@@ -29,6 +31,9 @@ const BOILERPLATE_TITLE =
 
 function groupFromTitle(title: string): SectionGroup {
   const t = title.toLowerCase();
+  // 取り込み元によっては図表も type "other" で来る（例: Lourenco2020 の "TABLE 1"）
+  if (/^(table|tab\.)\s*[a-z]?\d/.test(t)) return "table";
+  if (/^(figure|fig\.?)\s*[a-z]?\d/.test(t)) return "figure";
   if (/method|material|study design|patients and/.test(t)) return "methods";
   if (/result/.test(t)) return "results";
   if (/discussion|limitation/.test(t)) return "discussion";
@@ -41,11 +46,57 @@ function sectionGroup(type: string, title: string): SectionGroup {
   return TYPE_GROUPS[type] ?? groupFromTitle(title);
 }
 
-// 段落テキスト中のリンクを落として空白を詰める。表は行構造を残す。
+// 段落テキスト中のリンクと図の画像URLを落として空白を詰める。表は行構造を残す。
 function cleanText(text: string, group: SectionGroup): string {
-  const unlinked = text.replace(/\[[^\]]*\]\(https?:\/\/[^\)]+\)/g, "");
+  const unlinked = text.replace(/\[[^\]]*\]\(https?:\/\/[^\)]+\)/g, "").replace(/\[Image URL:[^\]]*\]/gi, "");
   if (group === "table") return unlinked.trim();
   return unlinked.replace(/\s+/g, " ").trim();
+}
+
+// これより長い表は、表題と列見出しを付けたまま行の束に分ける（埋め込みの入力上限と検索の粒度のため）。
+const TABLE_CHUNK_CHARS = 4000;
+
+// "a | b | c" のような行を Markdown の表の行（"| a | b | c |"）に揃える。
+function tableRow(line: string): string {
+  if (!line.includes("|") || line.startsWith("|")) return line;
+  return `| ${line} |`;
+}
+
+// 表は1段落に Markdown で入っていることも、1行ずつ段落に分かれていることもある。
+// 1行だけでは表題も列名も無く検索の役に立たないので、表全体を1単位にまとめる。
+function tableChunks(paragraphs: string[]): string[] {
+  const lines = paragraphs
+    .flatMap((p) => cleanText(p, "table").split("\n"))
+    .map((line) => tableRow(line.trim()))
+    .filter(Boolean);
+  const header = lines.findIndex((line) => line.startsWith("|"));
+  if (header >= 0 && !/^\|[\s:|-]+\|$/.test(lines[header + 1] ?? "")) {
+    const columns = lines[header].split("|").length - 2;
+    lines.splice(header + 1, 0, `|${" --- |".repeat(Math.max(columns, 1))}`);
+  }
+  const whole = lines.join("\n");
+  if (whole.length <= TABLE_CHUNK_CHARS || header < 0) return whole ? [whole] : [];
+
+  const head = lines.slice(0, header + 2);
+  const headLength = head.join("\n").length;
+  const chunks: string[] = [];
+  let rows: string[] = [];
+  let length = headLength;
+  for (const row of lines.slice(header + 2)) {
+    if (rows.length && length + row.length > TABLE_CHUNK_CHARS) {
+      chunks.push([...head, ...rows].join("\n"));
+      rows = [];
+      length = headLength;
+    }
+    rows.push(row);
+    length += row.length + 1;
+  }
+  if (rows.length) chunks.push([...head, ...rows].join("\n"));
+  return chunks;
+}
+
+function normalized(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 // 取り込み時の連番サフィックス（-2 など）を落とした ID を引用ラベルにする（例: Li2026）。
@@ -69,17 +120,31 @@ interface PaperIndex {
   embeddings: number[][];
 }
 
-// abstract は本文（Results/Conclusion など）とほぼ同じ文を含み、top-K を同じ内容で食いつぶすので除く。
-// 本文が取れていない論文だけは abstract を残して検索できるようにする。
-function paragraphsOf(set: ArticleSet, includeAbstract = false): Paragraph[] {
+// abstract は入れない。構造化 abstract が Purpose / Methods / Results … の節として本文側にも
+// 取り込まれている論文があるので（例: Yang2021）、abstract と同じ文の段落も本文から除く。
+function paragraphsOf(set: ArticleSet): Paragraph[] {
+  const abstract = normalized(
+    set.sections
+      .filter((section) => section.type === "abstract")
+      .flatMap((section) => [...section.paragraphs, ...section.subsections.flatMap((sub) => sub.paragraphs)])
+      .join(" "),
+  );
+  const inAbstract = (text: string) => {
+    const t = normalized(text);
+    return t.length >= 40 && abstract.includes(t);
+  };
+
   const out: Paragraph[] = [];
   for (const section of set.sections) {
-    if (section.type === "abstract" && !includeAbstract) continue;
-    const group = section.type === "abstract" ? "other" : sectionGroup(section.type, section.title);
+    if (section.type === "abstract") continue;
+    const group = sectionGroup(section.type, section.title);
     if (!TYPE_GROUPS[section.type] && BOILERPLATE_TITLE.test(section.title.trim())) continue;
 
     const push = (paragraphs: string[], subsection: string) => {
-      const texts = paragraphs.map((p) => cleanText(p, group)).filter(Boolean);
+      const texts =
+        group === "table"
+          ? tableChunks(paragraphs)
+          : paragraphs.map((p) => cleanText(p, group)).filter((text) => text && (group === "figure" || !inAbstract(text)));
       texts.forEach((text, i) =>
         out.push({
           text,
@@ -101,9 +166,8 @@ const cache = new Map<string, Promise<PaperIndex>>();
 
 async function buildPaperIndex(id: string, mtimeMs: number): Promise<PaperIndex> {
   const set = loadArticleSet(id);
-  let paragraphs = paragraphsOf(set);
-  if (!paragraphs.length) paragraphs = paragraphsOf(set, true);
-  if (!paragraphs.length) throw new Error("No paragraphs to search");
+  const paragraphs = paragraphsOf(set);
+  if (!paragraphs.length) throw new Error("No main text to search (abstracts are not indexed)");
   const embeddings = await getEmbeddings("corpus", id, paragraphs.map((p) => p.text));
   return { set, mtimeMs, paragraphs, embeddings };
 }
@@ -146,6 +210,8 @@ export interface CorpusPaper {
   journal: string;
   doi: string;
   sourceUrl: string;
+  // PubMed での分類（未確認・PubMed に無ければ null）
+  articleType: MainArticleType | null;
   paragraphs: number;
   // 直近の検索で top-K に入った段落数（prepare では 0）
   hits: number;
@@ -204,6 +270,7 @@ async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
       journal: set.journal,
       doi: set.doi,
       sourceUrl: set.sourceUrl,
+      articleType: set.articleType ?? null,
       paragraphs: index.paragraphs.length,
       hits: 0,
     };
@@ -237,6 +304,7 @@ export interface CorpusSource {
   journal: string;
   doi: string;
   sourceUrl: string;
+  articleType: MainArticleType | null;
   section: string;
   subsection: string;
   sectionGroup: SectionGroup;
@@ -296,7 +364,13 @@ async function synthesize(enQuery: string, sources: CorpusSource[]) {
   if (!sources.length) return { text: "No relevant passages were found in the selected papers.", model: MODELS.llm };
   const context = sources
     .map((s) => {
-      const meta = [s.authors.split(",")[0]?.trim() && `${s.authors.split(",")[0].trim()} et al.`, s.year, s.journal]
+      // 原著か総説かを渡し、総説の記述（二次情報）と原著の結果を区別して書けるようにする。
+      const meta = [
+        s.articleType && `${MAIN_ARTICLE_TYPE_LABEL[s.articleType]} article`,
+        s.authors.split(",")[0]?.trim() && `${s.authors.split(",")[0].trim()} et al.`,
+        s.year,
+        s.journal,
+      ]
         .filter(Boolean)
         .join(", ");
       return [
@@ -313,6 +387,7 @@ async function synthesize(enQuery: string, sources: CorpusSource[]) {
     "After each statement, cite the supporting passages by their identifiers in square brackets, e.g. [S3] or [S2, S7].",
     "Use only S-identifiers for citations; numeric brackets inside passages are the articles' own references and must not be used as citations.",
     "Attribute findings to their paper by its label (e.g. Li2026) when comparing studies, and point out where papers agree, disagree, or report different numbers.",
+    "Each passage header says whether its paper is an original article or a review; when a statement rests on a review, say so, since reviews summarize other studies rather than report new data.",
     "If the passages do not contain enough information, say so clearly.",
     "Always answer in English, regardless of the language of the user's query.",
   ].join(" ");
@@ -370,6 +445,7 @@ export async function runCorpusQuery(
       journal: paper.journal,
       doi: paper.doi,
       sourceUrl: paper.sourceUrl,
+      articleType: paper.articleType,
       section: para.section,
       subsection: para.subsection,
       sectionGroup: para.group,

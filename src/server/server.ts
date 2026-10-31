@@ -3,7 +3,8 @@ import path from "node:path";
 import fs from "node:fs";
 import express from "express";
 import { harvestReferences, listReferenceSets, loadReferenceSet } from "./referenceHarvester.js";
-import { harvestArticle, listArticleSets, loadArticleSet } from "./articleHarvester.js";
+import { harvestArticle, listArticleSets, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { classifyArticle, classifyUncheckedArticles } from "./articleClassifier.js";
 import { prepareCorpus, runCorpusQuery, type CorpusQueryResult, type CorpusSource } from "./corpusRag.js";
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
@@ -74,11 +75,23 @@ function errorText(e: unknown): string {
   return String((e as any)?.message ?? e);
 }
 
-function articleSummary(article: Awaited<ReturnType<typeof harvestArticle>>) {
+// 取り込んだ主論文を PubMed で Original / Review に分類する。
+// 失敗しても取り込みは成功扱いにする（未確認のまま残り、次のサーバ起動で再試行される）。
+async function withArticleType(set: ArticleSet): Promise<ArticleSet> {
+  try {
+    return await classifyArticle(set.id);
+  } catch (e) {
+    console.warn(`[classify] ${set.id}: ${errorText(e)}`);
+    return set;
+  }
+}
+
+function articleSummary(article: ArticleSet) {
   return {
     id: article.id,
     title: article.title,
     sourceUrl: article.sourceUrl,
+    articleType: article.articleType ?? null,
     chunkCount: article.chunkCount,
     extractionSource: article.extractionSource,
     createdAt: article.createdAt,
@@ -111,7 +124,7 @@ app.post("/api/import/ors", async (req, res) => {
   } = { ok: false };
 
   try {
-    result.article = articleSummary(await harvestArticle({ sourceUrl, html, title, jatsXml }));
+    result.article = articleSummary(await withArticleType(await harvestArticle({ sourceUrl, html, title, jatsXml })));
   } catch (e) {
     result.articleError = errorText(e);
   }
@@ -159,7 +172,7 @@ app.get("/api/article/sets/:id", (req, res) => {
 app.post("/api/article/harvest", async (req, res) => {
   const { sourceUrl, html, title } = req.body ?? {};
   try {
-    const result = await harvestArticle({ sourceUrl, html, title });
+    const result = await withArticleType(await harvestArticle({ sourceUrl, html, title }));
     res.json(result);
   } catch (e: any) {
     console.error(e);
@@ -314,4 +327,6 @@ app.listen(PORT, () => {
   const missing = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"].filter((key) => !process.env[key]);
   console.log(`[server] answer model: ${modelLabel(MODELS.llm)} (${MODELS.llm})`);
   console.log(`[server] api ready: ${missing.length ? `missing ${missing.join(", ")}` : "with OPENAI_API_KEY and ANTHROPIC_API_KEY"}`);
+  // 分類前に取り込んだ論文を、起動のたびに裏で分類しておく（済んだものは飛ばす）。
+  classifyUncheckedArticles().catch((e) => console.warn(`[classify] ${errorText(e)}`));
 });

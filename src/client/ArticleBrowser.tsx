@@ -1,6 +1,5 @@
 // 主論文JSONの本文・図をセクション単位で展開表示するブラウザと、参照文献一覧の行（Preview 画面で使う）。
 // RAG の段落から開いたときは、その段落を含むセクションを開いて強調する。
-import { classifyArticleType, type ArticleType } from "../shared/articleType.js";
 import { CitedText } from "./markdown.js";
 import type { ArticleSection, ArticleSet, ArticleSubsection, ReferenceRecord } from "./types.js";
 
@@ -243,24 +242,8 @@ export function ArticleContentBrowser({ article, target }: { article: ArticleSet
   );
 }
 
-export type { ArticleType };
-
-// 種別を保存する前に取り込んだ参照文献JSONは publicationTypes だけ持つので、そこから判定する。
-export function referenceType(record: ReferenceRecord): ArticleType | undefined {
-  const pubmed = record.pubmed;
-  if (!pubmed) return undefined;
-  return pubmed.articleType ?? (pubmed.publicationTypes?.length ? classifyArticleType(pubmed.publicationTypes) : undefined);
-}
-
-export const ARTICLE_TYPE_LABEL: Record<ArticleType, string> = {
-  review: "Review",
-  original: "Original",
-  other: "Other",
-};
-
 export function ReferenceRow({ record }: { record: ReferenceRecord }) {
   const abstract = record.pubmed?.abstract ?? "";
-  const articleType = referenceType(record);
   const meshTerms = record.pubmed?.meshTerms ?? [];
   return (
     <details className={abstract ? "ref-details" : "ref-details muted-row"}>
@@ -270,9 +253,6 @@ export function ReferenceRow({ record }: { record: ReferenceRecord }) {
           <div className="ref-main">
             <div className="ref-title">{record.pubmed?.title || record.text}</div>
             <div className="ref-meta">
-              {articleType && (
-                <span className={`ref-type ref-type-${articleType}`}>{ARTICLE_TYPE_LABEL[articleType]}</span>
-              )}
               {record.pubmed?.authors?.[0] && (
                 <span>
                   {record.pubmed.authors[0]}

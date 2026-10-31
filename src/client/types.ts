@@ -1,3 +1,5 @@
+import type { MainArticleType } from "../shared/articleType.js";
+
 export interface Status {
   hasApiKey: boolean;
   missingKeys: string[];
@@ -47,6 +49,8 @@ export interface ArticleSetSummary {
   title: string;
   sourceUrl: string;
   doi?: string;
+  // PubMed での分類（未確認・PubMed に無ければ null）
+  articleType?: MainArticleType | null;
   chunkCount: number;
   createdAt: string;
 }
@@ -79,6 +83,9 @@ export interface ArticleSet {
   createdAt: string;
   sections: ArticleSection[];
   chunkCount: number;
+  pmid?: string;
+  publicationTypes?: string[];
+  articleType?: MainArticleType | null;
 }
 
 /** Preview で開く論文と、RAG の段落から来たときの飛び先 */
@@ -102,6 +109,7 @@ export interface CorpusPaper {
   journal: string;
   doi: string;
   sourceUrl: string;
+  articleType: MainArticleType | null;
   paragraphs: number;
   hits: number;
 }
@@ -129,6 +137,7 @@ export interface CorpusSource {
   journal: string;
   doi: string;
   sourceUrl: string;
+  articleType: MainArticleType | null;
   section: string;
   subsection: string;
   sectionGroup: SectionGroup;

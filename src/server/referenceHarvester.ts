@@ -764,6 +764,20 @@ async function titleToPmid(text: string): Promise<string> {
   return data?.esearchresult?.idlist?.[0] ?? "";
 }
 
+function normalizedTitle(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+// 主論文の PubMed レコード。DOI で引き、DOI が無いときだけタイトルで探す。
+// タイトル検索は別の論文に当たりやすいので、取れたレコードのタイトルが一致するときだけ採る。
+export async function findPubmedRecord(doi: string, title: string): Promise<ReferenceRecord["pubmed"] | undefined> {
+  if (doi) return fetchPubmedRecord(await doiToPmid(doi));
+  const record = await fetchPubmedRecord(await titleToPmid(title));
+  const want = normalizedTitle(title);
+  const got = normalizedTitle(record?.title ?? "");
+  return want.length >= 20 && got && (got.includes(want) || want.includes(got)) ? record : undefined;
+}
+
 function xmlText(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
   return m ? stripTags(m[1]) : "";
