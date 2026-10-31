@@ -11,6 +11,9 @@ RAG を使うのは、本数が多く全文をそのまま渡せないときだ�
 
 ## 想定ワークフロー
 
+**主経路は CLI（MHTML）**。出版社サイトで論文を開き MHTML で保存 → `npm run ingest` で Zotero 登録と JSON 化までまとめて行う。
+詳しくは下の「CLI取り込み（MHTML）」。以下のブックマークレット経路も引き続き使える。
+
 1. 制限付き論文をログイン済みブラウザで開く。
 2. Web UIの `ORS Import` ブックマークレットをChromeのブックマークバーに登録する。
 3. 論文ページを開いた状態でブックマークレットを実行し、主論文JSONとReference JSONを作る。
@@ -20,6 +23,36 @@ RAG を使うのは、本数が多く全文をそのまま渡せないときだ�
 
 サーバ側のURL取得も使えますが、ログインCookieは共有されないため、制限付き記事ではHTMLファイル/貼り付けが主経路です。
 ブックマークレットはログイン済みChromeの現在DOMを `http://localhost:5174/api/import/ors` に送るため、制限付き記事ではこちらが推奨経路です。
+
+## CLI取り込み（MHTML）
+
+1. 出版社サイトで論文の全文ページを開き、Chrome の「ページを保存」→「ウェブページ、1 つのファイル」で `.mhtml` を Downloads に保存する
+   （Dropbox のダウンロード同期を使っている Mac では `~/Library/CloudStorage/Dropbox/Mac (2)/Downloads`。`INGEST_DOWNLOADS_DIR` で変更可）。
+2. Zotero 7 を起動しておく（下の「Zotero連携」の準備と同じ）。
+3. 取り込む:
+
+```bash
+npm run ingest -- -c general --doi 10.1177/03635465261479923
+```
+
+| オプション | 意味 |
+|---|---|
+| `-c <コレクション>` | 登録先の Zotero コレクション名（必須）。同名が複数あるときは `親/子` で指定 |
+| `--doi <DOI>` | 省略するとページ内の DOI を使う。指定するとページ内の DOI と照合し、食い違えば止める |
+| ファイル指定 | 省略すると Downloads の最新の `.mhtml` 1本。`--all` で Downloads の `.mhtml` を全部 |
+| `--dry-run` | 何も書かずに DOI・移動先・Zotero への登録内容だけ表示 |
+| `--no-zotero` | Zotero に触れず、移動と JSON 化だけ |
+
+1本ごとに次を行う:
+
+1. MHTML から本体の HTML と元URL・DOI を読む。
+2. MHTML を `<Obsidian>/50_coding/llamaindex/mhtml/<DOI>.mhtml` へ**移動**して原本として保持する（主論文JSONの `sourceMhtml` にパスを残す）。
+3. Zotero に DOI で登録し、指定コレクションに入れる（doi.org の書誌 → Zotero コネクタ）。
+   **同じ DOI が既に Zotero にあれば登録しない**。そのアイテムが指定コレクションに入っていなければ警告だけ出す（既存アイテムのコレクションは Zotero で手で変える）。
+4. 主論文JSON・参考文献JSONを作り（Import 画面と同じパーサ）、PubMed で Original / Review に分類する。
+
+最後に Zotero のコレクション構成をフォルダへ同期する（`Sync collections` → `Apply` と同じ）ので、Web UI ではそのままコレクションのフォルダに入っている。
+Zotero に書き込むのはこの CLI だけで、Web UI の Zotero 同期は読み取り専用のまま。
 
 ## ORSブックマークレット
 
@@ -136,6 +169,9 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 | `src/server/server.ts` | Express API |
 | `src/server/library.ts` | フォルダ構成（library.json）の読み書き。ネスト・循環チェック・削除時の未分類化 |
 | `src/server/zotero.ts` | Zotero ローカルAPIの読み取りと、コレクション→フォルダ同期 |
+| `src/server/zoteroConnector.ts` | CLI 取り込み用の Zotero 書き込み（DOI → アイテム登録 → コレクション指定） |
+| `src/server/mhtml.ts` | MHTML から本体の HTML と元URLを取り出す |
+| `scripts/ingest-mhtml.ts` | CLI 取り込み（`npm run ingest`）: 移動 → Zotero 登録 → JSON 化 → フォルダ同期 |
 | `src/client/App.tsx` | 画面シェル（Documents / RAG / Preview の切り替え、データ読み込み） |
 | `src/client/LibraryScreen.tsx` | ドキュメント選択・取り込み画面（フォルダツリー、Import、文献カード） |
 | `src/client/ZoteroPanel.tsx` | Zotero同期パネル（接続状態、プレビュー、適用） |
@@ -149,6 +185,7 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 <Obsidian>/50_coding/llamaindex/reference_sets   # 参考文献セット JSON
 <Obsidian>/50_coding/llamaindex/article_sets     # 主論文セット JSON
 <Obsidian>/50_coding/llamaindex/raw_html         # 取り込み時の入力HTML（再現性確保・パーサ検証用）
+<Obsidian>/50_coding/llamaindex/mhtml            # CLI 取り込みの元 MHTML（<DOI>.mhtml）
 <Obsidian>/50_coding/llamaindex/library.json     # ドキュメント選択画面のフォルダ構成
 ```
 

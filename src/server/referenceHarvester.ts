@@ -99,18 +99,20 @@ function mapChars(text: string, map: Record<string, string>): string {
 function convertSubSup(s: string): string {
   return s
     .replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_m, inner: string) =>
-      mapChars(inner.replace(/<[^>]+>/g, ""), SUBSCRIPT_MAP),
+      mapChars(decodeHtmlEntities(inner.replace(/<[^>]+>/g, "")), SUBSCRIPT_MAP),
     )
     .replace(/<sup\b[^>]*>([\s\S]*?)<\/sup>/gi, (_m, inner: string) =>
-      mapChars(inner.replace(/<[^>]+>/g, ""), SUPERSCRIPT_MAP),
+      mapChars(decodeHtmlEntities(inner.replace(/<[^>]+>/g, "")), SUPERSCRIPT_MAP),
     );
 }
 
 function stripTags(s: string): string {
-  return convertSubSup(decodeHtmlEntities(s))
+  // 実体参照はタグを除いた後で戻す。先に戻すと "P &lt; .01 … (P &gt;" の間がタグと見なされて消える。
+  const text = convertSubSup(s)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^>]+>/g, " ");
+  return decodeHtmlEntities(text)
     .replace(/\s+/g, " ")
     .trim();
 }

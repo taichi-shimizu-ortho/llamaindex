@@ -12,8 +12,8 @@ function decodeHtmlEntities(s: string): string {
 }
 
 function stripTags(html: string): string {
-  return decodeHtmlEntities(html)
-    .replace(/<[^>]+>/g, " ")
+  // 実体参照はタグを除いた後で戻す。先に戻すと "P &lt; .01 … (P &gt;" の間がタグと見なされて消える。
+  return decodeHtmlEntities(html.replace(/<[^>]+>/g, " "))
     .replace(/\s+/g, " ")
     .trim();
 }

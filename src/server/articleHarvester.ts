@@ -32,6 +32,8 @@ export interface ArticleSet {
   sections: ArticleSection[];
   chunkCount: number;
   extractionSource?: string;
+  // CLI 取り込みの元 MHTML（PATHS.outputDir からの相対パス）
+  sourceMhtml?: string;
   // PubMed での分類（articleClassifier.ts が書く）。見つからなければ articleType は null
   pmid?: string;
   publicationTypes?: string[];
@@ -79,7 +81,7 @@ const SUBSCRIPT_MAP: Record<string, string> = {
 };
 function convertSub(s: string): string {
   return s.replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_m, inner: string) =>
-    Array.from(inner.replace(/<[^>]+>/g, ""))
+    Array.from(decodeHtmlEntities(inner.replace(/<[^>]+>/g, "")))
       .map((ch) => SUBSCRIPT_MAP[ch] ?? ch)
       .join(""),
   );
@@ -93,12 +95,14 @@ function formatHtmlCitations(s: string): string {
 
 function stripTags(s: string): string {
   const cited = formatHtmlCitations(s);
-  return convertSub(decodeHtmlEntities(cited))
+  // 実体参照はタグを除いた後で戻す。先に戻すと "P &lt; .01 … (P &gt;" の間がタグと見なされて消える。
+  const text = convertSub(cited)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<table\b[\s\S]*?<\/table>/gi, " ")
     .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^>]+>/g, " ");
+  return decodeHtmlEntities(text)
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -462,12 +466,12 @@ function isBoilerplateParagraph(text: string): boolean {
 }
 
 function stripTagsNoTable(s: string): string {
-  return convertSub(decodeHtmlEntities(s))
+  const text = convertSub(s)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    
     .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^>]+>/g, " ");
+  return decodeHtmlEntities(text)
     .replace(/\s+/g, " ")
     .trim();
 }

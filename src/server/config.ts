@@ -32,6 +32,8 @@ export const PATHS = {
   referenceOutputDir: path.join(BASE, "reference_sets"),
   articleOutputDir: path.join(BASE, "article_sets"),
   rawHtmlDir: path.join(BASE, "raw_html"),
+  // CLI 取り込み（npm run ingest）で保存した MHTML の原本。<DOI>.mhtml で置く。
+  mhtmlDir: path.join(BASE, "mhtml"),
   // ドキュメント選択画面のフォルダ構成（フォルダ定義と文献の振り分け）。
   libraryFile: path.join(BASE, "library.json"),
   // 埋め込みベクトルのキャッシュ（再起動時の再埋め込みを避ける）。

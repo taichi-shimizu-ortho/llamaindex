@@ -172,7 +172,7 @@ export async function zoteroStatus(): Promise<ZoteroStatus> {
 
 // ---- 突き合わせ ----
 
-function normalizeDoi(value: string): string {
+export function normalizeDoi(value: string): string {
   return (value || "")
     .trim()
     .toLowerCase()
