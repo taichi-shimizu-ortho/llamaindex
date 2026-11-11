@@ -37,3 +37,10 @@ embeddings_cache/
 /import_*.js
 /*_raw.html
 /*_out.json
+
+# Local publisher archives, extracted full text, and one-off intake diagnostics.
+/tmp/
+/debug_*.mjs
+/msc-oxt-inventory.json
+*.mhtml
+*.mht
