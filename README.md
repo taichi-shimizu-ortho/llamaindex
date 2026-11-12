@@ -72,7 +72,7 @@ UIは3画面に分かれている。上部のナビゲーション（`Documents`
   - `+ Folder` で作成、行の `+` でサブフォルダ作成、`✎` でリネーム、`×` で削除。
   - 削除するとサブフォルダも消えるが、**文献JSONそのものは消えず未分類（Unfiled）に戻る**。
   - 文献カードをフォルダ行へドラッグ＆ドロップで振り分ける（カードの `Folder` セレクトでも可）。フォルダ行を別のフォルダ行へドラッグすると階層を変更できる。`Unfiled` 行へのドロップは、文献なら未分類化、フォルダならトップレベルへの移動。
-- **Documents**: フォルダ内の文献一覧。タイトル/IDでの絞り込み、参考文献abstractの取得状況の確認。
+- **Documents**: フォルダ内の文献一覧。タイトル/IDでの絞り込み、参考文献の件数の確認。
   RAG の対象（corpus）の決め方は2通り:
   - **フォルダ単位（基本）**: フォルダを開いて `Ask this folder (N) →`。`Subfolders` のチェックで子孫フォルダを含めるか決める。
     対象はフォルダに紐づくので、Zotero を同期し直してコレクションの中身が変われば次の検索から追従する。
@@ -143,7 +143,7 @@ Documents で選んだフォルダ（または手動で選んだ論文）の本�
 Documents の文献カードの `Preview`、または RAG の論文ラベル・根拠段落から開く。上部のプルダウンで論文を切り替え、最近開いた論文はチップから戻れる。
 
 - **本文**: Abstract・Figures・Main Text を節・小見出し単位で開閉して読む。本文中の引用番号 `[12]` はホバーで参照文献の情報を出す。
-- **References**: 参照文献の一覧（PubMed のタイトル・著者・誌名・年・PMID・abstract・MeSH）。
+- **References**: 参照文献の一覧（引用文・DOI・PMID）。2026-10-31 以前に取り込んだ論文は PubMed のタイトル・著者・誌名・年・abstract・MeSH も持つ。
 
 ### 主論文の種別（Original / Review）
 
@@ -162,7 +162,7 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 | ファイル | 役割 |
 |---|---|
 | `src/server/articleHarvester.ts` | 論文ページのHTML/JATSから主論文JSON（節・段落・図表）を作る |
-| `src/server/referenceHarvester.ts` | HTMLから参考文献候補を抽出し、PubMed E-utilitiesでPMID/abstractを取得してJSON保存 |
+| `src/server/referenceHarvester.ts` | HTML/JATSから参考文献リストを抽出してJSON保存（PubMed 等への abstract 取得はしない） |
 | `src/server/articleClassifier.ts` | 主論文を PubMed で Original / Review に分類して論文JSONに書き込む（取り込み時・起動時） |
 | `src/server/corpusRag.ts` | 複数論文の段落索引（メタデータ付き）、横断検索、Claude による引用付き回答 |
 | `src/server/embeddingStore.ts` | 埋め込みのディスクキャッシュとコサイン類似度 |

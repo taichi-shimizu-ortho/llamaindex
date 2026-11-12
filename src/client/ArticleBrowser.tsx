@@ -246,7 +246,7 @@ export function ReferenceRow({ record }: { record: ReferenceRecord }) {
   const abstract = record.pubmed?.abstract ?? "";
   const meshTerms = record.pubmed?.meshTerms ?? [];
   return (
-    <details className={abstract ? "ref-details" : "ref-details muted-row"}>
+    <details className="ref-details">
       <summary>
         <div className="ref-row ref-row-summary">
           <div className="ref-index">{record.index}</div>
@@ -274,7 +274,8 @@ export function ReferenceRow({ record }: { record: ReferenceRecord }) {
               {record.error && <span className="warn-text">{record.error}</span>}
             </div>
           </div>
-          <span className={abstract ? "pill ok" : "pill warn"}>{abstract ? "Abstract" : "No abstract"}</span>
+          {/* abstract は以前の取り込みで取得済みの参照文献にだけある */}
+          {abstract && <span className="pill ok">Abstract</span>}
         </div>
       </summary>
       <div className="ref-abstract-body">

@@ -206,9 +206,7 @@ function ImportPanel({
           {report.reference && (
             <div className="import-report-row">
               <span className="pill ok">References</span>
-              <span>
-                {report.reference.abstractFound}/{report.reference.totalReferences} abstracts
-              </span>
+              <span>{report.reference.totalReferences} references</span>
             </div>
           )}
           {report.articleError && <div className="warn-text">Article: {report.articleError}</div>}
@@ -481,7 +479,10 @@ function DocumentCard({
         <span>{set.chunkCount} paragraphs</span>
         <span className={referenceSet ? "" : "warn-text"}>
           {referenceSet
-            ? `${referenceSet.abstractFound}/${referenceSet.totalReferences} abstracts`
+            ? `${referenceSet.totalReferences} references${
+                // 以前の取り込みでは参照文献の abstract も取っていた
+                referenceSet.abstractFound ? ` · ${referenceSet.abstractFound} abstracts` : ""
+              }`
             : "No reference JSON"}
         </span>
         {zoteroAdded && <span title="Date added in Zotero">Added {formatDate(zoteroAdded)}</span>}

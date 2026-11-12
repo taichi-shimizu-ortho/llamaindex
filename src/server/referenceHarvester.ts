@@ -1183,7 +1183,7 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   if (fs.existsSync(existingPath)) {
     try {
       const existing = JSON.parse(fs.readFileSync(existingPath, "utf-8"));
-      if (existing.records && existing.records.length > 0 && existing.abstractFound > 0) {
+      if (existing.records && existing.records.length > 0) {
         return existing; // Skip if already fetched
       }
     } catch {
@@ -1215,12 +1215,9 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
     }
   }
 
-  const enrichedRecords: ReferenceRecord[] = [];
-
-  for (const candidate of candidates) {
-    enrichedRecords.push(await enrichRecord(candidate));
-  }
-  const records = dedupeEnrichedRecords(enrichedRecords, sourceUrl, html);
+  // 参照文献は本文中の引用番号との対応付けに使うリストだけを残す。PubMed / Crossref / Europe PMC への
+  // abstract 取得は行わない（1件ずつ問い合わせるので取り込みが遅く、RAG の索引にも使っていないため）。
+  const records = dedupeEnrichedRecords(candidates, sourceUrl, html);
 
   const set: ReferenceSet = {
     id,

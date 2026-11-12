@@ -876,10 +876,6 @@ body {
   background: var(--panel-2);
 }
 
-.muted-row {
-  opacity: 0.68;
-}
-
 .ref-index {
   width: 26px;
   height: 26px;
