@@ -57,7 +57,7 @@ Zotero に書き込むのは CLI（`ingest` と `ingest:offline`）だけで、W
 ### 出版社別オフライン変換（`ingest:offline`）
 
 Wiley・SAGE・ScienceDirect などは、出版社ごとの規則で HTML を読むオフライン変換のほうが表・図・節の構造が正確。
-MHTML のファイル名を論文ID（`Habib2018.mhtml` など）にして渡す。出版社は保存元URLで自動判定し、DOI・タイトル・著者はページから読む。
+論文IDにはファイル名（`Habib2018.mhtml` なら `Habib2018`）か `--id` の値を使う。出版社は保存元URLで自動判定し、DOI・タイトル・著者はページから読む。
 
 ```bash
 npm run ingest:offline -- -c "postless traction" --dry-run ~/Downloads/Habib2018.mhtml
@@ -68,15 +68,40 @@ npm run ingest:offline -- -c "postless traction" ~/Downloads/Habib2018.mhtml
 |---|---|
 | `-c <コレクション>` | 登録先の Zotero コレクション名（`--no-zotero` のときは不要） |
 | ファイル／フォルダ | `.mhtml` を1本ずつ、またはフォルダ内の `.mhtml` をすべて |
+| `--id <ID>` | ファイル1本を指定し、Chromeの保存名のまま取り込む。 |
+| `--copy` | ダウンロード原本を保持し、出版社別フォルダへコピーする。 |
 | `--dry-run` | 変換だけ行い、段落・図・表・参考文献の数、警告、書き込み先を表示する（何も書かない） |
 | `--replace` | 取り込み済みのIDを上書きする（前の JSON は `backups/` に退避） |
 | `--figure-dir <dir>` | 手で保存した図の置き場所（既定は Downloads） |
 | `--no-zotero` | Zotero に触れない（フォルダは未分類のまま） |
 
-- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`。それ以外（Springer・JBJS など）は止まるので `npm run ingest` を使う。
-- MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ移す。`mhtml/` の中（`mhtml/postless/wiley/` など）にあればそのまま残す。
+- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`。
+- MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ保存する。既定は移動で、`--copy` を付けるとコピーする。`mhtml/` 配下であれば元の位置を使う。
 - Wiley の MHTML には図の画像が入っていないことが多い。警告に出る URL をブラウザで開き、`<ID>_fig<N>.jpg` の名前で Downloads に保存して `--replace` で取り込み直す。既存の `raw_html/<ID>_figures/Figure_<N>.*` も再利用する。
 - 変換本体は `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）。
+
+### ArthroscopyとOJSMの保存ページ
+
+出版社サイトで全文と参考文献が表示された状態をChromeでMHTMLに保存する。
+ArthroscopyはWileyの本文領域から節・小節・表を抽出し、OJSMはSAGEの本文と参考文献の領域を使う。
+次のコマンドで出版社の自動判定、DOI、本文・図表・参考文献の件数を確認し、`--dry-run` を外して登録する。
+引数のIDは論文ごとに変更する。
+
+```bash
+npm run ingest:offline -- --no-zotero --copy --dry-run --id Canham2016 "<WileyのMHTML>"
+npm run ingest:offline -- --no-zotero --copy --dry-run --id Sogbein2019 "<SAGEのMHTML>"
+```
+
+文献をRXFP1のレビューで使う場合はDocumentsで **RXFP1** フォルダへ割り当てる。
+図の画像が保存ファイルに含まれない場合は、取り込み警告と照合しながら
+`<ID>_fig<N>.jpg` として保存し、同じコマンドに `--replace` を付ける。
+Dove Medical Pressの画像として掲載された表は出典画像とキャプションを保持する。
+
+Bryant 1975のスキャンは、ページ範囲を確認済みのプロファイルで処理する。
+
+```bash
+npm run ingest:pdf -- --profile scripts/pdf-profiles/bryant1975.json --folder RXFP1 "<BryantのPDF>"
+```
 
 ## ORSブックマークレット
 
@@ -213,8 +238,26 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 <Obsidian>/50_coding/llamaindex/library.json     # ドキュメント選択画面のフォルダ構成
 ```
 
-`<Obsidian>` は `config.ts` が自動解決する（Windows: `~/Dropbox/obsidian`、Mac: `~/Library/CloudStorage/Dropbox/obsidian`）。
-環境変数 `OBSIDIAN_DIR` で明示指定も可能。
+`<Obsidian>` は `OBSIDIAN_DIR`、Dropboxの `info.json`、OS別の既定パスの順に解決する。
+
+### RXFP1フォルダと旧データの移行
+
+RXFP1の本文は `article_sets/` の論文別JSONで管理する。Documentsの **Ask RXFP1** と、
+Manuscriptの **RXFP1 folder** は同じ現行フォルダを参照する。
+
+未移行のデータセットでは、アプリを停止して次を実行する。
+
+```bash
+node --import tsx scripts/migrate-rxfp1.ts --dry-run
+node --import tsx scripts/migrate-rxfp1.ts --apply
+```
+
+移行コマンドは `articles_all3.json` と補足Markdownから論文別JSONを作り、置き換える現行JSONとフォルダ情報を `backups/` に保存する。
+DOI・PMIDなどが一致する既存論文はそのIDに対応付ける。既存の本文と別フォルダへの割り当てを優先する。
+旧本文の入力先は `RXFP1_ARTICLES_JSON` と `RXFP1_MD_SOURCE_DIR` で指定できる。
+
+検索では `storage_all_ts` を優先し、利用できない場合は `storage_all` を読む。現行JSONの本文・節・小節が一致したベクトルを再利用する。
+ベクトルに対応しない本文は語句検索で引ける。旧ストアの場所は `RXFP1_STORAGE_ALL_DIR` と `RXFP1_PYTHON_STORAGE_DIR` で指定できる。
 
 ## 実行
 

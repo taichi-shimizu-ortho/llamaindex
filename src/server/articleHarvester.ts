@@ -32,8 +32,11 @@ export interface ArticleSet {
   sections: ArticleSection[];
   chunkCount: number;
   extractionSource?: string;
+  legacyRxfp1Ids?: string[];
   // CLI 取り込みの元 MHTML（PATHS.outputDir からの相対パス）
   sourceMhtml?: string;
+  // PDF取り込み原本（PATHS.outputDirからの相対パス）。
+  sourcePdf?: string;
   // PubMed での分類（articleClassifier.ts が書く）。見つからなければ articleType は null
   pmid?: string;
   publicationTypes?: string[];
@@ -705,6 +708,12 @@ export function loadArticleSet(id: string): ArticleSet {
   return JSON.parse(fs.readFileSync(articleSetPath(safeId), "utf-8")) as ArticleSet;
 }
 
+export function resolveArticleId(id: string): string {
+  const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
+  if (!safeId.startsWith("rxfp1.") || fs.existsSync(articleSetPath(safeId))) return safeId;
+  return listArticleSets().find((set) => set.legacyRxfp1Ids?.includes(safeId))?.id ?? safeId;
+}
+
 export function listArticleSets() {
   if (!fs.existsSync(PATHS.articleOutputDir)) return [];
   return fs
@@ -722,11 +731,28 @@ export function listArticleSets() {
         // Zotero同期の突き合わせキー。
         doi: set.doi ?? "",
         articleType: set.articleType ?? null,
+        legacyRxfp1Ids: set.legacyRxfp1Ids,
         chunkCount: set.chunkCount,
         createdAt: set.createdAt,
       };
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function articleIdForDoi(doi: string): string | undefined {
+  const key = (value: string) => value.trim().toLowerCase().replace(/^https?:\/\/(?:dx\.)?doi\.org\//, "");
+  const target = key(doi);
+  if (!target || !fs.existsSync(PATHS.articleOutputDir)) return undefined;
+  for (const name of fs.readdirSync(PATHS.articleOutputDir).sort()) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const article = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, name), "utf8")) as ArticleSet;
+      if (key(article.doi ?? "") === target) return name.slice(0, -5);
+    } catch {
+      // An unreadable article does not establish a DOI match.
+    }
+  }
+  return undefined;
 }
 
 import { parseJatsArticle } from "./sageJatsHarvester.js";
@@ -806,8 +832,18 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
 
   if (!set) throw new Error("Failed to extract article content");
   
-  const id = uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, title);
+  const id = articleIdForDoi(finalDoi) ?? uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, title);
   set.id = id;
+  if (fs.existsSync(articleSetPath(id))) {
+    const previous = loadArticleSet(id);
+    const hasBody = (sections: ArticleSection[]) => sections.some((section) =>
+      !["abstract", "figure", "table"].includes(section.type) && !EXCLUDED_SECTION_TYPES.has(section.type)
+      && (section.paragraphs.length || section.subsections.some((subsection) => subsection.paragraphs.length)));
+    if (hasBody(previous.sections) && !hasBody(set.sections)) {
+      throw new Error(`The input has no main text. The existing full text for ${id} was retained.`);
+    }
+    if (previous.legacyRxfp1Ids?.length) set.legacyRxfp1Ids = previous.legacyRxfp1Ids;
+  }
 
   set.chunkCount = set.sections.reduce(
       (sum, section) => sum + section.paragraphs.length + (section.subsections || []).reduce((n, sub) => n + sub.paragraphs.length, 0),

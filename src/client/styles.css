@@ -1419,3 +1419,49 @@ button.paper-label {
 }
 button.paper-label:hover { text-decoration: underline; }
 .source-meta .source-preview { margin: 0 0 0 auto; }
+
+.manuscript-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+
+.manuscript-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 195px), 1fr));
+  gap: 12px;
+}
+
+.manuscript-result {
+  display: grid;
+  gap: 10px;
+}
+
+.manuscript-result h3,
+.manuscript-claim h4 {
+  margin: 0 0 6px;
+}
+
+.manuscript-claim blockquote,
+.manuscript-panel form blockquote {
+  border-inline-start: 2px solid var(--border);
+  margin-inline: 0;
+  padding-inline-start: 12px;
+}
+
+.manuscript-text {
+  white-space: pre-wrap;
+}
+
+.manuscript-evidence {
+  padding-block: 6px;
+}
+
+.manuscript-evidence summary {
+  cursor: pointer;
+}
+
+.manuscript-evidence:target {
+  outline: 2px solid var(--accent);
+}

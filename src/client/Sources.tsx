@@ -55,7 +55,8 @@ export function CorpusSourceCard({
             {section} · ¶{source.paragraphIndex}/{source.totalParagraphs}
           </div>
         </div>
-        <ScoreBar score={source.score} />
+        {source.ranking ? <span className="pill">{source.ranking === "legacy_vector" ? "Archive vector" : "Text match"}</span>
+          : <ScoreBar score={source.score} />}
       </div>
       <div className="source-meta">
         {source.doi && (

@@ -6,12 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { documentsInFolder, scopeLabel } from "./documents.js";
 import { LibraryScreen } from "./LibraryScreen.js";
+import { ManuscriptScreen } from "./ManuscriptScreen.js";
 import { PreviewScreen } from "./PreviewScreen.js";
 import { RagScreen } from "./RagScreen.js";
-import type { ArticleSetSummary, CorpusScope, LibraryState, PreviewTarget, ReferenceSetSummary, Status } from "./types.js";
+import type { ArticleSetSummary, CorpusScope, LibraryState, PreviewTarget, ReferenceSetSummary, Rxfp1ArticleSummary, Status } from "./types.js";
 
 type Theme = "light" | "dark";
-type Screen = "library" | "rag" | "preview";
+type Screen = "library" | "rag" | "preview" | "manuscript";
 
 const CORPUS_KEY = "corpusIds";
 const SCOPE_KEY = "corpusScope";
@@ -61,6 +62,7 @@ export function App() {
   const [status, setStatus] = useState<Status | null>(null);
   const [screen, setScreen] = useState<Screen>("library");
   const [articleSets, setArticleSets] = useState<ArticleSetSummary[]>([]);
+  const [rxfp1Articles, setRxfp1Articles] = useState<Rxfp1ArticleSummary[]>([]);
   const [referenceSets, setReferenceSets] = useState<ReferenceSetSummary[]>([]);
   const [library, setLibrary] = useState<LibraryState>(EMPTY_LIBRARY);
   const [corpusIds, setCorpusIds] = useState<string[]>(initialCorpus);
@@ -90,12 +92,14 @@ export function App() {
   }, [recentIds]);
 
   async function refreshLists(): Promise<void> {
-    const [articles, references, nextLibrary] = await Promise.all([
+    const [articles, references, nextLibrary, archive] = await Promise.all([
       api.articleSets(),
       api.referenceSets(),
       api.library(),
+      api.rxfp1Articles(),
     ]);
     setArticleSets(articles);
+    setRxfp1Articles(archive);
     setReferenceSets(references);
     setLibrary(nextLibrary);
   }
@@ -107,13 +111,25 @@ export function App() {
       .finally(() => setLoading(""));
   }, []);
 
-  // 取り込み直しや改名で消えた論文を、最近開いた一覧と Preview から外す。
+  const byId = useMemo(() => {
+    const lookup = new Map(articleSets.map((set) => [set.id, set]));
+    for (const set of articleSets) {
+      for (const alias of set.legacyRxfp1Ids ?? []) if (!lookup.has(alias)) lookup.set(alias, set);
+    }
+    return lookup;
+  }, [articleSets]);
+
+  // Canonical IDs keep selections and Preview history valid after the RXFP1 migration.
   useEffect(() => {
     if (loading) return;
-    const ids = new Set(articleSets.map((set) => set.id));
-    setRecentIds((prev) => (prev.every((id) => ids.has(id)) ? prev : prev.filter((id) => ids.has(id))));
-    setPreviewTarget((prev) => (prev && !ids.has(prev.articleId) ? null : prev));
-  }, [loading, articleSets]);
+    const canonical = (ids: string[]) => [...new Set(ids.flatMap((id) => byId.get(id)?.id ?? []))];
+    setRecentIds(canonical);
+    setCorpusIds(canonical);
+    setPreviewTarget((prev) => {
+      const id = prev && byId.get(prev.articleId)?.id;
+      return id && prev ? { ...prev, articleId: id } : null;
+    });
+  }, [loading, byId]);
 
   // Zotero 同期などでスコープのフォルダが消えたら、フォルダスコープを外す（手動選択に戻る）。
   useEffect(() => {
@@ -127,24 +143,33 @@ export function App() {
     if (corpusScope) {
       return documentsInFolder(articleSets, library, corpusScope.folderId, corpusScope.includeSubfolders);
     }
-    const byId = new Map(articleSets.map((set) => [set.id, set]));
     return corpusIds.flatMap((id) => byId.get(id) ?? []);
-  }, [articleSets, library, corpusIds, corpusScope]);
+  }, [articleSets, library, corpusIds, corpusScope, byId]);
 
+  const rxfp1Searchable = rxfp1Articles.filter((set) => set.searchable);
+  const rxfp1Ids = new Set(rxfp1Articles.map((set) => set.id));
+  const isRxfp1Scope = corpusPapers.length > 0 && corpusPapers.every((paper) => rxfp1Ids.has(paper.id));
   const corpusLabel = corpusScope
     ? scopeLabel(library.folders, corpusScope.folderId, corpusScope.includeSubfolders)
-    : "Custom selection";
+    : isRxfp1Scope ? "RXFP1 folder" : "Custom selection";
 
   // 手動でチェックを付け外ししたら、その時点のフォルダの中身を起点にした手動選択へ切り替える。
   function setSelected(ids: string[], selected: boolean) {
     const base = corpusScope ? corpusPapers.map((set) => set.id) : corpusIds;
-    const next = selected ? [...base, ...ids.filter((id) => !base.includes(id))] : base.filter((id) => !ids.includes(id));
+    const next = selected ? [...new Set([...base, ...ids])]
+      : base.filter((id) => !ids.includes(id));
     setCorpusScope(null);
     setCorpusIds(next);
   }
 
   function askFolder(scope: CorpusScope) {
     setCorpusScope(scope);
+    setScreen("rag");
+  }
+
+  function askRxfp1() {
+    setCorpusScope(null);
+    setCorpusIds(rxfp1Searchable.map((set) => set.id));
     setScreen("rag");
   }
 
@@ -192,6 +217,12 @@ export function App() {
           >
             Preview
           </button>
+          <button
+            className={screen === "manuscript" ? "nav-btn active" : "nav-btn"}
+            onClick={() => setScreen("manuscript")}
+          >
+            Manuscript
+          </button>
         </nav>
 
         <div className="status">
@@ -237,6 +268,8 @@ export function App() {
             onClearSelection={clearSelection}
             onAsk={() => setScreen("rag")}
             onAskFolder={askFolder}
+            rxfp1Count={rxfp1Searchable.length}
+            onAskRxfp1={askRxfp1}
             onPreview={(id) => openPreview(id)}
             onError={setError}
           />
@@ -244,6 +277,8 @@ export function App() {
 
         <div className="screen" hidden={screen !== "rag"}>
           <RagScreen
+            key={isRxfp1Scope ? "rxfp1" : "current"}
+            rxfp1={isRxfp1Scope}
             papers={corpusPapers}
             scopeLabel={corpusLabel}
             active={screen === "rag"}
@@ -264,6 +299,9 @@ export function App() {
             onOpen={(id) => openPreview(id)}
             onBackToLibrary={() => setScreen("library")}
           />
+        </div>
+        <div className="screen" hidden={screen !== "manuscript"}>
+          <ManuscriptScreen rxfp1Available={rxfp1Articles.length > 0} />
         </div>
       </main>
     </div>

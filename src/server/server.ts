@@ -1,15 +1,19 @@
 // Express API サーバ + 本番時は静的配信
 import path from "node:path";
 import fs from "node:fs";
+import { randomUUID } from "node:crypto";
 import express from "express";
 import { harvestReferences, listReferenceSets, loadReferenceSet } from "./referenceHarvester.js";
-import { harvestArticle, listArticleSets, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { harvestArticle, listArticleSets, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
 import { classifyArticle, classifyUncheckedArticles } from "./articleClassifier.js";
 import { prepareCorpus, runCorpusQuery, type CorpusQueryResult, type CorpusSource } from "./corpusRag.js";
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
 import { MODELS, PATHS } from "./config.js";
 import { modelLabel } from "../shared/modelLabel.js";
+import { listRxfp1Articles } from "./rxfp1Corpus.js";
+import { readManuscript } from "./manuscriptDocx.js";
+import { parseReviewRequest, ReviewInputError, runManuscriptReview } from "./manuscriptReview.js";
 
 const app = express();
 app.use((req, res, next) => {
@@ -132,7 +136,7 @@ app.post("/api/import/ors", async (req, res) => {
   }
 
   try {
-    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit, jatsXml }));
+    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit, jatsXml, articleId: result.article?.id }));
   } catch (e) {
     result.referenceError = errorText(e);
   }
@@ -163,9 +167,13 @@ app.get("/api/article/sets", (_req, res) => {
   }
 });
 
+app.get("/api/rxfp1/articles", (_req, res) => {
+  res.json({ sets: listRxfp1Articles() });
+});
+
 app.get("/api/article/sets/:id", (req, res) => {
   try {
-    res.json(loadArticleSet(req.params.id));
+    res.json(loadArticleSet(resolveArticleId(req.params.id)));
   } catch (e: any) {
     res.status(404).json({ error: String(e?.message ?? e) });
   }
@@ -201,6 +209,39 @@ app.post("/api/corpus/query", async (req, res) => {
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
+  }
+});
+
+app.post("/api/manuscript/read", express.raw({ type: "application/octet-stream", limit: "12mb" }), async (req, res) => {
+  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: "Choose a .docx file." });
+  try {
+    res.json(await readManuscript(req.body));
+  } catch (error) {
+    res.status(400).json({ error: errorText(error) });
+  }
+});
+
+app.post("/api/manuscript/review", async (req, res) => {
+  try {
+    res.json(await runManuscriptReview(parseReviewRequest(req.body)));
+  } catch (error) {
+    res.status(error instanceof ReviewInputError ? 400 : 502).json({ error: errorText(error) });
+  }
+});
+
+app.post("/api/manuscript/save", (req, res) => {
+  const markdown = req.body?.markdown;
+  if (typeof markdown !== "string" || !markdown.trim() || markdown.length > 4_000_000) {
+    return res.status(400).json({ error: "No valid Markdown report to save." });
+  }
+  try {
+    fs.mkdirSync(PATHS.manuscriptReviewDir, { recursive: true });
+    const date = new Date().toISOString().slice(0, 10);
+    const file = path.join(PATHS.manuscriptReviewDir, `${date}_manuscript_review_${randomUUID()}.md`);
+    fs.writeFileSync(file, markdown, { encoding: "utf8", flag: "wx" });
+    res.json({ file });
+  } catch (error) {
+    res.status(500).json({ error: errorText(error) });
   }
 });
 
@@ -264,7 +305,7 @@ function sourceMarkdown(source: CorpusSource): string {
   ].filter(Boolean).join(" ");
   return [
     `#### S${source.n}. ${source.label} — ${section}${source.cited ? " (cited)" : ""}`,
-    `- Score: ${source.score.toFixed(4)} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
+    `- ${source.ranking === "legacy_vector" ? "RXFP1 archive vector" : source.ranking === "text_match" ? "Text match" : `Score: ${source.score.toFixed(4)}`} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
     source.title ? `- Title: ${source.title}` : "",
     cite ? `- Journal: ${cite}` : "",
     links ? `- Links: ${links}` : "",
@@ -286,6 +327,7 @@ function resultMarkdown(result: CorpusQueryResult): string {
     result.sectionGroups?.length ? `sections: ${result.sectionGroups.join(", ")}` : "",
   ].filter(Boolean).join(" · ");
   if (result.scopeLabel) parts.push("", `*Scope: ${result.scopeLabel}*`);
+  for (const note of result.searchNotes ?? []) parts.push("", note);
   parts.push("", `*Papers (${result.papers.length}): ${result.papers.map((p) => p.label).join(", ")} — ${settings}*`);
   parts.push("", "### Answer", "", result.answer || "");
   if (result.sources.length) {

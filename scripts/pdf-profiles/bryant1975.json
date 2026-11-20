@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "pageCount": 5,
+  "sourceSha256": "1aade979ce9e6e8e95195dd8d1f9028d8e63d73ea874b2d9e5228d1f17766436",
+  "metadata": {
+    "id": "Bryant1975",
+    "title": "Immunoreactive Relaxin in Human Serum During the Menstrual Cycle",
+    "authors": ["Gillian D. Bryant", "Martin E. A. Panter", "Teodor Stelmasiak"],
+    "journal": "The Journal of Clinical Endocrinology & Metabolism",
+    "year": "1975",
+    "doi": "10.1210/jcem-41-6-1065",
+    "pmid": "1206093",
+    "sourceUrl": "https://doi.org/10.1210/jcem-41-6-1065",
+    "articleType": "original",
+    "articleTypeSource": "manual"
+  },
+  "abstractRegions": [
+    {"page": 1, "box": [63, 179, 264, 302]},
+    {"page": 1, "box": [279, 179, 479, 294]}
+  ],
+  "initialSection": {"title": "Introduction", "type": "intro"},
+  "dropCap": "R",
+  "paragraphIndent": 13,
+  "paragraphStarts": ["Serial plasma measurements", "From Fig. 1", "Relaxin immunoactivity decreased"],
+  "bodyRegions": [
+    {"page": 1, "box": [55, 320, 264, 642]},
+    {"page": 1, "box": [273, 320, 482, 675]},
+    {"page": 2, "box": [55, 82, 264, 594]},
+    {"page": 2, "box": [273, 82, 483, 593]},
+    {"page": 4, "box": [54, 82, 263, 681]},
+    {"page": 4, "box": [271, 82, 482, 553]}
+  ],
+  "headings": [
+    {"match": "Materials and Methods", "title": "Materials and Methods", "type": "methods"},
+    {"match": "Results", "title": "Results", "type": "results"},
+    {"match": "Discussion", "title": "Discussion", "type": "discussion"}
+  ],
+  "figures": [
+    {"title": "Figure 1", "page": 3, "box": [48, 80, 489, 677],
+     "captionPage": 2, "captionBox": [56, 625, 481, 673]}
+  ],
+  "referenceRegions": [
+    {"page": 5, "box": [55, 102, 264, 291]},
+    {"page": 5, "box": [272, 82, 480, 291]}
+  ],
+  "expectedReferences": 20,
+  "textCorrections": {
+    "17/3": "17β",
+    "evi-dence": "evidence",
+    "modifica-tion": "modification",
+    "prolac-tin": "prolactin",
+    "like-wise": "likewise",
+    "through-out": "throughout",
+    "pro-lactin": "prolactin",
+    "systemmatic": "systematic",
+    "radioinimunoassays": "radioimmunoassays",
+    "logaritlim transfonned": "logarithm transformed"
+  },
+  "warnings": [
+    "This reviewed scan uses an embedded OCR layer. Check exact values, names and citations against the original page.",
+    "Figure 1 is on page 1067; its caption is on page 1066."
+  ]
+}

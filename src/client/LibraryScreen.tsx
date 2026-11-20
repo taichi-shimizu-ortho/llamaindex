@@ -52,6 +52,8 @@ interface LibraryScreenProps {
   onClearSelection: () => void;
   onAsk: () => void;
   onAskFolder: (scope: CorpusScope) => void;
+  rxfp1Count: number;
+  onAskRxfp1: () => void;
   onPreview: (articleId: string) => void;
   onError: (message: string) => void;
 }
@@ -526,6 +528,8 @@ export function LibraryScreen({
   onClearSelection,
   onAsk,
   onAskFolder,
+  rxfp1Count,
+  onAskRxfp1,
   onPreview,
   onError,
 }: LibraryScreenProps) {
@@ -831,6 +835,9 @@ export function LibraryScreen({
           </div>
 
           <div className="corpus-bar">
+            {rxfp1Count > 0 && (
+              <button className="ghost" onClick={onAskRxfp1}>Ask RXFP1 ({rxfp1Count}) →</button>
+            )}
             {folderView && (
               <button
                 className="primary"

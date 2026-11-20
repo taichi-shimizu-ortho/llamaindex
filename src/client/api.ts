@@ -8,11 +8,13 @@ import type {
   LibraryState,
   ReferenceSet,
   ReferenceSetSummary,
+  Rxfp1ArticleSummary,
   SectionGroup,
   Status,
   ZoteroStatus,
   ZoteroSyncReport,
 } from "./types.js";
+import type { LiteratureCollection, Manuscript, ManuscriptReviewResult, ReviewMode, ReviewScope } from "../shared/manuscript.js";
 
 // APIサーバが落ちているとViteのdevサーバがHTMLを返すため、JSON以外は
 // 「APIに接続できていない」として扱い、パース失敗の不明なエラーにしない。
@@ -60,6 +62,7 @@ export const api = {
   status: () => requestJson<Status>("/api/status"),
 
   articleSets: () => requestJson<{ sets: ArticleSetSummary[] }>("/api/article/sets").then((d) => d.sets ?? []),
+  rxfp1Articles: () => requestJson<{ sets: Rxfp1ArticleSummary[] }>("/api/rxfp1/articles").then((d) => d.sets ?? []),
   referenceSets: () => requestJson<{ sets: ReferenceSetSummary[] }>("/api/reference/sets").then((d) => d.sets ?? []),
   articleSet: (id: string) => requestJson<ArticleSet>(`/api/article/sets/${encodeURIComponent(id)}`),
   referenceSet: (id: string) => requestJson<ReferenceSet>(`/api/reference/sets/${encodeURIComponent(id)}`),
@@ -86,6 +89,13 @@ export const api = {
   // 選んだ論文の埋め込みを先に用意する（キャッシュ済みならすぐ返る）。
   corpusPrepare: (articleIds: string[]) => postJson<CorpusPrepareResult>("/api/corpus/prepare", { articleIds }),
   corpusQuery: (body: CorpusQueryRequest) => postJson<CorpusQueryResult>("/api/corpus/query", body),
+
+  readManuscript: (file: File) => requestJson<Manuscript>("/api/manuscript/read", {
+    method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file,
+  }),
+  reviewManuscript: (manuscript: Manuscript, mode: ReviewMode, scope: ReviewScope, locations: string[], collection: LiteratureCollection) =>
+    postJson<ManuscriptReviewResult>("/api/manuscript/review", { manuscript, mode, scope, locations, collection }),
+  saveManuscriptReview: (markdown: string) => postJson<{ file: string }>("/api/manuscript/save", { markdown }),
 
   saveSession: (sessionId: string, result: unknown) =>
     postJson<{ file?: string }>("/api/session/save", { sessionId, result }),

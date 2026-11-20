@@ -100,7 +100,7 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
   if (options.dryRun) return;
 
   const article = await harvestArticle({ html: page.html, sourceUrl: page.sourceUrl });
-  const reference = await harvestReferences({ html: page.html, sourceUrl: page.sourceUrl });
+  const reference = await harvestReferences({ html: page.html, sourceUrl: page.sourceUrl, articleId: article.id });
   const set = loadArticleSet(article.id);
   set.sourceMhtml = path.relative(PATHS.outputDir, stored);
   fs.writeFileSync(articleSetPath(set.id), JSON.stringify(set, null, 2), "utf-8");

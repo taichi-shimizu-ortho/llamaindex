@@ -30,6 +30,7 @@ from PIL import Image
 STAGE = None
 INPUT_DIR = None
 SUPPLEMENT_DIR = None
+INPUT_FILE = None
 INVENTORY = None
 BY_NAME = {}
 FIGURE_DIRS = []
@@ -40,7 +41,7 @@ EXCLUDED = re.compile(EXCLUDED.pattern + r'|^Statements$|ORCID|Footnotes|authors
 HOST_PLATFORMS = [
  ('onlinelibrary.wiley.com', 'wiley'), ('journals.sagepub.com', 'sage'), ('mdpi.com', 'mdpi'),
  ('frontiersin.org', 'frontiers'), ('academic.oup.com', 'oup'), ('sciencedirect.com', 'sd'),
- ('iopscience.iop.org', 'iop'), ('boneandjoint.org.uk', 'bjr')]
+ ('iopscience.iop.org', 'iop'), ('boneandjoint.org.uk', 'bjr'), ('dovepress.com', 'dove')]
 # Fallback for the 2026-11 MSC-OXT batch, whose archives were converted before host detection.
 LEGACY_PLATFORMS = {
  'frontiers': ['Feixiang2023','Wang2024'],
@@ -119,12 +120,23 @@ def parse_mhtml(path):
     return url, max(htmls)[2], assets
 
 def roots(soup, name):
-    root_selector = {'wiley': '.article-section__full', 'mdpi': '#article-contents', 'bjr': '#article-body .body', 'sage': '#bodymatter', 'oup': '.widget-ArticleFulltext', 'frontiers': '.ArticleContent', 'sd': '#body', 'iop': '.wd-jnl-art-full-text'}[platform(name)]
+    publisher = platform(name)
+    root_selector = {'wiley': '.article-section__full', 'mdpi': '#article-contents', 'bjr': '#article-body .body', 'sage': '#bodymatter', 'oup': '.widget-ArticleFulltext', 'frontiers': '.ArticleContent', 'sd': '#body', 'iop': '.wd-jnl-art-full-text', 'dove': 'div[class~="$body"]'}[publisher]
     body = soup.select_one(root_selector)
     if body is None: raise ValueError(f'{name}: article body is missing')
     result = BeautifulSoup('<article></article>', 'html.parser').article
     abstract_selector='.article-section__abstract,section.abstract,#html-abstract,#abstract,.abstract,.ArticleContent > #h1,.wd-jnl-art-abstract'
-    abstract = (soup.select_one('#ab0005') or soup.select_one('div.abstract.author')) if platform(name)=='sd' else soup.select_one(abstract_selector)
+    abstract = (soup.select_one('#ab0005') or soup.select_one('div.abstract.author')) if publisher=='sd' else soup.select_one(abstract_selector)
+    if publisher == 'dove':
+        label = next((node for node in soup.select('.article-inner_html p > strong')
+                      if re.fullmatch(r'Abstract:?', node.get_text(strip=True), re.I)), None)
+        if label:
+            content = []
+            for sibling in label.next_siblings:
+                if isinstance(sibling, Tag) and re.match(r'Keywords\b', sibling.get_text(strip=True), re.I):
+                    break
+                content.append(str(sibling))
+            abstract = BeautifulSoup('<p>' + ''.join(content) + '</p>', 'html.parser').p
     if abstract:
         wrapper = BeautifulSoup('<section><h2>Abstract</h2><p></p></section>', 'html.parser').section
         abstract_text = re.sub(r'^Abstract\s*', '', text_of(abstract), flags=re.I)
@@ -132,6 +144,17 @@ def roots(soup, name):
         wrapper.p.string = abstract_text
         result.append(wrapper)
     body_copy = copy.deepcopy(body)
+    if publisher == 'dove':
+        # The Dove layout wraps captioned images in thumbnail tables, including image-only data tables.
+        for item in body_copy.select('table.thumbnail-table:has(img)'):
+            figure = BeautifulSoup('<figure><figcaption></figcaption></figure>', 'html.parser').figure
+            image = copy.deepcopy(item.find('img'))
+            anchor = item.find('a', href=True)
+            if anchor:
+                image['data-large'] = anchor['href']
+            figure.figcaption.string = text_of(item)
+            figure.insert(0, image)
+            item.replace_with(figure)
     for x in list(body_copy.select(abstract_selector)):
         if x.parent: x.decompose()
     for h in list(body_copy.find_all(['h2','h3'])):
@@ -242,10 +265,14 @@ def extract_figures(root, name, url, assets, output):
         legend = text_of(cap) if cap else img.get('alt','')
         fid=re.search(r'(?:^|[^a-z])F(\d+)$',fig.get('id',''),re.I)
         labels=[rawlabel,img.get('alt',''),fig.get('data-toolbar-title',''),('Figure '+fid.group(1)) if fid else '',legend]
-        match=next((m for v in labels if (m:=re.search(r'(?:Fig(?:ure)?\.?)\s*(\d+)\s*(?:\(([a-z])\))?',v,re.I))),None)
+        label_pattern = r'(Fig(?:ure)?\.?|Table)\s*(\d+)\s*(?:\(([a-z])\))?' if platform(name) == 'dove' else r'(Fig(?:ure)?\.?)\s*(\d+)\s*(?:\(([a-z])\))?'
+        match=next((m for v in labels if (m:=re.search(label_pattern,v,re.I))),None)
         if not match: continue
-        panel=match.group(2) if match.lastindex and match.lastindex>=2 else None
-        title = 'Figure ' + match.group(1) + (f' ({panel})' if panel else '')
+        label, number, panel = match.groups()
+        image_table = label.lower() == 'table'
+        title = ('Table ' if image_table else 'Figure ') + number + (f' ({panel})' if panel else '')
+        if image_table:
+            warnings.append(f'Table values stored as an image only: {title}')
         if title in seen: continue
         seen.add(title)
         choices = [img.get(x,'') for x in ['data-original','data-large','data-lg-src','data-src','src']]
@@ -274,7 +301,7 @@ def extract_figures(root, name, url, assets, output):
                 if len(payload)>500: asset = (header[5:].split(';')[0], payload, data_url[:70])
         supplied = None
         if not asset and not panel:
-            supplied = local_figure(name, match.group(1))
+            supplied = local_figure(name, number)
             if supplied:
                 asset = (mimetypes.guess_type(supplied.name)[0] or 'application/octet-stream', supplied.read_bytes(), str(supplied))
         if not asset:
@@ -358,7 +385,7 @@ def extract_body(root):
     return [s for s in sections if s['paragraphs'] or s['subsections']]
 
 def extract_refs(soup,name,url):
-    selectors={'wiley':'.article-section__references li[data-bib-id]','mdpi':'#html-references_list li','bjr':'#article-body .ref-list p.reference','sage':'#bibliography .biblioentry','oup':'.widget-ArticleFulltext .ref-list .ref-content','frontiers':'ul.References > li.References__item','sd':'.references li','iop':'#references-wrapper .ref'}
+    selectors={'wiley':'.article-section__references li[data-bib-id]','mdpi':'#html-references_list li','bjr':'#article-body .ref-list p.reference','sage':'#bibliography .biblioentry','oup':'.widget-ArticleFulltext .ref-list .ref-content','frontiers':'ul.References > li.References__item','sd':'.references li','iop':'#references-wrapper .ref','dove':'p[class~="$reftext"][id]'}
     records=[];seen=set()
     for idx,r in enumerate(soup.select(selectors[platform(name)]),1):
         doi=pmid=''
@@ -370,6 +397,10 @@ def extract_refs(soup,name,url):
         content=copy.deepcopy(r.select_one('.citation-content,.reference-mixed-citation,.mixed-citation,.References__content,.reference') or r)
         for link in content.select('.ReferenceLinks,.References__links'):link.decompose()
         text=text_of(content)
+        if platform(name) == 'dove':
+            text = re.sub(r'^\d+\.\s*', '', text)
+            if not doi and (match := re.search(r'\bdoi:\s*(10\.\d{4,9}/\S+)', text, re.I)):
+                doi = match[1].rstrip('.,;')
         text=re.sub(r'\s*(?:CAS|PubMed|Web of Science®?|Google Scholar|Find Full Text|CrossRef|Crossref)\s*',' ',text)
         identity=norm(text)
         if identity in seen:continue
@@ -378,7 +409,7 @@ def extract_refs(soup,name,url):
     return records
 
 def convert(name):
-    source=INPUT_DIR/(name+'.mhtml')
+    source=INPUT_FILE or INPUT_DIR/(name+'.mhtml')
     out=STAGE/name;out.mkdir(parents=True,exist_ok=True)
     url,html,assets=parse_mhtml(source)
     soup=BeautifulSoup(html,'html.parser');combined,body=roots(soup,name)
@@ -450,10 +481,12 @@ def convert(name):
     return result
 
 def main():
-    global STAGE, INPUT_DIR, SUPPLEMENT_DIR, INVENTORY, BY_NAME, FIGURE_DIRS
+    global STAGE, INPUT_DIR, INPUT_FILE, SUPPLEMENT_DIR, INVENTORY, BY_NAME, FIGURE_DIRS
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('names', nargs='+', help='Article IDs, matching <ID>.mhtml and manifest filenames')
-    parser.add_argument('--input-dir', type=Path, required=True, help='Directory containing saved MHTML archives')
+    inputs=parser.add_mutually_exclusive_group(required=True)
+    inputs.add_argument('--input-dir', type=Path, help='Directory containing saved MHTML archives')
+    inputs.add_argument('--input-file', type=Path, help='Single saved MHTML archive, under any filename')
     parser.add_argument('--output-dir', type=Path, required=True, help='Staging directory; existing article folders are refused')
     parser.add_argument('--manifest', type=Path, help='Optional JSON list with filename, doi and title; when given, the page DOI must match it')
     parser.add_argument('--inventory', type=Path, help='Optional local Zotero metadata JSON list (fields.DOI and creators)')
@@ -461,16 +494,19 @@ def main():
     parser.add_argument('--figure-dir', type=Path, action='append', default=[], help='Directory with hand-saved figure images <ID>_fig<N>.<ext> (repeatable)')
     args=parser.parse_args()
     FIGURE_DIRS=[d.resolve() for d in args.figure_dir]
-    STAGE=args.output_dir.resolve();INPUT_DIR=args.input_dir.resolve()
+    STAGE=args.output_dir.resolve()
+    INPUT_FILE=args.input_file.resolve() if args.input_file else None
+    INPUT_DIR=INPUT_FILE.parent if INPUT_FILE else args.input_dir.resolve()
     SUPPLEMENT_DIR=args.supplement_dir.resolve() if args.supplement_dir else None
     INVENTORY=json.loads(args.inventory.read_text(encoding='utf-8-sig')) if args.inventory else None
     manifest=json.loads(args.manifest.read_text(encoding='utf-8-sig')) if args.manifest else []
     BY_NAME={Path(x['filename']).stem:x for x in manifest}
     names=list(dict.fromkeys(args.names))
+    if INPUT_FILE and len(names) != 1:parser.error('--input-file requires exactly one article ID')
     for name in names:
-        if not re.fullmatch(r'[A-Za-z0-9_-]+',name):parser.error(f'Invalid article ID: {name}')
+        if not re.fullmatch(r'[A-Za-z0-9_.-]+',name) or name in ('.', '..'):parser.error(f'Invalid article ID: {name}')
         if args.manifest and name not in BY_NAME:parser.error(f'Article absent from manifest: {name}')
-        source=INPUT_DIR/(name+'.mhtml')
+        source=INPUT_FILE or INPUT_DIR/(name+'.mhtml')
         if not source.is_file():parser.error(f'Missing archive: {name}.mhtml')
         url=snapshot_url(source);detected=platform_for_url(url)
         if detected:DETECTED[name]=detected

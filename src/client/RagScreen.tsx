@@ -33,6 +33,7 @@ function initialSessionId(): string {
 }
 
 interface RagScreenProps {
+  rxfp1: boolean;
   // 選択中の論文（corpus）
   papers: ArticleSetSummary[];
   // 対象の説明（"Folder: …" / "Custom selection"）。画面と保存する md に出す。
@@ -44,7 +45,7 @@ interface RagScreenProps {
   onBackToLibrary: () => void;
 }
 
-export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onBackToLibrary }: RagScreenProps) {
+export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPreview, onBackToLibrary }: RagScreenProps) {
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(10);
   const [perPaper, setPerPaper] = useState(3);
@@ -69,6 +70,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
     if (!active || !ids.length) return;
     let cancelled = false;
     setPreparing(true);
+    setPrepared(null);
     setError("");
     api
       .corpusPrepare(ids)
@@ -146,6 +148,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
   }
 
   const skipped = result?.skipped ?? prepared?.skipped ?? [];
+  const searchNotes = [...new Set([...(prepared?.rxfp1?.notes ?? []), ...(result?.searchNotes ?? [])])];
 
   return (
     <section className="main-panel">
@@ -157,9 +160,10 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
         <span className="panel-note">
           {papers.length} papers
           {prepared ? ` · ${prepared.totalParagraphs} paragraphs indexed` : ""}
+          {prepared?.rxfp1?.store && ` · ${prepared.rxfp1.vectors} passages using ${prepared.rxfp1.store} archive vectors`}
         </span>
       </div>
-      {papers.length > CORPUS_SOFT_LIMIT && (
+      {!rxfp1 && papers.length > CORPUS_SOFT_LIMIT && (
         <div className="panel-note warn-text">
           {papers.length} papers in scope — this RAG is tuned for 10–{CORPUS_SOFT_LIMIT}. Answers may lean on a few papers;
           a subfolder or a lower “Per paper” keeps them balanced.
@@ -169,7 +173,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
       {preparing && (
         <div className="loading inline-loading">
           <div className="spinner" />
-          <span>Embedding {papers.length} papers (cached papers are instant)...</span>
+          <span>{rxfp1 ? "Loading RXFP1 vectors…" : `Embedding ${papers.length} papers (cached papers are instant)...`}</span>
         </div>
       )}
       {busy && (
@@ -179,6 +183,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
         </div>
       )}
       {error && <div className="error">{error}</div>}
+      {searchNotes.map((note) => <div className="panel-note" key={note}>{note}</div>)}
       {skipped.length > 0 && (
         <div className="error">
           Skipped: {skipped.map((s) => `${s.id} (${s.error})`).join(", ")}
