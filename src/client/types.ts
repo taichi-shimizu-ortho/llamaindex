@@ -57,6 +57,10 @@ export interface ArticleSetSummary {
   createdAt: string;
 }
 
+export interface Rxfp1ArticleSummary extends ArticleSetSummary {
+  searchable: boolean;
+}
+
 // ---- 取り込み済み論文の本文（Preview 画面） ----
 
 export interface ArticleSubsection {
@@ -125,6 +129,7 @@ export interface CorpusPrepareResult {
   papers: CorpusPaper[];
   skipped: CorpusSkipped[];
   totalParagraphs: number;
+  rxfp1?: { store: "TypeScript" | "Python" | null; vectors: number; notes: string[] };
 }
 
 export interface CorpusSource {
@@ -132,6 +137,7 @@ export interface CorpusSource {
   articleId: string;
   label: string;
   score: number;
+  ranking?: "legacy_vector" | "text_match";
   cited: boolean;
   title: string;
   authors: string;
@@ -163,6 +169,7 @@ export interface CorpusQueryResult {
   answer: string;
   model: string;
   sources: CorpusSource[];
+  searchNotes?: string[];
 }
 
 // ---- ドキュメント選択画面（フォルダ管理） ----

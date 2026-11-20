@@ -6,24 +6,16 @@ import path from "node:path";
 import { PATHS } from "./config.js";
 import type { ArticleSet } from "./articleHarvester.js";
 import type { ReferenceSet } from "./referenceHarvester.js";
-import type { CitationCheck, Evidence, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
+import type { CitationCheck, Evidence, LiteratureCollection, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
+import { loadRxfp1Corpus } from "./rxfp1Corpus.js";
+import { rxfp1PassageKey, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
+import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
 type Section = ArticleSet["sections"][number];
-interface LegacySection {
-  title: string;
-  type: string;
-  content: string;
-  subsections?: { title: string; content: string }[];
-}
-interface LegacyArticle {
-  citekey: string;
-  title: string;
-  authors: string[];
-  published: string;
-  doi: string;
-  pmid: string;
-  is_review: boolean;
-  sections: LegacySection[];
+
+interface SemanticEvidence {
+  index: Rxfp1Index;
+  query?: Float32Array;
 }
 
 interface Passage {
@@ -59,15 +51,9 @@ export interface RetrievalRequest {
   mode: RetrievalMode;
 }
 
-const STOP = new Set("about after also among and are both can does during each from had has have how into its may more most only other over some such than that the their them then there these they this those through use was were what when where which who will with would".split(" "));
-const tokens = (text: string) => new Set(
-  (text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
-    .filter((term) => term.length > 2 && !STOP.has(term))
-    .map((term) => term.length > 4 ? term.replace(/(?<!s)s$/, "") : term),
-);
 const doiOf = (value: string) => value.match(/10\.\d{4,9}\/[^\s"”<>]+/i)?.[0].replace(/[),.;\]]+$/, "").toLowerCase() ?? "";
 const titleKey = (value: string) => value.normalize("NFKD").toLowerCase().replace(/\p{M}|[^\p{L}\p{N}]+/gu, "");
-const excluded = /^(?:references?|cited[ _]by|acknowledg|keywords?|abbreviations?|funding|grants|disclosures?|conflicts? of interest|author contributions|availability of data|data availability|footnotes?)/i;
+const excluded = /^(?:excluded|references?|cited[ _]by|acknowledg|keywords?|abbreviations?|funding|grants|disclosures?|conflicts? of interest|author contributions|availability of data|data availability|footnotes?)/i;
 
 function sectionGroup(type: string, title: string): string {
   if (type === "abstract" || /^abstract\b/i.test(title)) return "abstract";
@@ -88,6 +74,7 @@ function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]
       ...section.subsections.map((sub) => ({ title: sub.title, paragraphs: sub.paragraphs })),
     ];
     return pieces.flatMap(({ title, paragraphs }, subIndex) => {
+      if (title && excluded.test(title)) return [];
       const sectionTitle = section.title || section.type;
       const group = sectionGroup(section.type, title || sectionTitle);
       const type = articleType === "review" ? "secondary_summary"
@@ -103,7 +90,7 @@ function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]
           paragraph: paragraphIndex + 1,
           page: null,
         },
-        type, group, terms: tokens(text),
+        type, group, terms: searchTerms(text),
         limitations: [
           ...(group === "abstract" ? ["Abstract passage."] : []),
           ...(group === "table" ? ["Table structure may be incomplete in the extracted paragraph."] : []),
@@ -118,23 +105,6 @@ function sourceFromSet(set: ArticleSet): Source {
   return {
     id: set.id, title: set.title, authors: set.authors ?? [], year: set.year,
     doi: doiOf(set.doi ?? ""), pmid: set.pmid ?? "", passages: passagesOf(set.sections, set.articleType),
-  };
-}
-
-const paragraphsOf = (text: string) => (text ?? "").split(/\r?\n\s*\r?\n/).filter((p) => p.trim());
-
-function sourceFromLegacy(set: LegacyArticle): Source {
-  return {
-    id: `legacy:${set.citekey}`,
-    title: set.title,
-    authors: Array.isArray(set.authors) ? set.authors : [],
-    year: set.published?.match(/\b\d{4}\b/)?.[0] ?? "",
-    doi: doiOf(set.doi ?? ""), pmid: String(set.pmid ?? ""),
-    passages: passagesOf(set.sections.map((section) => ({
-      ...section,
-      paragraphs: paragraphsOf(section.content),
-      subsections: (section.subsections ?? []).map((sub) => ({ ...sub, paragraphs: paragraphsOf(sub.content) })),
-    })), set.is_review ? "review" : "original"),
   };
 }
 
@@ -179,7 +149,11 @@ function bestCopies(sources: Source[]): Source[] {
   return [...byWork.values()];
 }
 
-export function loadLiterature() {
+export function loadLiterature(collection: LiteratureCollection = "current") {
+  if (collection === "rxfp1") {
+    const archive = loadRxfp1Corpus();
+    return { sources: [...archive.articles.values()].map(sourceFromSet), abstractSources: [], errors: archive.errors };
+  }
   const errors: string[] = [];
   const sources: Source[] = [];
   for (const set of readSets<ArticleSet>(PATHS.articleOutputDir, errors)) {
@@ -187,15 +161,6 @@ export function loadLiterature() {
       sources.push(sourceFromSet(set));
     } catch {
       errors.push(`Could not extract article ${set?.id ?? "(unknown ID)"}.`);
-    }
-  }
-  const legacy = PATHS.manuscriptLiteratureFile;
-  if (legacy) {
-    try {
-      const data = JSON.parse(fs.readFileSync(legacy, "utf8")) as { articles: LegacyArticle[] };
-      sources.push(...data.articles.map(sourceFromLegacy));
-    } catch {
-      errors.push("Could not read the configured legacy literature file.");
     }
   }
   const abstractSources = readSets<ReferenceSet>(PATHS.referenceOutputDir, errors).flatMap((set) =>
@@ -248,23 +213,21 @@ function resolveCitation(citation: Citation, sources: Source[]): { check: Citati
   return { check, source };
 }
 
-function rank(query: string, sources: Source[], limit: number, perPaper: number) {
-  const terms = [...tokens(query)];
+function rank(query: string, sources: Source[], limit: number, perPaper: number, semantic?: SemanticEvidence) {
   const candidates = sources.flatMap((source) => source.passages.map((passage) => ({ source, passage })));
-  const weights = terms.map((term) =>
-    Math.log(1 + candidates.length / (1 + candidates.filter(({ passage }) => passage.terms.has(term)).length)),
-  );
-  const ranked = candidates.flatMap((candidate) => {
-    const { passage } = candidate;
-    const matches = terms.map((term, i) => passage.terms.has(term) ? weights[i] : 0).filter(Boolean);
-    if (matches.length < Math.min(2, terms.length) || !matches.length) return [];
-    const direct = /^(?:results|methods|materials\|methods|table|figure)$/.test(passage.group) ? 1.15 : 1;
-    const score = direct * matches.reduce((sum, weight) => sum + weight, 0) / Math.sqrt(12 + passage.terms.size);
-    return [{ ...candidate, score }];
+  const boost = (p: Passage) => /^(?:results|methods|materials\|methods|table|figure)$/.test(p.group) ? 1.15 : 1;
+  const lexical = rankByText(query, candidates, ({ passage }) => passage.terms, ({ passage }) => boost(passage));
+  const queryVector = semantic?.query;
+  const dense = !queryVector ? [] : candidates.flatMap((item) => {
+    const { source, passage } = item;
+    const { section, subsection } = passage.locator;
+    const vector = semantic.index.vectors.get(rxfp1PassageKey(source.id, section, subsection ?? "", passage.text));
+    return vector ? [{ item, score: rxfp1Similarity(queryVector, vector) * boost(passage) }] : [];
   }).sort((a, b) => b.score - a.score);
-  const hits: typeof ranked = [];
+  const ranked = fusePassageRanks(lexical, dense, Math.max(30, limit * 5));
+  const hits: typeof candidates = [];
   const counts = new Map<string, number>();
-  for (const hit of ranked) {
+  for (const { item: hit } of ranked) {
     const count = counts.get(hit.source.id) ?? 0;
     if (count >= perPaper) continue;
     hits.push(hit);
@@ -308,10 +271,19 @@ export function retrieveLiterature(
   corpus: ReturnType<typeof loadLiterature>,
   request: RetrievalRequest,
   references: Record<string, string>,
+  semantic?: SemanticEvidence,
 ): RetrievalResult {
   const evidence: Evidence[] = [];
   const sourceChecks: CitationCheck[] = [];
   const coverage = [...corpus.errors];
+  if (semantic) {
+    coverage.push(...semantic.index.notes);
+    if (semantic.query && semantic.index.store) {
+      coverage.push(`RXFP1 search combined ${semantic.index.store} archive vectors with text matching.`);
+    } else if (semantic.index.vectors.size) {
+      coverage.push("RXFP1 query embedding unavailable. Search used text matching.");
+    }
+  }
   const query = [request.query, request.scope].filter(Boolean).join(" ");
   const citedWorks = new Set<string>();
   if (request.mode !== "search_literature") {
@@ -321,7 +293,7 @@ export function retrieveLiterature(
       sourceChecks.push(check);
       if (!source) continue;
       citedWorks.add(identity(source));
-      const hits = rank(query, [source], 4, 4);
+      const hits = rank(query, [source], 4, 4, semantic);
       for (const hit of hits) evidence.push(evidenceRecord(request, hit, "cited_source", id));
       if (!hits.length) coverage.push(`Citation [${id}] had no matching passages in the available text.`);
     }
@@ -329,7 +301,7 @@ export function retrieveLiterature(
   if (request.mode !== "verify_cited_sources") {
     const broader = bestCopies(corpus.sources).filter((source) => hasBody(source) && !citedWorks.has(identity(source)));
     coverage.push(`Related search covered ${broader.length} locally indexed works with body text.`);
-    for (const hit of rank(query, broader, 6, 2)) evidence.push(evidenceRecord(request, hit, "broader_search", hit.source.id));
+    for (const hit of rank(query, broader, 6, 2, semantic)) evidence.push(evidenceRecord(request, hit, "broader_search", hit.source.id));
   }
   const hasCatalogue = corpus.sources.length > 0 || corpus.abstractSources.length > 0;
   return {

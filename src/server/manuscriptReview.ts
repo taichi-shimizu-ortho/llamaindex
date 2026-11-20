@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { loadLiterature, retrieveLiterature } from "./literatureEvidence.js";
 import { generateAnswer } from "./llm.js";
+import { loadRxfp1Index, rxfp1QueryVectors } from "./rxfp1Index.js";
 import {
   REVIEW_MODES,
-  type ClaimReview, type DraftSupport, type Manuscript, type ManuscriptBlock, type ManuscriptReviewResult,
+  type ClaimReview, type DraftSupport, type LiteratureCollection, type Manuscript, type ManuscriptBlock, type ManuscriptReviewResult,
   type ManuscriptSection, type RetrievalResult, type ReviewClaim, type ReviewMode, type ReviewScope,
 } from "../shared/manuscript.js";
 
@@ -55,11 +56,14 @@ function oneOf<T extends string>(value: unknown, options: readonly T[]): T {
   throw new Error("Unexpected review option or model response value.");
 }
 
-export function parseReviewRequest(raw: unknown): { mode: ReviewMode; manuscript: Manuscript; scope: ReviewScope; locations: string[] } {
+export function parseReviewRequest(raw: unknown): {
+  mode: ReviewMode; manuscript: Manuscript; scope: ReviewScope; collection: LiteratureCollection; locations: string[];
+} {
   try {
     const input = object(raw);
     const mode = oneOf(input.mode, REVIEW_MODES);
     const scope = oneOf(input.scope, ["cited_only", "cited_and_related"] as const);
+    const collection = oneOf(input.collection ?? "current", ["current", "rxfp1"] as const);
     const source = object(input.manuscript);
     const rawSections = object(source.sections);
     const sections: Manuscript["sections"] = {};
@@ -87,7 +91,7 @@ export function parseReviewRequest(raw: unknown): { mode: ReviewMode; manuscript
     if (locations.some((id) => !targets.some((block) => block.location === id))) {
       throw new Error("The selected paragraphs do not belong to this review mode.");
     }
-    return { mode, scope, locations, manuscript: { title: text(source.title), sections, references, notes: stringList(source.notes) } };
+    return { mode, scope, collection, locations, manuscript: { title: text(source.title), sections, references, notes: stringList(source.notes) } };
   } catch (error) {
     throw new ReviewInputError(text((error as Error).message) || "Invalid manuscript review request.");
   }
@@ -179,24 +183,31 @@ Return {"claims":[{"location":"P5.S1","assertion":"independent assertion faithfu
     .map((claim, i) => ({ ...claim, claim_id: `C${i + 1}` }));
 }
 
-function retrieveClaims(
-  mode: ReviewMode, scope: ReviewScope, claims: PlannedClaim[], references: Manuscript["references"],
-): RetrievalResult[] {
-  const corpus = loadLiterature();
-  return claims.flatMap((claim) => {
+async function retrieveClaims(
+  mode: ReviewMode, scope: ReviewScope, collection: LiteratureCollection, claims: PlannedClaim[], references: Manuscript["references"],
+): Promise<RetrievalResult[]> {
+  const corpus = loadLiterature(collection);
+  const requests = claims.flatMap((claim) => {
     const shouldSearch = mode === "discussion_draft" || (scope === "cited_and_related" && claim.kind !== "present_study");
     const shouldVerify = mode !== "discussion_draft" && (claim.cited_source_ids.length > 0
       || claim.kind === "external" || claim.kind === "comparison");
     if (!shouldSearch && !shouldVerify) return [];
     const retrievalMode = shouldSearch && shouldVerify ? "both" : shouldSearch ? "search_literature" : "verify_cited_sources";
-    const requestId = createHash("sha256").update(JSON.stringify([retrievalMode, claim, claim.cited_source_ids.map(
+    const requestId = createHash("sha256").update(JSON.stringify([collection, retrievalMode, claim, claim.cited_source_ids.map(
       (id) => references[id],
     )])).digest("hex").slice(0, 16);
-    return [retrieveLiterature(corpus, {
+    return [{
       request_id: `R-${requestId}`, claim_id: claim.claim_id, query: claim.query, scope: claim.scope,
       cited_source_ids: shouldVerify ? claim.cited_source_ids : [], mode: retrievalMode,
-    }, references)];
+    } as const];
   });
+  const broader = requests.filter((request) => request.mode !== "verify_cited_sources");
+  const index = collection === "rxfp1" && broader.length ? await loadRxfp1Index() : undefined;
+  const queryFor = (request: typeof requests[number]) => [request.query, request.scope].filter(Boolean).join(" ");
+  const vectors = index?.vectors.size ? await rxfp1QueryVectors(broader.map(queryFor)) : undefined;
+  return requests.map((request) => retrieveLiterature(corpus, request, references,
+    index && request.mode !== "verify_cited_sources" ? { index, query: vectors?.get(queryFor(request)) } : undefined,
+  ));
 }
 
 function evidenceForModel(retrievals: RetrievalResult[]) {
@@ -285,7 +296,7 @@ export async function runManuscriptReview(
   request: ReturnType<typeof parseReviewRequest>,
   ask: typeof generateAnswer = generateAnswer,
 ): Promise<ManuscriptReviewResult> {
-  const { manuscript, mode, scope, locations } = request;
+  const { manuscript, mode, scope, collection, locations } = request;
   const reviewSection: ManuscriptSection = mode === "intro_fact_check" ? "intro" : mode === "discussion_verify" ? "discussion" : "results";
   const targets = (manuscript.sections[reviewSection] ?? []).filter((block) => !locations.length || locations.includes(block.location));
   const study = mode === "intro_fact_check" ? {} : Object.fromEntries(STUDY_SECTIONS.map((name) => [name, manuscript.sections[name] ?? []]));
@@ -308,7 +319,7 @@ export async function runManuscriptReview(
     result.unresolved.push("No checkable findings or assertions were identified in the selected paragraphs.");
     return result;
   }
-  const retrievals = retrieveClaims(mode, scope, claims, manuscript.references);
+  const retrievals = await retrieveClaims(mode, scope, collection, claims, manuscript.references);
   result.retrievals = retrievals;
   result.unresolved.push(...reportGaps(claims, retrievals));
   const { literature, canonical } = evidenceForModel(retrievals);

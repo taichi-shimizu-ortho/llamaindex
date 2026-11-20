@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { api, errorMessage } from "./api.js";
 import { manuscriptMarkdown } from "../shared/manuscriptMarkdown.js";
-import { REVIEW_MODES, type Manuscript, type ManuscriptReviewResult, type ReviewMode, type ReviewScope } from "../shared/manuscript.js";
+import { REVIEW_MODES, type LiteratureCollection, type Manuscript, type ManuscriptReviewResult, type ReviewMode, type ReviewScope } from "../shared/manuscript.js";
 
 const MODE_LABEL: Record<ReviewMode, string> = {
   intro_fact_check: "Introduction fact check",
@@ -79,10 +79,11 @@ function ReviewResult({ result }: { result: ManuscriptReviewResult }) {
   );
 }
 
-export function ManuscriptScreen() {
+export function ManuscriptScreen({ rxfp1Available }: { rxfp1Available: boolean }) {
   const [manuscript, setManuscript] = useState<Manuscript | null>(null);
   const [mode, setMode] = useState<ReviewMode>("intro_fact_check");
   const [scope, setScope] = useState<ReviewScope>("cited_only");
+  const [collection, setCollection] = useState<LiteratureCollection>("current");
   const [location, setLocation] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -117,7 +118,7 @@ export function ManuscriptScreen() {
     setResult(null);
     setSavedFile("");
     try {
-      setResult(await api.reviewManuscript(manuscript, mode, scope, location ? [location] : []));
+      setResult(await api.reviewManuscript(manuscript, mode, scope, location ? [location] : [], collection));
     } catch (error) {
       setError(errorMessage(error));
     } finally {
@@ -173,6 +174,19 @@ export function ManuscriptScreen() {
                   <option value="cited_and_related">Include related local literature</option>
                 </select>
               </label>
+              {rxfp1Available && (
+                <label className="field">
+                  Literature collection
+                  <select value={collection} disabled={Boolean(busy)} onChange={(event) => {
+                    setCollection(event.target.value as LiteratureCollection);
+                    setResult(null);
+                    setSavedFile("");
+                  }}>
+                    <option value="current">Current library</option>
+                    <option value="rxfp1">RXFP1 archive</option>
+                  </select>
+                </label>
+              )}
               <label className="field">
                 Word paragraphs
                 <select value={location} disabled={Boolean(busy) || !paragraphs.length} onChange={(event) => {
@@ -189,6 +203,8 @@ export function ManuscriptScreen() {
             <p className="panel-note">
               {Object.keys(manuscript.references).length} numbered references. Review sends selected manuscript text
               {mode !== "intro_fact_check" ? ", study materials," : ""} and local evidence passages to the configured Claude API.
+              {collection === "rxfp1" && (scope === "cited_and_related" || mode === "discussion_draft")
+                && " RXFP1 related search sends focused search terms to the configured OpenAI embeddings API."}
             </p>
             <button className="primary" disabled={Boolean(busy) || (!paragraphs.length && mode !== "discussion_draft")}>
               Run review

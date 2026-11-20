@@ -45,7 +45,10 @@ const BASE = path.join(CODING, "llamaindex");
 export const PATHS = {
   outputDir: BASE,
   manuscriptReviewDir: process.env.MANUSCRIPT_REVIEW_DIR || BASE,
-  manuscriptLiteratureFile: process.env.MANUSCRIPT_LITERATURE_FILE,
+  rxfp1Articles: process.env.RXFP1_ARTICLES_JSON || process.env.MANUSCRIPT_LITERATURE_FILE || path.join(BASE, "articles_all3.json"),
+  rxfp1MarkdownDir: process.env.RXFP1_MD_SOURCE_DIR || path.join(OBSIDIAN, "10_article", "RXFP1"),
+  rxfp1StorageTs: process.env.RXFP1_STORAGE_ALL_DIR || path.join(BASE, "storage_all_ts"),
+  rxfp1StoragePython: process.env.RXFP1_PYTHON_STORAGE_DIR || path.join(BASE, "storage_all"),
   manuscriptReader: path.join(ROOT, "scripts", "read-manuscript.py"),
   manuscriptPython: process.env.MANUSCRIPT_PYTHON || (process.platform === "win32"
     ? path.join(ROOT, ".venv", "Scripts", "python.exe") : path.join(ROOT, ".venv", "bin", "python")),
@@ -65,5 +68,6 @@ export const MODELS = {
   // 回答生成は Claude（ANTHROPIC_API_KEY）。埋め込みと翻訳は OpenAI（OPENAI_API_KEY）。
   llm: "claude-sonnet-5-5",
   embed: "text-embedding-3-small",
+  rxfp1Embed: "text-embedding-3-large",
   translate: "gpt-5.6-terra",
 };

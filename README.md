@@ -213,8 +213,17 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 <Obsidian>/50_coding/llamaindex/library.json     # ドキュメント選択画面のフォルダ構成
 ```
 
-`<Obsidian>` は `config.ts` が自動解決する（Windows: `~/Dropbox/obsidian`、Mac: `~/Library/CloudStorage/Dropbox/obsidian`）。
-環境変数 `OBSIDIAN_DIR` で明示指定も可能。
+`<Obsidian>` は `OBSIDIAN_DIR`、Dropboxの `info.json`、OS別の既定パスの順に解決する。
+
+### RXFP1の旧文献・索引
+
+Documents の **Ask RXFP1 archive** を押すと、RXFP1の資料を対象にいつものRAG画面を開く。
+Manuscript の **Literature collection** でも **RXFP1 archive** を選べる。引用確認は同じ資料を読み、関連文献検索ではベクトルも使う。
+
+- `articles_all3.json` の本文を使用する。本文が足りない論文は `<Obsidian>/10_article/RXFP1` の `# 4 Main Text` から補う。抄録だけのノートは引用確認で抄録として表示する。
+- `storage_all_ts` を優先し、利用できない場合は `storage_all` を読む。本文・節・小節が一致した既存ベクトルを `text-embedding-3-large` で作った検索語のベクトルと比較し、語句検索の順位と統合する。未収録の本文は語句検索で引ける。
+- 設定を変更する場合は `RXFP1_ARTICLES_JSON`、`RXFP1_MD_SOURCE_DIR`、`RXFP1_STORAGE_ALL_DIR`（TypeScript版）、`RXFP1_PYTHON_STORAGE_DIR`（Python版）を使う。
+  以前の `MANUSCRIPT_LITERATURE_FILE` もRXFP1の本文JSON指定として使える。
 
 ## 実行
 

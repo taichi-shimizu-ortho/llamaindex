@@ -11,6 +11,8 @@ import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, re
 import { syncZotero, zoteroStatus } from "./zotero.js";
 import { MODELS, PATHS } from "./config.js";
 import { modelLabel } from "../shared/modelLabel.js";
+import { isRxfp1Article } from "../shared/rxfp1.js";
+import { listRxfp1Articles, loadRxfp1Corpus } from "./rxfp1Corpus.js";
 import { readManuscript } from "./manuscriptDocx.js";
 import { parseReviewRequest, ReviewInputError, runManuscriptReview } from "./manuscriptReview.js";
 
@@ -166,9 +168,16 @@ app.get("/api/article/sets", (_req, res) => {
   }
 });
 
+app.get("/api/rxfp1/articles", (_req, res) => {
+  res.json({ sets: listRxfp1Articles() });
+});
+
 app.get("/api/article/sets/:id", (req, res) => {
   try {
-    res.json(loadArticleSet(req.params.id));
+    const id = req.params.id;
+    const article = isRxfp1Article(id) ? loadRxfp1Corpus().articles.get(id) : loadArticleSet(id);
+    if (!article) return res.status(404).json({ error: "RXFP1 paper not found." });
+    res.json(article);
   } catch (e: any) {
     res.status(404).json({ error: String(e?.message ?? e) });
   }
@@ -300,7 +309,7 @@ function sourceMarkdown(source: CorpusSource): string {
   ].filter(Boolean).join(" ");
   return [
     `#### S${source.n}. ${source.label} — ${section}${source.cited ? " (cited)" : ""}`,
-    `- Score: ${source.score.toFixed(4)} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
+    `- ${source.ranking === "legacy_vector" ? "RXFP1 archive vector" : source.ranking === "text_match" ? "Text match" : `Score: ${source.score.toFixed(4)}`} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
     source.title ? `- Title: ${source.title}` : "",
     cite ? `- Journal: ${cite}` : "",
     links ? `- Links: ${links}` : "",
@@ -322,6 +331,7 @@ function resultMarkdown(result: CorpusQueryResult): string {
     result.sectionGroups?.length ? `sections: ${result.sectionGroups.join(", ")}` : "",
   ].filter(Boolean).join(" · ");
   if (result.scopeLabel) parts.push("", `*Scope: ${result.scopeLabel}*`);
+  for (const note of result.searchNotes ?? []) parts.push("", note);
   parts.push("", `*Papers (${result.papers.length}): ${result.papers.map((p) => p.label).join(", ")} — ${settings}*`);
   parts.push("", "### Answer", "", result.answer || "");
   if (result.sources.length) {

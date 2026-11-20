@@ -9,6 +9,10 @@ import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js
 import { generateAnswer, hasJapanese, translateToEnglish } from "./llm.js";
 import { articleSetPath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
 import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
+import { isRxfp1Article, RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
+import { isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
+import { loadRxfp1Index, rxfp1PassageKey, rxfp1QueryVectors, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
+import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
 // 節の種類を論文横断で揃えた分類。取り込み元によって type が "body" や "other" のこともあるので、
 // そのときは見出しから推定する。
@@ -122,7 +126,7 @@ interface PaperIndex {
 
 // abstract は入れない。構造化 abstract が Purpose / Methods / Results … の節として本文側にも
 // 取り込まれている論文があるので（例: Yang2021）、abstract と同じ文の段落も本文から除く。
-function paragraphsOf(set: ArticleSet): Paragraph[] {
+function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
   const abstract = normalized(
     set.sections
       .filter((section) => section.type === "abstract")
@@ -137,12 +141,13 @@ function paragraphsOf(set: ArticleSet): Paragraph[] {
   const out: Paragraph[] = [];
   for (const section of set.sections) {
     if (section.type === "abstract") continue;
+    if (rxfp1 && !isRxfp1Body(section.type, section.title)) continue;
     const group = sectionGroup(section.type, section.title);
     if (!TYPE_GROUPS[section.type] && BOILERPLATE_TITLE.test(section.title.trim())) continue;
 
     const push = (paragraphs: string[], subsection: string) => {
-      const texts =
-        group === "table"
+      const texts = rxfp1 ? paragraphs
+        : group === "table"
           ? tableChunks(paragraphs)
           : paragraphs.map((p) => cleanText(p, group)).filter((text) => text && (group === "figure" || !inAbstract(text)));
       texts.forEach((text, i) =>
@@ -157,7 +162,9 @@ function paragraphsOf(set: ArticleSet): Paragraph[] {
       );
     };
     push(section.paragraphs, "");
-    for (const sub of section.subsections) push(sub.paragraphs, sub.title);
+    for (const sub of section.subsections) {
+      if (!rxfp1 || isRxfp1Body("", sub.title)) push(sub.paragraphs, sub.title);
+    }
   }
   return out;
 }
@@ -226,6 +233,7 @@ interface LoadedCorpus {
   papers: CorpusPaper[];
   indexes: PaperIndex[];
   skipped: CorpusSkipped[];
+  rxfp1?: Rxfp1Index;
 }
 
 function uniqueIds(ids: unknown): string[] {
@@ -237,8 +245,20 @@ function uniqueIds(ids: unknown): string[] {
 async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
   const ids = uniqueIds(articleIds);
   if (!ids.length) throw new Error("Select at least one paper");
+  const isArchive = ids.some(isRxfp1Article);
+  if (isArchive && !ids.every(isRxfp1Article)) throw new Error("Select the RXFP1 archive as its own search scope.");
+  const archive = isArchive ? loadRxfp1Corpus() : undefined;
+  const rxfp1 = archive ? await loadRxfp1Index(archive) : undefined;
+  async function indexPaper(id: string): Promise<PaperIndex> {
+    if (!archive) return paperIndex(id);
+    const set = archive.articles.get(id);
+    if (!set) throw new Error("RXFP1 paper not found.");
+    const paragraphs = paragraphsOf(set, true);
+    if (!paragraphs.length) throw new Error("No main text to search (abstracts are not indexed)");
+    return { set, paragraphs, mtimeMs: 0, embeddings: [] };
+  }
   const settled = await mapLimit(ids, 4, (id) =>
-    paperIndex(id).then(
+    indexPaper(id).then(
       (index) => ({ id, index, error: "" }),
       (e) => ({ id, index: null, error: String(e?.message ?? e) }),
     ),
@@ -249,11 +269,12 @@ async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
 
   // 同じ引用ラベルが複数あれば a, b, … を付けて区別する。
   const labelCount = new Map<string, number>();
-  for (const { id } of loaded) labelCount.set(baseLabel(id), (labelCount.get(baseLabel(id)) ?? 0) + 1);
+  const labelFor = (id: string) => baseLabel(isArchive ? id.slice(RXFP1_ARTICLE_PREFIX.length) : id);
+  for (const { id } of loaded) labelCount.set(labelFor(id), (labelCount.get(labelFor(id)) ?? 0) + 1);
   const labelSeen = new Map<string, number>();
 
   const papers = loaded.map(({ id, index }): CorpusPaper => {
-    const base = baseLabel(id);
+    const base = labelFor(id);
     let label = base;
     if ((labelCount.get(base) ?? 0) > 1) {
       const n = labelSeen.get(base) ?? 0;
@@ -276,19 +297,24 @@ async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
     };
   });
 
-  return { papers, indexes: loaded.map((l) => l.index), skipped };
+  return { papers, indexes: loaded.map((l) => l.index), skipped, rxfp1 };
 }
 
 export interface CorpusPrepareResult {
   papers: CorpusPaper[];
   skipped: CorpusSkipped[];
   totalParagraphs: number;
+  rxfp1?: { store: Rxfp1Index["store"]; vectors: number; notes: string[] };
 }
 
 // 検索前に埋め込みを用意しておく（初回だけ時間がかかるため、画面を開いた時点で走らせる）。
 export async function prepareCorpus(articleIds: unknown): Promise<CorpusPrepareResult> {
-  const { papers, skipped } = await loadCorpus(articleIds);
-  return { papers, skipped, totalParagraphs: papers.reduce((sum, p) => sum + p.paragraphs, 0) };
+  const { papers, indexes, skipped, rxfp1 } = await loadCorpus(articleIds);
+  const totalParagraphs = papers.reduce((sum, p) => sum + p.paragraphs, 0);
+  if (!rxfp1) return { papers, skipped, totalParagraphs };
+  const vectors = indexes.reduce((count, index) => count + index.paragraphs.filter((para) =>
+    rxfp1.vectors.has(rxfp1PassageKey(index.set.id, para.section, para.subsection, para.text))).length, 0);
+  return { papers, skipped, totalParagraphs, rxfp1: { store: rxfp1.store, vectors, notes: rxfp1.notes } };
 }
 
 export interface CorpusSource {
@@ -297,6 +323,7 @@ export interface CorpusSource {
   articleId: string;
   label: string;
   score: number;
+  ranking?: "legacy_vector" | "text_match";
   cited: boolean;
   title: string;
   authors: string;
@@ -330,6 +357,7 @@ export interface CorpusQueryResult {
   answer: string;
   model: string;
   sources: CorpusSource[];
+  searchNotes?: string[];
 }
 
 export interface CorpusQueryOptions {
@@ -399,27 +427,46 @@ export async function runCorpusQuery(
   articleIds: unknown,
   originalQuery: string,
   opts: CorpusQueryOptions = {},
+  services = { synthesize, rxfp1QueryVectors },
 ): Promise<CorpusQueryResult> {
   const topK = Math.max(1, Math.min(40, Number(opts.topK ?? 10) || 10));
   const perPaper = Math.max(0, Math.min(40, Number(opts.perPaper ?? 0) || 0));
   const sectionGroups = normalizeGroups(opts.sectionGroups);
   const allowed = sectionGroups.length ? new Set(sectionGroups) : null;
 
-  const { papers, indexes, skipped } = await loadCorpus(articleIds);
+  const { papers, indexes, skipped, rxfp1 } = await loadCorpus(articleIds);
   if (!papers.length) throw new Error(`No searchable papers: ${skipped.map((s) => `${s.id} (${s.error})`).join(", ")}`);
 
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery;
-  const queryVec = await embedModel().getTextEmbedding(enQuery);
-
-  // 全論文の段落をまとめて採点し、上から順に（1論文あたりの上限を守りつつ）topK 件取る。
-  const scored = indexes.flatMap((index, p) =>
+  const passages = indexes.flatMap((index, p) =>
     index.paragraphs.flatMap((para, i) =>
-      !allowed || allowed.has(para.group) ? [{ p, para, score: cosineSimilarity(queryVec, index.embeddings[i]) }] : [],
-    ),
+      !allowed || allowed.has(para.group) ? [{ p, para, i, id: index.set.id }] : []),
   );
-  if (!scored.length) throw new Error(`No paragraphs in the selected section types: ${sectionGroups.join(", ")}`);
-  scored.sort((a, b) => b.score - a.score);
+  if (!passages.length) throw new Error(`No paragraphs in the selected section types: ${sectionGroups.join(", ")}`);
+
+  const searchNotes = [...(rxfp1?.notes ?? [])];
+  let scored: { p: number; para: Paragraph; score: number; ranking?: CorpusSource["ranking"] }[];
+  if (rxfp1) {
+    const available = passages.flatMap((item) => {
+      const { para, id } = item;
+      const vector = rxfp1.vectors.get(rxfp1PassageKey(id, para.section, para.subsection, para.text));
+      return vector ? [{ item, vector }] : [];
+    });
+    const query = available.length ? (await services.rxfp1QueryVectors([enQuery])).get(enQuery) : undefined;
+    if (available.length && !query) searchNotes.push("RXFP1 query embedding unavailable. Search used text matching.");
+    const dense = query === undefined ? [] : available.map(({ item, vector }) =>
+      ({ item, score: rxfp1Similarity(query, vector) })).sort((a, b) => b.score - a.score);
+    const lexical = rankByText(enQuery, passages, ({ para }) => searchTerms(para.text));
+    const vectorHits = new Set(dense.map((hit) => hit.item));
+    scored = fusePassageRanks(lexical, dense, passages.length).map(({ item, score }) => ({
+      ...item, score, ranking: vectorHits.has(item) ? "legacy_vector" : "text_match",
+    }));
+  } else {
+    const query = await embedModel().getTextEmbedding(enQuery);
+    scored = passages.map(({ p, para, i }) => ({ p, para, score: cosineSimilarity(query, indexes[p].embeddings[i]) }))
+      .sort((a, b) => b.score - a.score);
+  }
 
   const perPaperCount = new Map<number, number>();
   const picked: typeof scored = [];
@@ -431,13 +478,14 @@ export async function runCorpusQuery(
     picked.push(hit);
   }
 
-  const sources: CorpusSource[] = picked.map(({ p, para, score }, i) => {
+  const sources: CorpusSource[] = picked.map(({ p, para, score, ranking }, i) => {
     const paper = papers[p];
     return {
       n: i + 1,
       articleId: paper.id,
       label: paper.label,
       score,
+      ranking,
       cited: false,
       title: paper.title,
       authors: paper.authors,
@@ -455,7 +503,7 @@ export async function runCorpusQuery(
     };
   });
 
-  const { text: answer, model } = await synthesize(enQuery, sources);
+  const { text: answer, model } = await services.synthesize(enQuery, sources);
   const cited = citedPassages(answer);
   for (const source of sources) source.cited = cited.has(source.n);
   for (const [p, count] of perPaperCount) papers[p].hits = count;
@@ -474,5 +522,6 @@ export async function runCorpusQuery(
     answer,
     model,
     sources,
+    ...(searchNotes.length ? { searchNotes } : {}),
   };
 }

@@ -96,3 +96,4 @@ export interface ManuscriptReviewResult {
 }
 
 export type ReviewScope = "cited_only" | "cited_and_related";
+export type LiteratureCollection = "current" | "rxfp1";
