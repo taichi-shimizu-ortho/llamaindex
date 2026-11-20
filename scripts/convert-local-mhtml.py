@@ -1,15 +1,19 @@
-"""Convert saved MSC-OXT publisher MHTML into local structured article sets.
+"""Convert saved publisher MHTML into local structured article sets (staging only).
 
+The publisher layout is picked from the host of the saved page URL, and DOI and
+title come from the page's citation meta tags, so a manifest is optional.
 This command only reads local archives. It never opens publisher URLs, downloads
 images, calls an LLM, or edits the live library. Missing assets stay in warnings.
-Use --help for the manifest and inventory inputs; install dependencies from
-scripts/offline-mhtml-requirements.txt into the project virtual environment.
+`npm run ingest:offline` wraps it and promotes the result into the library.
+Install dependencies from scripts/offline-mhtml-requirements.txt into the
+project virtual environment.
 """
 from __future__ import annotations
 import argparse
 import base64
 import copy
 import email
+import email.parser
 import hashlib
 import io
 import json
@@ -28,16 +32,36 @@ INPUT_DIR = None
 SUPPLEMENT_DIR = None
 INVENTORY = None
 BY_NAME = {}
+FIGURE_DIRS = []
 NOW = datetime.now(timezone.utc).isoformat()
 EXCLUDED = re.compile(r'acknowledg|funding|conflicts?|competing interest|disclosure|author.?s?.? contributions?|author notes|ethical|ethics|^consent$|data availability|abbreviations|supplementary|supporting information|publisher.?s note|copyright', re.I)
 EXCLUDED = re.compile(EXCLUDED.pattern + r'|^Statements$|ORCID|Footnotes|authorship contribution|Declaration of AI|Institutional Review|Informed Consent|Supplemental Material', re.I)
-PLATFORMS = {
+# Publisher layout is chosen from the host of the saved page (Snapshot-Content-Location).
+HOST_PLATFORMS = [
+ ('onlinelibrary.wiley.com', 'wiley'), ('journals.sagepub.com', 'sage'), ('mdpi.com', 'mdpi'),
+ ('frontiersin.org', 'frontiers'), ('academic.oup.com', 'oup'), ('sciencedirect.com', 'sd'),
+ ('iopscience.iop.org', 'iop'), ('boneandjoint.org.uk', 'bjr')]
+# Fallback for the 2026-11 MSC-OXT batch, whose archives were converted before host detection.
+LEGACY_PLATFORMS = {
  'frontiers': ['Feixiang2023','Wang2024'],
  'mdpi': ['Breuil2021','Ferrero2021','Pampanella2024','Petrocelli2023','Philippon2025','Roux2020','Roux2023'],
  'wiley': ['Ahmed2021','Hatakeyama2017','Kim2010','Murata2020'],
  'sage': ['Colaianni2014','Murata2018','Nakashima2022','Utsunomiya2013','Zhang2026','Tamma2009'],
  'oup': ['Elabd2008','Noiseux2012'], 'sd': ['Santos2018'], 'iop': ['Wang2025'], 'bjr': ['Cheng2024']}
-def platform(name):return next(k for k,v in PLATFORMS.items() if name in v)
+DETECTED = {}
+
+def platform_for_url(url):
+    host = (urlsplit(url).hostname or '').lower()
+    return next((p for suffix, p in HOST_PLATFORMS if host == suffix or host.endswith('.' + suffix)), None)
+
+def platform(name):
+    if name in DETECTED: return DETECTED[name]
+    return next(k for k,v in LEGACY_PLATFORMS.items() if name in v)
+
+def snapshot_url(path):
+    with path.open('rb') as f:
+        headers = email.parser.BytesHeaderParser(policy=policy.default).parse(f)
+    return str(headers.get('Snapshot-Content-Location') or '')
 
 def norm(x):
     return re.sub(r'\s+', ' ', x or '').strip()
@@ -100,7 +124,7 @@ def roots(soup, name):
     if body is None: raise ValueError(f'{name}: article body is missing')
     result = BeautifulSoup('<article></article>', 'html.parser').article
     abstract_selector='.article-section__abstract,section.abstract,#html-abstract,#abstract,.abstract,.ArticleContent > #h1,.wd-jnl-art-abstract'
-    abstract = soup.select_one('#ab0005') if platform(name)=='sd' else soup.select_one(abstract_selector)
+    abstract = (soup.select_one('#ab0005') or soup.select_one('div.abstract.author')) if platform(name)=='sd' else soup.select_one(abstract_selector)
     if abstract:
         wrapper = BeautifulSoup('<section><h2>Abstract</h2><p></p></section>', 'html.parser').section
         abstract_text = re.sub(r'^Abstract\s*', '', text_of(abstract), flags=re.I)
@@ -114,30 +138,68 @@ def roots(soup, name):
         if heading(h).lower()=='abstract':h.decompose()
     if name=='Murata2020':
         for h in body_copy.find_all(['h3','h4','h5']):h.name='h'+str(int(h.name[1])-1)
+    else:
+        # Wiley's Arthroscopy family starts the body at h3 (Methods/Results), with h2 only for
+        # appendices and back matter. Promote the headings before the first content h2 one level.
+        for h in body_copy.find_all(['h2','h3','h4','h5']):
+            if h.name=='h2':
+                if not re.fullmatch(r'references?|bibliography|supporting information',heading(h),re.I) and not EXCLUDED.search(heading(h)):break
+                continue
+            h.name='h'+str(int(h.name[1])-1)
     # Several publishers leave introduction paragraphs before the first heading.
     body_copy.insert(0, BeautifulSoup('<h2>Introduction</h2>','html.parser').h2)
     result.append(body_copy)
     return result, body
 
+def span(cell, attr):
+    try: return max(1, min(int(cell.get(attr, 1)), 50))
+    except (TypeError, ValueError): return 1
+
 def table_markdown(table):
-    rows = []
+    # Expand rowspan/colspan into a full grid so merged headers repeat over their columns.
+    rows, pending = [], {}
     for tr in table.select('tr'):
         cells = tr.find_all(['td','th'], recursive=False)
-        if cells: rows.append([text_of(c).replace('|', '\\|') for c in cells])
+        if not cells: continue
+        row, col = [], 0
+        for cell in cells:
+            while col in pending:
+                text, left = pending[col]; row.append(text)
+                if left > 1: pending[col] = (text, left - 1)
+                else: del pending[col]
+                col += 1
+            text = text_of(cell).replace('|', '\\|')
+            for _ in range(span(cell, 'colspan')):
+                row.append(text)
+                if span(cell, 'rowspan') > 1: pending[col] = (text, span(cell, 'rowspan') - 1)
+                col += 1
+        while col in pending:
+            text, left = pending[col]; row.append(text)
+            if left > 1: pending[col] = (text, left - 1)
+            else: del pending[col]
+            col += 1
+        rows.append(row)
     if not rows: return ''
     width = max(map(len, rows))
     rows = [r + [''] * (width-len(r)) for r in rows]
     return '\n'.join(['| ' + ' | '.join(rows[0]) + ' |', '| ' + ' | '.join(['---'] * width) + ' |'] + ['| ' + ' | '.join(r) + ' |' for r in rows[1:]])
+
+# Supplementary-file listings (Wiley "Supporting Information") are tables of filenames, not data.
+SUPPORTING_BLOCK = re.compile(r'article-section__supporting|support-info')
+
+def in_supporting(node):
+    return any(SUPPORTING_BLOCK.search(' '.join(p.get('class') or [])) for p in node.parents if isinstance(p, Tag))
 
 def extract_tables(root, name):
     out, warnings, seen = [], [], set()
     wraps = root.select('.html-table-wrap,.article-table-content,.article-table-wrapper,.table-wrap,.table-section,figure.table,.ArticleTable,div.boxout:has(table)')
     for w in wraps:
         if any(p in wraps for p in w.parents): continue
+        if in_supporting(w): continue
         ancestor_section = w.find_parent('section')
         parent_heading = ancestor_section.find(['h2','h3'], recursive=False) if ancestor_section else None
         if parent_heading and EXCLUDED.search(heading(parent_heading)): continue
-        caption = w.select_one('.html-table_wrap_discription,.table-caption,figcaption,caption,.table__caption,.ArticleTable__caption,.ArticleTable__title')
+        caption = w.select_one('.html-table_wrap_discription,.table-caption,.article-table-caption,figcaption,caption,.table__caption,.ArticleTable__caption,.ArticleTable__title')
         if not caption and 'boxout' in (w.get('class') or []):caption=w.find('p')
         label = text_of(caption) if caption else ''
         if w.select_one('.ArticleTable__description'):label+=' '+text_of(w.select_one('.ArticleTable__description'))
@@ -151,11 +213,11 @@ def extract_tables(root, name):
         md = table_markdown(table)
         if md and md not in seen:
             seen.add(md)
-            title_match = re.search(r'Table\s*\d+[A-Za-z]?', label, re.I)
+            title_match = re.search(r'(?:Appendix\s+)?Table\s*\d+[A-Za-z]?', label, re.I)
             title = title_match.group() if title_match else f'Table {len(out)+1}'
             out.append(section(title, 'table', [label + '\n\n' + md if label else md]))
     for table in root.select('table'):
-        if table.find_parent(class_='html-table_wrap_td') or any(p in wraps for p in table.parents): continue
+        if table.find_parent(class_='html-table_wrap_td') or any(p in wraps for p in table.parents) or in_supporting(table): continue
         if 'Publisher' in table.get_text() and len(table.select('tr')) < 3: continue
         ancestor_section = table.find_parent('section')
         parent_heading = ancestor_section.find(['h2','h3'], recursive=False) if ancestor_section else None
@@ -210,8 +272,14 @@ def extract_figures(root, name, url, assets, output):
                 header, encoded = data_url.split(',',1)
                 payload = base64.b64decode(encoded)
                 if len(payload)>500: asset = (header[5:].split(';')[0], payload, data_url[:70])
+        supplied = None
+        if not asset and not panel:
+            supplied = local_figure(name, match.group(1))
+            if supplied:
+                asset = (mimetypes.guess_type(supplied.name)[0] or 'application/octet-stream', supplied.read_bytes(), str(supplied))
         if not asset:
-            warnings.append(f'Figure image not embedded: {title}')
+            remote = next((canonical_url(v,url) for v in choices if v and not v.startswith('data:')), '')
+            warnings.append(f'Figure image not embedded: {title}' + (f' <{remote}>' if remote else ''))
             out.append(section(title, 'figure', [legend + '\n\n[Image unavailable in saved MHTML]']))
             continue
         media, payload, source = asset
@@ -230,8 +298,24 @@ def extract_figures(root, name, url, assets, output):
         path = output / 'figures' / filename;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(payload)
         local = f'/raw_html/{name}_figures/{filename}'
         out.append(section(title, 'figure', [f'[Image URL: {local}]\n\n{legend}']))
-        details.append({'title':title,'filename':filename,'source':source,'bytes':len(payload),'width':width,'height':height})
+        details.append({'title':title,'filename':filename,'source':source,'bytes':len(payload),'width':width,'height':height,'supplied':bool(supplied),'sha256':hashlib.sha256(payload).hexdigest()})
     return out,warnings,details
+
+IMAGE_SUFFIXES = {'.jpg','.jpeg','.png','.gif','.webp','.tif','.tiff'}
+
+def local_figure(name, number):
+    """Find a figure image the user saved by hand: <ID>_fig<N>.<ext> in a --figure-dir,
+    or Figure_<N>.<ext> inside a directory named <ID>_figures (an earlier import)."""
+    wanted = {f'{name}_fig{number}', f'{name}_fig_{number}', f'{name}_figure{number}', f'{name}_figure_{number}'}
+    wanted = {w.lower() for w in wanted}
+    for d in FIGURE_DIRS:
+        if not d.is_dir(): continue
+        own = d.name.lower() == f'{name}_figures'.lower()
+        for f in sorted(d.iterdir()):
+            stem = f.stem.lower()
+            if f.suffix.lower() in IMAGE_SUFFIXES and (stem in wanted or (own and stem == f'figure_{number}')):
+                return f
+    return None
 
 def extract_body(root):
     node = copy.deepcopy(root)
@@ -298,16 +382,28 @@ def convert(name):
     out=STAGE/name;out.mkdir(parents=True,exist_ok=True)
     url,html,assets=parse_mhtml(source)
     soup=BeautifulSoup(html,'html.parser');combined,body=roots(soup,name)
-    expected=BY_NAME[name]
+    expected=BY_NAME.get(name)
     def meta(label):
         x=soup.find('meta',attrs={'name':re.compile('^'+re.escape(label)+'$',re.I)})
         return x.get('content','').strip() if x else ''
-    doi=meta('citation_doi') or expected['doi']
-    assert doi.lower()==expected['doi'].lower(),(name,doi)
-    title=BeautifulSoup(meta('citation_title') or expected['title'],'html.parser').get_text(' ',strip=True)
+    def clean_doi(value):
+        return re.sub(r'^(?:doi:\s*|https?://(?:dx\.)?doi\.org/)','',value.strip(),flags=re.I)
+    page_doi=next((d for d in (clean_doi(meta(k)) for k in ['citation_doi','dc.identifier','prism.doi']) if d.startswith('10.')),'')
+    doi=page_doi or (expected or {}).get('doi','')
+    if not doi:raise ValueError(f'{name}: no DOI in the page; add it to a --manifest')
+    if expected:assert doi.lower()==expected['doi'].lower(),(name,doi)
+    og=soup.find('meta',attrs={'property':'og:title'})
+    title=meta('citation_title') or meta('dc.title') or (expected or {}).get('title','') or (og.get('content','') if og else '')
+    title=BeautifulSoup(title,'html.parser').get_text(' ',strip=True)
+    if not title:raise ValueError(f'{name}: no title in the page; add it to a --manifest')
     authors=[x.get('content','') for x in soup.find_all('meta',attrs={'name':re.compile('^citation_author$',re.I)})]
     if not authors:
         authors=[norm(x.get('content','')) for x in soup.find_all('meta',attrs={'name':re.compile(r'^dc\.creator$',re.I)})]
+    if not authors and platform(name)=='sd':
+        # ScienceDirect has no citation_author meta; names sit in the author group.
+        for link in soup.select('#author-group .react-xocs-alternative-link'):
+            given,surname=link.select_one('.given-name'),link.select_one('.surname')
+            if surname:authors.append(norm((given.get_text(' ',strip=True) if given else '')+' '+surname.get_text(' ',strip=True)))
     if not authors:
         if INVENTORY is None:raise ValueError(f'{name}: citation authors missing; provide --inventory for local Zotero metadata')
         inventory=INVENTORY
@@ -332,7 +428,8 @@ def convert(name):
     sections[idx:idx]=figures
     sections.extend(tables)
     count=sum(len(s['paragraphs'])+sum(len(x['paragraphs']) for x in s['subsections']) for s in sections if s['type']!='figure')
-    article={'id':name,'sourceUrl':url,'title':title,'authors':authors,'journal':meta('citation_journal_title'),'year':(re.search(r'(?:19|20)\d{2}',meta('citation_publication_date') or meta('citation_date') or name).group()),'doi':doi,'createdAt':NOW,'sections':sections,'chunkCount':count,'extractionSource':'local-mhtml-offline','qualityWarnings':fw+tw,'provenance':{'mhtmlFile':name+'.mhtml','sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'networkUsed':False}}
+    article={'id':name,'sourceUrl':url,'title':title,'authors':authors,'journal':meta('citation_journal_title'),'year':(re.search(r'(?:19|20)\d{2}',meta('citation_publication_date') or meta('citation_date') or name).group()),'doi':doi,'createdAt':NOW,'sections':sections,'chunkCount':count,'extractionSource':'local-mhtml-offline','qualityWarnings':fw+tw,'provenance':{'mhtmlFile':name+'.mhtml','sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'networkUsed':False,'savedPlatform':platform(name),'importGroup':INPUT_DIR.name}}
+    supplements+=[{'source':'user-saved image file','file':Path(d['source']).name,'sha256':d['sha256'],'figure':d['title'],'width':d['width'],'height':d['height']} for d in details if d['supplied']]
     if supplements:article['provenance']['supplements']=supplements
     refs=extract_refs(soup,name,url)
     if not refs:
@@ -340,37 +437,46 @@ def convert(name):
     if name=='Tamma2009' and len(refs)==3:
         article['qualityWarnings'].append('Reference list partially embedded: only references 1–3 are present')
     references={'id':name,'sourceUrl':url,'title':title,'doi':doi,'createdAt':NOW,'totalReferences':len(refs),'pubmedFound':0,'abstractFound':0,'records':refs,'extractionSource':'local-mhtml-offline'}
+    fulltext=[s for s in sections if s['type'] not in ['abstract','figure','table']]
+    # Technique notes and case reports are legitimately short; only an empty body is a parse failure.
+    assert len(fulltext)>=1 and count>=5,(name,'insufficient body')
+    notices=[f'Short body ({len(fulltext)} sections, {count} paragraphs); check the parse'] if len(fulltext)<3 or count<15 else []
+    assert not any('\ufffd' in s['content'] for s in fulltext),(name,'encoding error')
     (out/'article.json').write_text(json.dumps(article,ensure_ascii=False,indent=2),encoding='utf-8')
     (out/'reference.json').write_text(json.dumps(references,ensure_ascii=False,indent=2),encoding='utf-8')
     (out/'source.html').write_text(html,encoding='utf-8')
-    fulltext=[s for s in sections if s['type'] not in ['abstract','figure','table']]
-    assert len(fulltext)>=3 and count>=15,(name,'insufficient body')
-    assert not any('\ufffd' in s['content'] for s in fulltext),(name,'encoding error')
-    result={'id':name,'doi':doi,'source':str(source),'sha256':article['provenance']['sha256'],'textParagraphs':count,'figures':len(figures),'embeddedFigures':len(details),'tables':len(tables),'references':len(refs),'warnings':article['qualityWarnings'],'figureDetails':details,'sectionTitles':[s['title'] for s in fulltext]}
+    result={'id':name,'doi':doi,'source':str(source),'sha256':article['provenance']['sha256'],'textParagraphs':count,'figures':len(figures),'embeddedFigures':len(details),'tables':len(tables),'references':len(refs),'warnings':article['qualityWarnings'],'notices':notices,'figureDetails':details,'sectionTitles':[s['title'] for s in fulltext]}
     (out/'audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     return result
 
 def main():
-    global STAGE, INPUT_DIR, SUPPLEMENT_DIR, INVENTORY, BY_NAME
+    global STAGE, INPUT_DIR, SUPPLEMENT_DIR, INVENTORY, BY_NAME, FIGURE_DIRS
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('names', nargs='+', help='Article IDs, matching <ID>.mhtml and manifest filenames')
     parser.add_argument('--input-dir', type=Path, required=True, help='Directory containing saved MHTML archives')
     parser.add_argument('--output-dir', type=Path, required=True, help='Staging directory; existing article folders are refused')
-    parser.add_argument('--manifest', type=Path, required=True, help='JSON list with filename, doi and title for each article')
+    parser.add_argument('--manifest', type=Path, help='Optional JSON list with filename, doi and title; when given, the page DOI must match it')
     parser.add_argument('--inventory', type=Path, help='Optional local Zotero metadata JSON list (fields.DOI and creators)')
     parser.add_argument('--supplement-dir', type=Path, help='Optional local supplements: <ID>/table1.user.html for Breuil2021')
+    parser.add_argument('--figure-dir', type=Path, action='append', default=[], help='Directory with hand-saved figure images <ID>_fig<N>.<ext> (repeatable)')
     args=parser.parse_args()
+    FIGURE_DIRS=[d.resolve() for d in args.figure_dir]
     STAGE=args.output_dir.resolve();INPUT_DIR=args.input_dir.resolve()
     SUPPLEMENT_DIR=args.supplement_dir.resolve() if args.supplement_dir else None
     INVENTORY=json.loads(args.inventory.read_text(encoding='utf-8-sig')) if args.inventory else None
-    manifest=json.loads(args.manifest.read_text(encoding='utf-8-sig'))
+    manifest=json.loads(args.manifest.read_text(encoding='utf-8-sig')) if args.manifest else []
     BY_NAME={Path(x['filename']).stem:x for x in manifest}
     names=list(dict.fromkeys(args.names))
     for name in names:
         if not re.fullmatch(r'[A-Za-z0-9_-]+',name):parser.error(f'Invalid article ID: {name}')
-        if name not in BY_NAME:parser.error(f'Article absent from manifest: {name}')
-        if not any(name in group for group in PLATFORMS.values()):parser.error(f'Unsupported publisher layout for ID: {name}')
-        if not (INPUT_DIR/(name+'.mhtml')).is_file():parser.error(f'Missing archive: {name}.mhtml')
+        if args.manifest and name not in BY_NAME:parser.error(f'Article absent from manifest: {name}')
+        source=INPUT_DIR/(name+'.mhtml')
+        if not source.is_file():parser.error(f'Missing archive: {name}.mhtml')
+        url=snapshot_url(source);detected=platform_for_url(url)
+        if detected:DETECTED[name]=detected
+        elif not any(name in group for group in LEGACY_PLATFORMS.values()):
+            hosts=', '.join(h for h,_ in HOST_PLATFORMS)
+            parser.error(f'Unsupported publisher for {name}: {urlsplit(url).hostname or "no saved URL"} (supported: {hosts})')
         if (STAGE/name).exists():parser.error(f'Output already exists: {STAGE/name}; choose a new staging directory')
     results=[convert(name) for name in names]
     (STAGE/'batch-audit.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')

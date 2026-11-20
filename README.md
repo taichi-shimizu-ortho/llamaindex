@@ -52,7 +52,31 @@ npm run ingest -- -c general --doi 10.1177/03635465261479923
 4. 主論文JSON・参考文献JSONを作り（Import 画面と同じパーサ）、PubMed で Original / Review に分類する。
 
 最後に Zotero のコレクション構成をフォルダへ同期する（`Sync collections` → `Apply` と同じ）ので、Web UI ではそのままコレクションのフォルダに入っている。
-Zotero に書き込むのはこの CLI だけで、Web UI の Zotero 同期は読み取り専用のまま。
+Zotero に書き込むのは CLI（`ingest` と `ingest:offline`）だけで、Web UI の Zotero 同期は読み取り専用のまま。
+
+### 出版社別オフライン変換（`ingest:offline`）
+
+Wiley・SAGE・ScienceDirect などは、出版社ごとの規則で HTML を読むオフライン変換のほうが表・図・節の構造が正確。
+MHTML のファイル名を論文ID（`Habib2018.mhtml` など）にして渡す。出版社は保存元URLで自動判定し、DOI・タイトル・著者はページから読む。
+
+```bash
+npm run ingest:offline -- -c "postless traction" --dry-run ~/Downloads/Habib2018.mhtml
+npm run ingest:offline -- -c "postless traction" ~/Downloads/Habib2018.mhtml
+```
+
+| オプション | 意味 |
+|---|---|
+| `-c <コレクション>` | 登録先の Zotero コレクション名（`--no-zotero` のときは不要） |
+| ファイル／フォルダ | `.mhtml` を1本ずつ、またはフォルダ内の `.mhtml` をすべて |
+| `--dry-run` | 変換だけ行い、段落・図・表・参考文献の数、警告、書き込み先を表示する（何も書かない） |
+| `--replace` | 取り込み済みのIDを上書きする（前の JSON は `backups/` に退避） |
+| `--figure-dir <dir>` | 手で保存した図の置き場所（既定は Downloads） |
+| `--no-zotero` | Zotero に触れない（フォルダは未分類のまま） |
+
+- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`。それ以外（Springer・JBJS など）は止まるので `npm run ingest` を使う。
+- MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ移す。`mhtml/` の中（`mhtml/postless/wiley/` など）にあればそのまま残す。
+- Wiley の MHTML には図の画像が入っていないことが多い。警告に出る URL をブラウザで開き、`<ID>_fig<N>.jpg` の名前で Downloads に保存して `--replace` で取り込み直す。既存の `raw_html/<ID>_figures/Figure_<N>.*` も再利用する。
+- 変換本体は `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）。
 
 ## ORSブックマークレット
 
