@@ -13,6 +13,7 @@ import type {
   ZoteroStatus,
   ZoteroSyncReport,
 } from "./types.js";
+import type { Manuscript, ManuscriptReviewResult, ReviewMode, ReviewScope } from "../shared/manuscript.js";
 
 // APIサーバが落ちているとViteのdevサーバがHTMLを返すため、JSON以外は
 // 「APIに接続できていない」として扱い、パース失敗の不明なエラーにしない。
@@ -86,6 +87,13 @@ export const api = {
   // 選んだ論文の埋め込みを先に用意する（キャッシュ済みならすぐ返る）。
   corpusPrepare: (articleIds: string[]) => postJson<CorpusPrepareResult>("/api/corpus/prepare", { articleIds }),
   corpusQuery: (body: CorpusQueryRequest) => postJson<CorpusQueryResult>("/api/corpus/query", body),
+
+  readManuscript: (file: File) => requestJson<Manuscript>("/api/manuscript/read", {
+    method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file,
+  }),
+  reviewManuscript: (manuscript: Manuscript, mode: ReviewMode, scope: ReviewScope, locations: string[]) =>
+    postJson<ManuscriptReviewResult>("/api/manuscript/review", { manuscript, mode, scope, locations }),
+  saveManuscriptReview: (markdown: string) => postJson<{ file: string }>("/api/manuscript/save", { markdown }),
 
   saveSession: (sessionId: string, result: unknown) =>
     postJson<{ file?: string }>("/api/session/save", { sessionId, result }),

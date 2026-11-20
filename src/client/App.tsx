@@ -6,12 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { documentsInFolder, scopeLabel } from "./documents.js";
 import { LibraryScreen } from "./LibraryScreen.js";
+import { ManuscriptScreen } from "./ManuscriptScreen.js";
 import { PreviewScreen } from "./PreviewScreen.js";
 import { RagScreen } from "./RagScreen.js";
 import type { ArticleSetSummary, CorpusScope, LibraryState, PreviewTarget, ReferenceSetSummary, Status } from "./types.js";
 
 type Theme = "light" | "dark";
-type Screen = "library" | "rag" | "preview";
+type Screen = "library" | "rag" | "preview" | "manuscript";
 
 const CORPUS_KEY = "corpusIds";
 const SCOPE_KEY = "corpusScope";
@@ -192,6 +193,12 @@ export function App() {
           >
             Preview
           </button>
+          <button
+            className={screen === "manuscript" ? "nav-btn active" : "nav-btn"}
+            onClick={() => setScreen("manuscript")}
+          >
+            Manuscript
+          </button>
         </nav>
 
         <div className="status">
@@ -264,6 +271,9 @@ export function App() {
             onOpen={(id) => openPreview(id)}
             onBackToLibrary={() => setScreen("library")}
           />
+        </div>
+        <div className="screen" hidden={screen !== "manuscript"}>
+          <ManuscriptScreen />
         </div>
       </main>
     </div>
