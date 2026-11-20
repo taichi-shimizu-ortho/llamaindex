@@ -22,8 +22,14 @@ export function documentLabel(set: { title?: string; id: string }): string {
 
 // 「Altschuler et al., 2026」形式。著者が取れていない論文は id（取り込み時の AuthorYear）で代用する。
 export function authorYearLabel(set: { id: string; authors?: string[]; year?: string }): string {
+  const suffix = /^(jr|sr|ii|iii|iv)\.?$/i;
   const surnames = (set.authors ?? [])
-    .map((name) => name.trim().split(/\s+/).filter((part) => !/^(jr|sr|ii|iii|iv)\.?$/i.test(part)).at(-1) ?? "")
+    .map((name) => {
+      const [first, rest] = name.split(",", 2).map((part) => part.trim());
+      // Imported names can be stored as "Family, Given" or "Given Family".
+      if (rest && !suffix.test(rest)) return first;
+      return first.split(/\s+/).filter((part) => !suffix.test(part)).at(-1) ?? "";
+    })
     .filter(Boolean);
   if (!surnames.length) return set.id;
   const who =
