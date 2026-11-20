@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
-import type { ArticleSection, ArticleSet } from "./articleHarvester.js";
+import { articleSetPath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
 import { PATHS } from "./config.js";
-import { RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
+import { rxfp1DocumentIds } from "./library.js";
+import { rxfp1ArticleId } from "../shared/rxfp1.js";
 
 interface LegacySection {
   title: string;
@@ -56,7 +57,7 @@ function fromLegacy(article: LegacyArticle): ArticleSet {
     subsections: (s.subsections ?? []).map((sub) => ({ ...sub, paragraphs: paragraphs(sub.content) })),
   }));
   return {
-    id: RXFP1_ARTICLE_PREFIX + article.citekey, title: article.title,
+    id: rxfp1ArticleId(article.citekey), title: article.title,
     authors: Array.isArray(article.authors) ? article.authors : [],
     year: String(article.published ?? "").match(/\b\d{4}\b/)?.[0] ?? "",
     journal: article.source ?? "", doi, pmid, createdAt: "",
@@ -71,10 +72,13 @@ function fromLegacy(article: LegacyArticle): ArticleSet {
 function readLegacyArticles(file: string): ArticleSet[] {
   const data = JSON.parse(fs.readFileSync(file, "utf8")) as { articles: LegacyArticle[] };
   if (!Array.isArray(data.articles)) throw new Error("Invalid RXFP1 bibliography.");
-  return data.articles
-    .filter((a) => a && typeof a.citekey === "string" && CITEKEY.test(a.citekey) &&
-      typeof a.title === "string" && a.title.trim() && Array.isArray(a.sections))
-    .map(fromLegacy);
+  return data.articles.map((article) => {
+    if (!article || typeof article.citekey !== "string" || !/[A-Za-z0-9]/.test(article.citekey) ||
+      typeof article.title !== "string" || !article.title.trim() || !Array.isArray(article.sections)) {
+      throw new Error("A legacy entry has invalid bibliographic metadata.");
+    }
+    return fromLegacy(article);
+  });
 }
 
 function markdownSections(body: string): LegacySection[] {
@@ -138,7 +142,7 @@ export function parseRxfp1Markdown(markdown: string, fileKey: string, existing?:
   return parsed;
 }
 
-function hasBody(set: ArticleSet) {
+export function hasRxfp1Body(set: ArticleSet) {
   return set.sections.some((section) => isRxfp1Body(section.type, section.title) &&
     (section.paragraphs.length || section.subsections.some((sub) => sub.paragraphs.length)));
 }
@@ -157,9 +161,14 @@ export function fileStamp(file: string): string {
   }
 }
 
-let cached: { stamp: string; articles: Map<string, ArticleSet>; errors: string[] } | undefined;
+interface Rxfp1Catalogue {
+  stamp: string;
+  articles: Map<string, ArticleSet>;
+  errors: string[];
+}
 
-export function loadRxfp1Corpus() {
+// The old article and note files are only used by the migration command.
+export function loadLegacyRxfp1Corpus() {
   const { rxfp1Articles: file, rxfp1MarkdownDir: dir } = PATHS;
   const errors: string[] = [];
   const structured = fileStamp(file);
@@ -169,8 +178,6 @@ export function loadRxfp1Corpus() {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") errors.push("Could not list the RXFP1 Markdown folder.");
   }
-  const stamp = JSON.stringify([structured, errors, markdownFiles.map((name) => [name, fileStamp(path.join(dir, name))])]);
-  if (cached?.stamp === stamp) return cached;
   const articles = new Map<string, ArticleSet>();
   const idsByWork = new Map<string, string>();
   function remember(article: ArticleSet) {
@@ -179,29 +186,59 @@ export function loadRxfp1Corpus() {
   }
   if (structured) {
     try {
-      for (const article of readLegacyArticles(file)) remember(article);
-    } catch {
-      errors.push("Could not read the RXFP1 structured bibliography.");
+      for (const article of readLegacyArticles(file)) {
+        if (articles.has(article.id)) throw new Error(`Legacy article ID collision: ${article.id}`);
+        remember(article);
+      }
+    } catch (error) {
+      errors.push(`Could not read the RXFP1 structured bibliography: ${(error as Error).message}`);
     }
-  }
+  } else errors.push("The legacy RXFP1 bibliography is unavailable.");
   for (const name of markdownFiles) {
     const key = path.basename(name, ".md");
-    const id = RXFP1_ARTICLE_PREFIX + key;
+    const id = rxfp1ArticleId(key);
     const current = articles.get(id);
-    if (current && hasBody(current)) continue;
+    if (current && hasRxfp1Body(current)) continue;
     try {
       const parsed = parseRxfp1Markdown(fs.readFileSync(path.join(dir, name), "utf8"), key, current);
       if (!parsed) continue;
       const existingId = workKeys(parsed).map((work) => idsByWork.get(work)).find(Boolean);
       const existing = current ?? (existingId ? articles.get(existingId) : undefined);
-      if (existing && (hasBody(existing) ||
-        (!hasBody(parsed) && !parsed.sections.some((section) => section.type === "abstract")))) continue;
-      remember(existing ? {
+      if (!existing) {
+        remember(parsed);
+        continue;
+      }
+      const aliases = [...new Set([...(existing.legacyRxfp1Ids ?? []), parsed.id])].filter((alias) => alias !== existing.id);
+      if (hasRxfp1Body(existing) ||
+          (!hasRxfp1Body(parsed) && !parsed.sections.some((section) => section.type === "abstract"))) {
+        if (aliases.length) existing.legacyRxfp1Ids = aliases;
+        continue;
+      }
+      remember({
         ...parsed, id: existing.id, title: existing.title, authors: existing.authors.length ? existing.authors : parsed.authors,
-        articleType: existing.articleType ?? parsed.articleType,
-      } : parsed);
+        articleType: existing.articleType ?? parsed.articleType, legacyRxfp1Ids: aliases,
+      });
     } catch {
       errors.push(`Could not read RXFP1 note ${name}.`);
+    }
+  }
+  return { articles, errors };
+}
+
+let cached: Rxfp1Catalogue | undefined;
+
+export function loadRxfp1Corpus(): Rxfp1Catalogue {
+  const ids = [...rxfp1DocumentIds()].sort();
+  const stamp = JSON.stringify(ids.map((id) => [id, fileStamp(articleSetPath(id))]));
+  if (cached?.stamp === stamp) return cached;
+  const articles = new Map<string, ArticleSet>();
+  const errors: string[] = [];
+  for (const id of ids) {
+    if (!fs.existsSync(articleSetPath(id))) continue;
+    try {
+      articles.set(id, loadArticleSet(id));
+    } catch {
+      errors.push(`Could not read RXFP1 article ${id}.`);
     }
   }
   cached = { stamp, articles, errors };
@@ -211,6 +248,7 @@ export function loadRxfp1Corpus() {
 export function listRxfp1Articles() {
   return [...loadRxfp1Corpus().articles.values()].map((set) => ({
     id: set.id, title: set.title, authors: set.authors, year: set.year, sourceUrl: set.sourceUrl,
-    doi: set.doi, articleType: set.articleType, createdAt: set.createdAt, chunkCount: set.chunkCount, searchable: hasBody(set),
+    doi: set.doi, articleType: set.articleType, createdAt: set.createdAt, chunkCount: set.chunkCount,
+    legacyRxfp1Ids: set.legacyRxfp1Ids, searchable: hasRxfp1Body(set),
   })).sort((a, b) => a.title.localeCompare(b.title));
 }

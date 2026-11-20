@@ -11,4 +11,5 @@ dependencies = [
     "llama-index-llms-openai",
     "llama-index-embeddings-openai",
     "PyYAML",
+    "pymupdf>=1.26",
 ]

@@ -7,10 +7,11 @@ import fs from "node:fs";
 import { MODELS } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { generateAnswer, hasJapanese, translateToEnglish } from "./llm.js";
-import { articleSetPath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { articleSetPath, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
 import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
 import { isRxfp1Article, RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
 import { isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
+import { rxfp1DocumentIds } from "./library.js";
 import { loadRxfp1Index, rxfp1PassageKey, rxfp1QueryVectors, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
 import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
@@ -243,15 +244,14 @@ function uniqueIds(ids: unknown): string[] {
 
 // 読めない論文があっても全体は止めず、skipped に理由を返す。
 async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
-  const ids = uniqueIds(articleIds);
+  const ids = [...new Set(uniqueIds(articleIds).map(resolveArticleId))];
   if (!ids.length) throw new Error("Select at least one paper");
-  const isArchive = ids.some(isRxfp1Article);
-  if (isArchive && !ids.every(isRxfp1Article)) throw new Error("Select the RXFP1 archive as its own search scope.");
-  const archive = isArchive ? loadRxfp1Corpus() : undefined;
-  const rxfp1 = archive ? await loadRxfp1Index(archive) : undefined;
+  const rxIds = rxfp1DocumentIds();
+  const rxCorpus = ids.every((id) => rxIds.has(id)) ? loadRxfp1Corpus() : undefined;
+  const rxfp1 = rxCorpus ? await loadRxfp1Index(rxCorpus) : undefined;
   async function indexPaper(id: string): Promise<PaperIndex> {
-    if (!archive) return paperIndex(id);
-    const set = archive.articles.get(id);
+    if (!rxCorpus) return paperIndex(id);
+    const set = rxCorpus.articles.get(id);
     if (!set) throw new Error("RXFP1 paper not found.");
     const paragraphs = paragraphsOf(set, true);
     if (!paragraphs.length) throw new Error("No main text to search (abstracts are not indexed)");
@@ -269,7 +269,7 @@ async function loadCorpus(articleIds: unknown): Promise<LoadedCorpus> {
 
   // 同じ引用ラベルが複数あれば a, b, … を付けて区別する。
   const labelCount = new Map<string, number>();
-  const labelFor = (id: string) => baseLabel(isArchive ? id.slice(RXFP1_ARTICLE_PREFIX.length) : id);
+  const labelFor = (id: string) => baseLabel(isRxfp1Article(id) ? id.slice(RXFP1_ARTICLE_PREFIX.length) : id);
   for (const { id } of loaded) labelCount.set(labelFor(id), (labelCount.get(labelFor(id)) ?? 0) + 1);
   const labelSeen = new Map<string, number>();
 

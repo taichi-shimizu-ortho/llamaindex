@@ -7,7 +7,8 @@ import { PATHS } from "./config.js";
 import type { ArticleSet } from "./articleHarvester.js";
 import type { ReferenceSet } from "./referenceHarvester.js";
 import type { CitationCheck, Evidence, LiteratureCollection, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
-import { loadRxfp1Corpus } from "./rxfp1Corpus.js";
+import { rxfp1DocumentIds } from "./library.js";
+import { isRxfp1Article } from "../shared/rxfp1.js";
 import { rxfp1PassageKey, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
 import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
@@ -66,7 +67,7 @@ function sectionGroup(type: string, title: string): string {
   return type;
 }
 
-function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]): Passage[] {
+function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"], pdf = false): Passage[] {
   return sections.flatMap((section, sectionIndex) => {
     if (excluded.test(section.type) || excluded.test(section.title)) return [];
     const pieces = [
@@ -81,22 +82,26 @@ function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]
         : group === "methods" || group === "materials|methods" ? "methods"
         : ["discussion", "conclusion"].includes(group) ? "author_interpretation"
         : articleType === "original" && group === "results" ? "primary_result" : "other";
-      return paragraphs.flatMap((text, paragraphIndex): Passage[] => !text.trim() ? [] : [{
-        text,
-        locator: {
-          section: sectionTitle,
-          subsection: title,
-          chunk_id: [sectionIndex + 1, subIndex, paragraphIndex + 1].join("."),
-          paragraph: paragraphIndex + 1,
-          page: null,
-        },
-        type, group, terms: searchTerms(text),
-        limitations: [
-          ...(group === "abstract" ? ["Abstract passage."] : []),
-          ...(group === "table" ? ["Table structure may be incomplete in the extracted paragraph."] : []),
-          ...(text.includes("\uFFFD") ? ["The passage contains text decoding artifacts."] : []),
-        ],
-      }]);
+      return paragraphs.flatMap((raw, paragraphIndex): Passage[] => {
+        const text = group === "figure" ? raw.replace(/\[Image URL:[^\]]+\]\s*/g, "").trim() : raw;
+        return !text.trim() ? [] : [{
+          text,
+          locator: {
+            section: sectionTitle,
+            subsection: title,
+            chunk_id: [sectionIndex + 1, subIndex, paragraphIndex + 1].join("."),
+            paragraph: paragraphIndex + 1,
+            page: null,
+          },
+          type, group, terms: searchTerms(text),
+          limitations: [
+            ...(group === "abstract" ? ["Abstract passage."] : []),
+            ...(group === "table" ? ["Table structure may be incomplete in the extracted paragraph."] : []),
+            ...(text.includes("\uFFFD") ? ["The passage contains text decoding artifacts."] : []),
+            ...(pdf ? ["PDF text extraction. Check exact characters and values against the original page."] : []),
+          ],
+        }];
+      });
     });
   });
 }
@@ -104,7 +109,7 @@ function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]
 function sourceFromSet(set: ArticleSet): Source {
   return {
     id: set.id, title: set.title, authors: set.authors ?? [], year: set.year,
-    doi: doiOf(set.doi ?? ""), pmid: set.pmid ?? "", passages: passagesOf(set.sections, set.articleType),
+    doi: doiOf(set.doi ?? ""), pmid: set.pmid ?? "", passages: passagesOf(set.sections, set.articleType, set.extractionSource === "pdf"),
   };
 }
 
@@ -150,20 +155,20 @@ function bestCopies(sources: Source[]): Source[] {
 }
 
 export function loadLiterature(collection: LiteratureCollection = "current") {
-  if (collection === "rxfp1") {
-    const archive = loadRxfp1Corpus();
-    return { sources: [...archive.articles.values()].map(sourceFromSet), abstractSources: [], errors: archive.errors };
-  }
   const errors: string[] = [];
+  const selected = collection === "current" ? undefined : rxfp1DocumentIds();
+  const includes = (id: string) => !selected || selected.has(id);
+  if (selected && !selected.size) errors.push("The current RXFP1 folder has no assigned articles.");
   const sources: Source[] = [];
   for (const set of readSets<ArticleSet>(PATHS.articleOutputDir, errors)) {
+    if (!includes(set?.id)) continue;
     try {
       sources.push(sourceFromSet(set));
     } catch {
       errors.push(`Could not extract article ${set?.id ?? "(unknown ID)"}.`);
     }
   }
-  const abstractSources = readSets<ReferenceSet>(PATHS.referenceOutputDir, errors).flatMap((set) =>
+  const abstractSources = readSets<ReferenceSet>(PATHS.referenceOutputDir, errors).filter((set) => includes(set?.id)).flatMap((set) =>
     (Array.isArray(set?.records) ? set.records : []).flatMap((record): Source[] => {
       const meta = record?.pubmed;
       if (!meta?.title || !meta.abstract?.trim() || !meta.pmid) return [];
@@ -191,7 +196,12 @@ function resolveCitation(citation: Citation, sources: Source[]): { check: Citati
     if (!reference) return !/^\d+$/.test(identifier) && source.id === identifier;
     const key = titleKey(source.title ?? "");
     if (!key) return false;
-    if (explicitTitles.length) return explicitTitles.includes(key);
+    if (explicitTitles.length) {
+      if (explicitTitles.includes(key)) return true;
+      // A legacy publisher title can carry an inline footnote marker, e.g. "Mice1".
+      return isRxfp1Article(source.id) && Boolean(source.year && reference.includes(source.year))
+        && /\p{Ll}[1-9]$/u.test(source.title) && explicitTitles.includes(key.slice(0, -1));
+    }
     // Require a full title and year in unstructured bibliographies to avoid author-year guesses.
     return key.length >= 24 && Boolean(source.year) && reference.includes(source.year) && bare.includes(key);
   });

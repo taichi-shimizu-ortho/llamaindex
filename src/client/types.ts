@@ -53,6 +53,7 @@ export interface ArticleSetSummary {
   doi?: string;
   // PubMed での分類（未確認・PubMed に無ければ null）
   articleType?: MainArticleType | null;
+  legacyRxfp1Ids?: string[];
   chunkCount: number;
   createdAt: string;
 }

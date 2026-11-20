@@ -4,15 +4,14 @@ import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import express from "express";
 import { harvestReferences, listReferenceSets, loadReferenceSet } from "./referenceHarvester.js";
-import { harvestArticle, listArticleSets, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { harvestArticle, listArticleSets, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
 import { classifyArticle, classifyUncheckedArticles } from "./articleClassifier.js";
 import { prepareCorpus, runCorpusQuery, type CorpusQueryResult, type CorpusSource } from "./corpusRag.js";
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
 import { MODELS, PATHS } from "./config.js";
 import { modelLabel } from "../shared/modelLabel.js";
-import { isRxfp1Article } from "../shared/rxfp1.js";
-import { listRxfp1Articles, loadRxfp1Corpus } from "./rxfp1Corpus.js";
+import { listRxfp1Articles } from "./rxfp1Corpus.js";
 import { readManuscript } from "./manuscriptDocx.js";
 import { parseReviewRequest, ReviewInputError, runManuscriptReview } from "./manuscriptReview.js";
 
@@ -137,7 +136,7 @@ app.post("/api/import/ors", async (req, res) => {
   }
 
   try {
-    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit, jatsXml }));
+    result.reference = referenceSummary(await harvestReferences({ sourceUrl, html, title, limit, jatsXml, articleId: result.article?.id }));
   } catch (e) {
     result.referenceError = errorText(e);
   }
@@ -174,10 +173,7 @@ app.get("/api/rxfp1/articles", (_req, res) => {
 
 app.get("/api/article/sets/:id", (req, res) => {
   try {
-    const id = req.params.id;
-    const article = isRxfp1Article(id) ? loadRxfp1Corpus().articles.get(id) : loadArticleSet(id);
-    if (!article) return res.status(404).json({ error: "RXFP1 paper not found." });
-    res.json(article);
+    res.json(loadArticleSet(resolveArticleId(req.params.id)));
   } catch (e: any) {
     res.status(404).json({ error: String(e?.message ?? e) });
   }

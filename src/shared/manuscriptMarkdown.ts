@@ -2,6 +2,7 @@ import type { ManuscriptReviewResult } from "./manuscript.js";
 
 export function manuscriptMarkdown(result: ManuscriptReviewResult): string {
   const parts = ["# Manuscript review", "", result.title, "", `Mode: ${result.mode}`, `Model: ${result.model || "—"}`];
+  if (result.collection) parts.push(`Literature collection: ${result.collection}`);
   if (result.ledger.length) {
     parts.push("", "## Claim ledger");
     for (const claim of result.ledger) {

@@ -22,7 +22,10 @@ export async function classifyArticle(id: string) {
 
 // 通信エラーの論文は確認済みにせず、次の起動で再試行する。
 export async function classifyUncheckedArticles(): Promise<void> {
-  const unchecked = listArticleSets().filter((summary) => !loadArticleSet(summary.id).pubmedCheckedAt);
+  const unchecked = listArticleSets().filter((summary) => {
+    const set = loadArticleSet(summary.id);
+    return !set.pubmedCheckedAt && set.articleTypeSource !== "manual" && !set.extractionSource?.startsWith("rxfp1-");
+  });
   for (const { id } of unchecked) {
     try {
       const set = await classifyArticle(id);

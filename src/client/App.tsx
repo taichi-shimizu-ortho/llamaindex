@@ -9,7 +9,6 @@ import { LibraryScreen } from "./LibraryScreen.js";
 import { ManuscriptScreen } from "./ManuscriptScreen.js";
 import { PreviewScreen } from "./PreviewScreen.js";
 import { RagScreen } from "./RagScreen.js";
-import { isRxfp1Article } from "../shared/rxfp1.js";
 import type { ArticleSetSummary, CorpusScope, LibraryState, PreviewTarget, ReferenceSetSummary, Rxfp1ArticleSummary, Status } from "./types.js";
 
 type Theme = "light" | "dark";
@@ -112,13 +111,25 @@ export function App() {
       .finally(() => setLoading(""));
   }, []);
 
-  // 取り込み直しや改名で消えた論文を、最近開いた一覧と Preview から外す。
+  const byId = useMemo(() => {
+    const lookup = new Map(articleSets.map((set) => [set.id, set]));
+    for (const set of articleSets) {
+      for (const alias of set.legacyRxfp1Ids ?? []) if (!lookup.has(alias)) lookup.set(alias, set);
+    }
+    return lookup;
+  }, [articleSets]);
+
+  // Canonical IDs keep selections and Preview history valid after the RXFP1 migration.
   useEffect(() => {
     if (loading) return;
-    const ids = new Set([...articleSets, ...rxfp1Articles].map((set) => set.id));
-    setRecentIds((prev) => (prev.every((id) => ids.has(id)) ? prev : prev.filter((id) => ids.has(id))));
-    setPreviewTarget((prev) => (prev && !ids.has(prev.articleId) ? null : prev));
-  }, [loading, articleSets, rxfp1Articles]);
+    const canonical = (ids: string[]) => [...new Set(ids.flatMap((id) => byId.get(id)?.id ?? []))];
+    setRecentIds(canonical);
+    setCorpusIds(canonical);
+    setPreviewTarget((prev) => {
+      const id = prev && byId.get(prev.articleId)?.id;
+      return id && prev ? { ...prev, articleId: id } : null;
+    });
+  }, [loading, byId]);
 
   // Zotero 同期などでスコープのフォルダが消えたら、フォルダスコープを外す（手動選択に戻る）。
   useEffect(() => {
@@ -132,21 +143,20 @@ export function App() {
     if (corpusScope) {
       return documentsInFolder(articleSets, library, corpusScope.folderId, corpusScope.includeSubfolders);
     }
-    const selectedCatalogue = corpusIds.some(isRxfp1Article) ? rxfp1Articles : articleSets;
-    const byId = new Map(selectedCatalogue.map((set) => [set.id, set]));
     return corpusIds.flatMap((id) => byId.get(id) ?? []);
-  }, [articleSets, library, corpusIds, corpusScope, rxfp1Articles]);
+  }, [articleSets, library, corpusIds, corpusScope, byId]);
 
   const rxfp1Searchable = rxfp1Articles.filter((set) => set.searchable);
+  const rxfp1Ids = new Set(rxfp1Articles.map((set) => set.id));
+  const isRxfp1Scope = corpusPapers.length > 0 && corpusPapers.every((paper) => rxfp1Ids.has(paper.id));
   const corpusLabel = corpusScope
     ? scopeLabel(library.folders, corpusScope.folderId, corpusScope.includeSubfolders)
-    : corpusIds.some(isRxfp1Article) ? "RXFP1 archive" : "Custom selection";
+    : isRxfp1Scope ? "RXFP1 folder" : "Custom selection";
 
   // 手動でチェックを付け外ししたら、その時点のフォルダの中身を起点にした手動選択へ切り替える。
   function setSelected(ids: string[], selected: boolean) {
     const base = corpusScope ? corpusPapers.map((set) => set.id) : corpusIds;
-    const sameCollection = selected ? base.filter((id) => isRxfp1Article(id) === isRxfp1Article(ids[0] ?? "")) : base;
-    const next = selected ? [...sameCollection, ...ids.filter((id) => !sameCollection.includes(id))]
+    const next = selected ? [...new Set([...base, ...ids])]
       : base.filter((id) => !ids.includes(id));
     setCorpusScope(null);
     setCorpusIds(next);
@@ -267,7 +277,8 @@ export function App() {
 
         <div className="screen" hidden={screen !== "rag"}>
           <RagScreen
-            key={corpusPapers.some((paper) => isRxfp1Article(paper.id)) ? "rxfp1" : "current"}
+            key={isRxfp1Scope ? "rxfp1" : "current"}
+            rxfp1={isRxfp1Scope}
             papers={corpusPapers}
             scopeLabel={corpusLabel}
             active={screen === "rag"}
@@ -279,7 +290,7 @@ export function App() {
 
         <div className="screen" hidden={screen !== "preview"}>
           <PreviewScreen
-            articleSets={previewTarget && isRxfp1Article(previewTarget.articleId) ? rxfp1Articles : articleSets}
+            articleSets={articleSets}
             referenceSets={referenceSets}
             library={library}
             target={previewTarget}

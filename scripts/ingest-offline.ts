@@ -21,27 +21,31 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { PATHS } from "../src/server/config.js";
+import { articleIdForDoi } from "../src/server/articleHarvester.js";
 import { classifyArticle } from "../src/server/articleClassifier.js";
 import { normalizeDoi, syncZotero } from "../src/server/zotero.js";
 import { addToZotero, downloadsDir, isInside, isSameFile, moveFile, zoteroContext } from "./lib/ingest-common.js";
 import type { ZoteroContext } from "./lib/ingest-common.js";
 
 const USAGE =
-  'Usage: npm run ingest:offline -- -c <Zotero collection> [--dry-run] [--replace] [--no-zotero] [--figure-dir <dir>] <file.mhtml | folder> ...';
+  'Usage: npm run ingest:offline -- -c <Zotero collection> [--dry-run] [--replace] [--no-zotero] [--copy] [--id <article ID>] [--figure-dir <dir>] <file.mhtml | folder> ...';
 
 interface Options {
   collection: string;
   dryRun: boolean;
   replace: boolean;
   zotero: boolean;
+  copy: boolean;
+  id?: string;
   figureDirs: string[];
   inputs: string[];
 }
 
 function parseArgs(argv: string[]): Options {
-  const options: Options = { collection: "", dryRun: false, replace: false, zotero: true, figureDirs: [], inputs: [] };
+  const options: Options = { collection: "", dryRun: false, replace: false, zotero: true, copy: false, figureDirs: [], inputs: [] };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     const value = () => {
@@ -53,6 +57,8 @@ function parseArgs(argv: string[]): Options {
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--replace") options.replace = true;
     else if (arg === "--no-zotero") options.zotero = false;
+    else if (arg === "--copy") options.copy = true;
+    else if (arg === "--id") options.id = value();
     else if (arg === "--figure-dir") options.figureDirs.push(path.resolve(value()));
     else if (arg === "-h" || arg === "--help") {
       console.log(USAGE);
@@ -100,7 +106,7 @@ interface Staged {
 
 function convert(file: string, id: string, figureDirs: string[], stage: string): Staged {
   const figures = [...figureDirs, path.join(PATHS.rawHtmlDir, `${id}_figures`)].filter((d) => fs.existsSync(d));
-  const args = ["-I", path.join(root, "scripts", "convert-local-mhtml.py"), id, "--input-dir", path.dirname(file), "--output-dir", stage];
+  const args = ["-I", path.join(root, "scripts", "convert-local-mhtml.py"), id, "--input-file", file, "--output-dir", stage];
   for (const dir of figures) args.push("--figure-dir", dir);
   const result = spawnSync(python, args, { encoding: "utf-8" });
   if (result.error) throw result.error;
@@ -113,21 +119,6 @@ function convert(file: string, id: string, figureDirs: string[], stage: string):
   return { article: read("article.json"), reference: read("reference.json"), audit: read("audit.json"), dir };
 }
 
-// 既存の主論文JSONを走査し、同じ DOI が別IDで入っていないか確かめる
-function idForDoi(doi: string): string | undefined {
-  if (!fs.existsSync(PATHS.articleOutputDir)) return undefined;
-  for (const name of fs.readdirSync(PATHS.articleOutputDir)) {
-    if (!name.endsWith(".json")) continue;
-    try {
-      const existing = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, name), "utf-8"));
-      if (normalizeDoi(existing.doi ?? "") === doi) return existing.id ?? name.replace(/\.json$/, "");
-    } catch {
-      // 壊れたJSONは取り込みの判断材料にしない
-    }
-  }
-  return undefined;
-}
-
 function writeJson(target: string, data: unknown) {
   const temp = `${target}.tmp-${process.pid}`;
   fs.writeFileSync(temp, JSON.stringify(data, null, 2), "utf-8");
@@ -135,14 +126,16 @@ function writeJson(target: string, data: unknown) {
 }
 
 // mhtml/ 配下の出版社フォルダ名（変換スクリプトの略称 → 読める名前）
-const PLATFORM_FOLDERS: Record<string, string> = { sd: "sciencedirect", oup: "oup", iop: "iop", bjr: "boneandjoint" };
+const PLATFORM_FOLDERS: Record<string, string> = { sd: "sciencedirect", oup: "oup", iop: "iop", bjr: "boneandjoint", dove: "dovepress" };
 
 const backupStamp = new Date().toISOString().replace(/[:.]/g, "-");
 
 async function ingest(file: string, options: Options, ctx: ZoteroContext | null) {
-  const id = path.basename(file).replace(/\.mhtml?$/i, "");
+  const id = options.id ?? path.basename(file).replace(/\.mhtml?$/i, "");
   console.log(`\n▶ ${id}`);
-  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(`File name must be the article ID (letters, digits, _ or -): ${path.basename(file)}`);
+  if (!/^[A-Za-z0-9_.-]+$/.test(id) || id === "." || id === "..") {
+    throw new Error(`Invalid article ID: ${id}`);
+  }
 
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), "llamaindex-offline-"));
   try {
@@ -161,19 +154,22 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
     // ID・DOI の衝突を確かめる（別IDで同じ DOI が入っていれば止める）
     const articlePath = path.join(PATHS.articleOutputDir, `${id}.json`);
     const referencePath = path.join(PATHS.referenceOutputDir, `${id}.json`);
-    const sameDoi = idForDoi(doi);
-    if (sameDoi && sameDoi !== id) throw new Error(`DOI already imported as ${sameDoi}; rename the file to ${sameDoi}.mhtml to replace it`);
+    const sameDoi = articleIdForDoi(doi);
+    if (sameDoi && sameDoi !== id) throw new Error(`DOI already imported as ${sameDoi}; use --id ${sameDoi} --replace to update it`);
     const exists = fs.existsSync(articlePath);
     if (exists) {
       const existing = JSON.parse(fs.readFileSync(articlePath, "utf-8"));
       if (normalizeDoi(existing.doi ?? "") !== doi) throw new Error(`ID ${id} is already used by another paper (${existing.doi}); rename the file`);
       if (!options.replace) throw new Error(`${id} is already imported; review it and re-run with --replace to overwrite`);
+      if (existing.legacyRxfp1Ids?.length) article.legacyRxfp1Ids = existing.legacyRxfp1Ids;
     }
 
     // MHTML の置き場所: データの mhtml/ 配下ならそのまま、外なら mhtml/<出版社>/<ID>.mhtml
     const folder = PLATFORM_FOLDERS[platform] ?? platform;
     const stored = isInside(file, PATHS.mhtmlDir) ? file : path.join(PATHS.mhtmlDir, folder, `${id}.mhtml`);
-    if (stored !== file && fs.existsSync(stored) && !isSameFile(file, stored)) {
+    const alreadyArchived = stored !== file && fs.existsSync(stored) &&
+      (isSameFile(file, stored) || (options.copy && createHash("sha256").update(fs.readFileSync(stored)).digest("hex") === audit.sha256));
+    if (stored !== file && fs.existsSync(stored) && !alreadyArchived) {
       throw new Error(`A different archive is already at ${stored}; move it away first`);
     }
     article.sourceMhtml = relData(stored);
@@ -181,15 +177,18 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
     const figureFiles = fs.existsSync(path.join(dir, "figures")) ? fs.readdirSync(path.join(dir, "figures")) : [];
 
     if (options.dryRun) {
-      console.log(`  MHTML: ${stored === file ? "stays at" : "would move to"} ${relData(stored)}`);
+      console.log(`  MHTML: ${stored === file || alreadyArchived ? "stays at" : options.copy ? "would copy to" : "would move to"} ${relData(stored)}`);
       console.log(`  JSON: would ${exists ? "replace" : "write"} article_sets/${id}.json and reference_sets/${id}.json (${figureFiles.length} figure files)`);
       if (ctx) await addToZotero(doi, article.sourceUrl, ctx, true);
       return;
     }
 
-    if (stored !== file) {
-      moveFile(file, stored);
-      console.log(`  MHTML: moved to ${relData(stored)}`);
+    if (stored !== file && !alreadyArchived) {
+      if (options.copy) {
+        fs.mkdirSync(path.dirname(stored), { recursive: true });
+        fs.copyFileSync(file, stored, fs.constants.COPYFILE_EXCL);
+      } else moveFile(file, stored);
+      console.log(`  MHTML: ${options.copy ? "copied" : "moved"} to ${relData(stored)}`);
     }
     if (exists) {
       const backup = path.join(PATHS.outputDir, "backups", `ingest-offline-${backupStamp}`);
@@ -224,6 +223,7 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const files = inputFiles(options.inputs);
+  if (options.id && files.length !== 1) throw new Error("--id requires exactly one MHTML file");
   if (!options.figureDirs.length && fs.existsSync(downloadsDir())) options.figureDirs.push(downloadsDir());
   const ctx = options.zotero ? await zoteroContext(options.collection) : null;
   if (ctx) console.log(`Zotero collection: ${ctx.target.name}${options.dryRun ? "  (dry run: nothing is written)" : ""}`);

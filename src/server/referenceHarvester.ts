@@ -55,6 +55,7 @@ export interface HarvestOptions {
   title?: string;
   limit?: number;
   jatsXml?: string;
+  articleId?: string;
 }
 
 function ensureOutputDir() {
@@ -1177,7 +1178,7 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   const articleDoiMatch = options.jatsXml?.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
   const finalDoi = (articleDoiMatch ? articleDoiMatch[1].replace(/<[^>]+>/g, "").trim() : inferMeta(html, sourceUrl).doi) || "";
   
-  const id = uniqueJsonId(PATHS.referenceOutputDir, baseId, sourceUrl, finalDoi, title);
+  const id = uniqueJsonId(PATHS.referenceOutputDir, options.articleId ?? baseId, sourceUrl, finalDoi, title);
   
   const existingPath = referenceSetPath(id);
   if (fs.existsSync(existingPath)) {

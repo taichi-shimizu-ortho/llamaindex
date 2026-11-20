@@ -836,7 +836,7 @@ export function LibraryScreen({
 
           <div className="corpus-bar">
             {rxfp1Count > 0 && (
-              <button className="ghost" onClick={onAskRxfp1}>Ask RXFP1 archive ({rxfp1Count}) →</button>
+              <button className="ghost" onClick={onAskRxfp1}>Ask RXFP1 ({rxfp1Count}) →</button>
             )}
             {folderView && (
               <button

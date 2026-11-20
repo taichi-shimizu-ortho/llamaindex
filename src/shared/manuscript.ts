@@ -86,6 +86,7 @@ export interface DraftSupport {
 
 export interface ManuscriptReviewResult {
   mode: ReviewMode;
+  collection?: LiteratureCollection;
   title: string;
   model: string;
   ledger: ClaimReview[];
@@ -96,4 +97,4 @@ export interface ManuscriptReviewResult {
 }
 
 export type ReviewScope = "cited_only" | "cited_and_related";
-export type LiteratureCollection = "current" | "rxfp1";
+export type LiteratureCollection = "current" | "rxfp1" | "rxfp1_combined";

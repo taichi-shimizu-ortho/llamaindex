@@ -63,7 +63,8 @@ export function parseReviewRequest(raw: unknown): {
     const input = object(raw);
     const mode = oneOf(input.mode, REVIEW_MODES);
     const scope = oneOf(input.scope, ["cited_only", "cited_and_related"] as const);
-    const collection = oneOf(input.collection ?? "current", ["current", "rxfp1"] as const);
+    const requestedCollection = oneOf(input.collection ?? "current", ["current", "rxfp1", "rxfp1_combined"] as const);
+    const collection = requestedCollection === "rxfp1_combined" ? "rxfp1" : requestedCollection;
     const source = object(input.manuscript);
     const rawSections = object(source.sections);
     const sections: Manuscript["sections"] = {};
@@ -202,7 +203,7 @@ async function retrieveClaims(
     } as const];
   });
   const broader = requests.filter((request) => request.mode !== "verify_cited_sources");
-  const index = collection === "rxfp1" && broader.length ? await loadRxfp1Index() : undefined;
+  const index = collection !== "current" && broader.length ? await loadRxfp1Index() : undefined;
   const queryFor = (request: typeof requests[number]) => [request.query, request.scope].filter(Boolean).join(" ");
   const vectors = index?.vectors.size ? await rxfp1QueryVectors(broader.map(queryFor)) : undefined;
   return requests.map((request) => retrieveLiterature(corpus, request, references,
@@ -302,7 +303,7 @@ export async function runManuscriptReview(
   const study = mode === "intro_fact_check" ? {} : Object.fromEntries(STUDY_SECTIONS.map((name) => [name, manuscript.sections[name] ?? []]));
   const internal = new Set(Object.values(study).flat().map((b) => b.location));
   const result: ManuscriptReviewResult = {
-    mode, title: manuscript.title, ledger: [], draft: null, support_map: [], retrievals: [],
+    mode, collection, title: manuscript.title, ledger: [], draft: null, support_map: [], retrievals: [],
     model: "", unresolved: [...manuscript.notes],
   };
   if (!targets.length) {

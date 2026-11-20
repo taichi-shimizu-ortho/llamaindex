@@ -183,7 +183,7 @@ export function ManuscriptScreen({ rxfp1Available }: { rxfp1Available: boolean }
                     setSavedFile("");
                   }}>
                     <option value="current">Current library</option>
-                    <option value="rxfp1">RXFP1 archive</option>
+                    <option value="rxfp1">RXFP1 folder</option>
                   </select>
                 </label>
               )}
@@ -203,7 +203,7 @@ export function ManuscriptScreen({ rxfp1Available }: { rxfp1Available: boolean }
             <p className="panel-note">
               {Object.keys(manuscript.references).length} numbered references. Review sends selected manuscript text
               {mode !== "intro_fact_check" ? ", study materials," : ""} and local evidence passages to the configured Claude API.
-              {collection === "rxfp1" && (scope === "cited_and_related" || mode === "discussion_draft")
+              {collection !== "current" && (scope === "cited_and_related" || mode === "discussion_draft")
                 && " RXFP1 related search sends focused search terms to the configured OpenAI embeddings API."}
             </p>
             <button className="primary" disabled={Boolean(busy) || (!paragraphs.length && mode !== "discussion_draft")}>

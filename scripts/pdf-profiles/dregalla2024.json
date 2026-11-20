@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "pageCount": 14,
+  "metadata": {
+    "id": "Dregalla2024",
+    "title": "Isolation of Bone Marrow Mesenchymal Stem Cells Embedded in Native Tissue Stroma Yields Enriched Harvest, Improved Adherence and Proliferation, and Unique Secretome",
+    "authors": [
+      "Ryan Dregalla",
+      "Jessica Herrera",
+      "Lucanus Koldewyn",
+      "W. Sealy Hambright",
+      "Chris Donner",
+      "Jacob Singer",
+      "E. Jeff Donner",
+      "Johnny Huard"
+    ],
+    "journal": "Biologic Orthopedic Journal",
+    "year": "2024",
+    "doi": "10.22374/boj.v6i1.61",
+    "sourceUrl": "https://doi.org/10.22374/boj.v6i1.61",
+    "articleType": "original",
+    "articleTypeSource": "manual"
+  },
+  "abstractRegion": {
+    "page": 1,
+    "box": [
+      71,
+      321,
+      544,
+      606
+    ]
+  },
+  "bodyRegions": [
+    {
+      "page": 2,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 2,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 3,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 3,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        71,
+        65,
+        304,
+        300
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        311,
+        65,
+        544,
+        300
+      ]
+    },
+    {
+      "page": 5,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 5,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 6,
+      "box": [
+        71,
+        594,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 6,
+      "box": [
+        311,
+        594,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 8,
+      "box": [
+        71,
+        443,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 8,
+      "box": [
+        311,
+        443,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 10,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 10,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 11,
+      "box": [
+        71,
+        65,
+        304,
+        370
+      ]
+    }
+  ],
+  "headings": [
+    {
+      "match": "BACKGROUND",
+      "title": "Background",
+      "type": "intro"
+    },
+    {
+      "match": "METHODS",
+      "title": "Methods",
+      "type": "methods"
+    },
+    {
+      "match": "RESULTS",
+      "title": "Results",
+      "type": "results"
+    },
+    {
+      "match": "CONCLUSIONS",
+      "title": "Conclusions",
+      "type": "conclusion"
+    },
+    {
+      "match": "Human donors",
+      "title": "Human donors",
+      "type": "methods"
+    },
+    {
+      "match": "Bone-marrow aspirate concentrate and BMAX™ preparation",
+      "title": "Bone-marrow aspirate concentrate and BMAX™ preparation",
+      "type": "methods"
+    },
+    {
+      "match": "Total Nucleated Cell and Viability Quantification",
+      "title": "Total Nucleated Cell and Viability Quantification",
+      "type": "methods"
+    },
+    {
+      "match": "In vitro Cell Culture Conditions",
+      "title": "In vitro Cell Culture Conditions",
+      "type": "methods"
+    },
+    {
+      "match": "Flow cytometry",
+      "title": "Flow cytometry",
+      "type": "methods"
+    },
+    {
+      "match": "Cytokine Chemokine Secretome Analysis from BMAX™ and BMAC Products",
+      "title": "Cytokine Chemokine Secretome Analysis from BMAX™ and BMAC Products",
+      "type": "methods"
+    },
+    {
+      "match": "Statistical analysis",
+      "title": "Statistical analysis",
+      "type": "methods"
+    },
+    {
+      "match": "BMAX™ processing generates a customizable homogenized bone marrow product that contains viable MSCs within their native stroma",
+      "title": "BMAX™ processing generates a customizable homogenized bone marrow product that contains viable MSCs within their native stroma",
+      "type": "results"
+    },
+    {
+      "match": "BMAX™ yields cells with clinically relevant viability, with lower nucleated cell counts compared to BMAC with unique in vitro growth characteristics",
+      "title": "BMAX™ yields cells with clinically relevant viability, with lower nucleated cell counts compared to BMAC with unique in vitro growth characteristics",
+      "type": "results"
+    },
+    {
+      "match": "BMAX™-derived adherent cells possess MSC characteristics",
+      "title": "BMAX™-derived adherent cells possess MSC characteristics",
+      "type": "results"
+    },
+    {
+      "match": "Challenge with TNF-α reveals unique secretory responses that differentiate uncultured BMAX™ and BMAC products",
+      "title": "Challenge with TNF-α reveals unique secretory responses that differentiate uncultured BMAX™ and BMAC products",
+      "type": "results"
+    }
+  ],
+  "figures": [
+    {
+      "title": "Figure 1",
+      "page": 4,
+      "box": [
+        70,
+        311,
+        544,
+        579
+      ],
+      "captionBox": [
+        71,
+        582,
+        544,
+        694
+      ]
+    },
+    {
+      "title": "Figure 2",
+      "page": 6,
+      "box": [
+        112,
+        66,
+        505,
+        494
+      ],
+      "captionBox": [
+        71,
+        495,
+        544,
+        568
+      ]
+    },
+    {
+      "title": "Figure 3",
+      "page": 7,
+      "box": [
+        135,
+        66,
+        490,
+        594
+      ],
+      "captionBox": [
+        71,
+        595,
+        544,
+        694
+      ]
+    },
+    {
+      "title": "Figure 4",
+      "page": 8,
+      "box": [
+        90,
+        66,
+        520,
+        354
+      ],
+      "captionBox": [
+        71,
+        354,
+        544,
+        426
+      ]
+    },
+    {
+      "title": "Figure 5",
+      "page": 9,
+      "box": [
+        83,
+        66,
+        530,
+        309
+      ],
+      "captionBox": [
+        71,
+        312,
+        546,
+        384
+      ]
+    },
+    {
+      "title": "Figure 6",
+      "page": 9,
+      "box": [
+        71,
+        392,
+        540,
+        634
+      ],
+      "captionBox": [
+        71,
+        634,
+        546,
+        694
+      ]
+    },
+    {
+      "title": "Figure S1",
+      "page": 14,
+      "box": [
+        158,
+        84,
+        454,
+        355
+      ],
+      "captionBox": [
+        71,
+        359,
+        544,
+        390
+      ]
+    }
+  ],
+  "referenceRegions": [
+    {
+      "page": 11,
+      "box": [
+        311,
+        86,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 12,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 12,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    },
+    {
+      "page": 13,
+      "box": [
+        71,
+        65,
+        304,
+        694
+      ]
+    },
+    {
+      "page": 13,
+      "box": [
+        311,
+        65,
+        544,
+        694
+      ]
+    }
+  ],
+  "expectedReferences": 51,
+  "warnings": [
+    "Text-based PDF only; reading regions were visually reviewed for this 14-page layout.",
+    "Figure S1 included; the embedded still for Video S1 is not a playable video and is excluded.",
+    "This paper labels its Discussion-like final section Conclusions; the original heading is preserved."
+  ]
+}

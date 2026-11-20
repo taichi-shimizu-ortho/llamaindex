@@ -5,7 +5,6 @@ import { api, errorMessage } from "./api.js";
 import { documentLabel } from "./documents.js";
 import { MarkdownText, PassageMapContext, type PassageMap } from "./markdown.js";
 import { modelLabel } from "../shared/modelLabel.js";
-import { isRxfp1Article } from "../shared/rxfp1.js";
 import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
 import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, PreviewTarget, SectionGroup } from "./types.js";
@@ -34,6 +33,7 @@ function initialSessionId(): string {
 }
 
 interface RagScreenProps {
+  rxfp1: boolean;
   // 選択中の論文（corpus）
   papers: ArticleSetSummary[];
   // 対象の説明（"Folder: …" / "Custom selection"）。画面と保存する md に出す。
@@ -45,7 +45,7 @@ interface RagScreenProps {
   onBackToLibrary: () => void;
 }
 
-export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onBackToLibrary }: RagScreenProps) {
+export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPreview, onBackToLibrary }: RagScreenProps) {
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(10);
   const [perPaper, setPerPaper] = useState(3);
@@ -63,7 +63,6 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
   const flashTimer = useRef<number | undefined>(undefined);
 
   const ids = useMemo(() => papers.map((p) => p.id), [papers]);
-  const archive = papers.some((p) => isRxfp1Article(p.id));
   const idsKey = ids.join("|");
 
   // 画面を開いた時点で埋め込みを用意しておく（初回だけ時間がかかる）。
@@ -164,7 +163,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
           {prepared?.rxfp1?.store && ` · ${prepared.rxfp1.vectors} passages using ${prepared.rxfp1.store} archive vectors`}
         </span>
       </div>
-      {!archive && papers.length > CORPUS_SOFT_LIMIT && (
+      {!rxfp1 && papers.length > CORPUS_SOFT_LIMIT && (
         <div className="panel-note warn-text">
           {papers.length} papers in scope — this RAG is tuned for 10–{CORPUS_SOFT_LIMIT}. Answers may lean on a few papers;
           a subfolder or a lower “Per paper” keeps them balanced.
@@ -174,7 +173,7 @@ export function RagScreen({ papers, scopeLabel, active, onRemove, onPreview, onB
       {preparing && (
         <div className="loading inline-loading">
           <div className="spinner" />
-          <span>{archive ? "Loading RXFP1 archive vectors…" : `Embedding ${papers.length} papers (cached papers are instant)...`}</span>
+          <span>{rxfp1 ? "Loading RXFP1 vectors…" : `Embedding ${papers.length} papers (cached papers are instant)...`}</span>
         </div>
       )}
       {busy && (

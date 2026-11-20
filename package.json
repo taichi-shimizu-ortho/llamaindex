@@ -11,6 +11,7 @@
     "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
     "import:structured": "node scripts/import-structured-set.mjs",
     "ingest": "tsx scripts/ingest-mhtml.ts",
+    "ingest:pdf": "tsx scripts/ingest-pdf.ts",
     "ingest:offline": "tsx scripts/ingest-offline.ts"
   },
   "dependencies": {

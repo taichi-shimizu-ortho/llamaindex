@@ -164,7 +164,7 @@ function resolveParentId(state: LibraryState, value: unknown): string | null {
   return id;
 }
 
-function descendantIds(state: LibraryState, rootId: string): Set<string> {
+export function descendantIds(state: LibraryState, rootId: string): Set<string> {
   const ids = new Set<string>([rootId]);
   let added = true;
   while (added) {
@@ -177,6 +177,13 @@ function descendantIds(state: LibraryState, rootId: string): Set<string> {
     }
   }
   return ids;
+}
+
+export function rxfp1DocumentIds(state = readLibrary()): Set<string> {
+  const scope = new Set(state.folders.filter((folder) => folder.name.toLowerCase() === "rxfp1")
+    .flatMap((folder) => [...descendantIds(state, folder.id)]));
+  return new Set([...Object.keys(state.assignments), ...Object.keys(state.zoteroFolders ?? {})]
+    .filter((id) => scope.has(state.assignments[id]) || state.zoteroFolders?.[id]?.some((folder) => scope.has(folder))));
 }
 
 export function createFolder(name: unknown, parentId: unknown): LibraryState {

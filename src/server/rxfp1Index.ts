@@ -3,7 +3,7 @@ import path from "node:path";
 import { MODELS, PATHS } from "./config.js";
 import { embedModel } from "./embeddingStore.js";
 import { fileStamp, isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
-import { RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
+import { rxfp1ArticleId } from "../shared/rxfp1.js";
 
 const DIMENSIONS = 3072;
 const stores = [
@@ -30,7 +30,7 @@ function unitVector(values: unknown): Float32Array | undefined {
   return Float32Array.from(values, (value) => value / norm);
 }
 
-async function readStore(store: typeof stores[number], allowed: Set<string>): Promise<Map<string, Float32Array>> {
+async function readStore(store: typeof stores[number], allowed: Set<string>, ids: Map<string, string>): Promise<Map<string, Float32Array>> {
   const docData = JSON.parse(await readFile(store.docs, "utf8"))["docstore/data"];
   const data = JSON.parse(await readFile(store.vectors, "utf8"));
   const embeddings = data[store.key];
@@ -47,7 +47,9 @@ async function readStore(store: typeof stores[number], allowed: Set<string>): Pr
     }
     const meta = node?.metadata;
     if (typeof meta?.citekey !== "string" || typeof meta.section !== "string" || typeof node.text !== "string") continue;
-    const key = rxfp1PassageKey(RXFP1_ARTICLE_PREFIX + meta.citekey, meta.section, meta.subsection ?? "", node.text);
+    const idForPaper = ids.get(rxfp1ArticleId(meta.citekey));
+    if (!idForPaper) continue;
+    const key = rxfp1PassageKey(idForPaper, meta.section, meta.subsection ?? "", node.text);
     if (allowed.has(key) && !vectors.has(key)) {
       const normalized = unitVector(embedding);
       if (normalized) vectors.set(key, normalized);
@@ -58,7 +60,9 @@ async function readStore(store: typeof stores[number], allowed: Set<string>): Pr
 
 async function loadIndex(corpus: ReturnType<typeof loadRxfp1Corpus>, storeStamps: string[][]): Promise<Rxfp1Index> {
   const allowed = new Set<string>();
+  const ids = new Map<string, string>();
   for (const set of corpus.articles.values()) {
+    for (const legacyId of [set.id, ...(set.legacyRxfp1Ids ?? [])]) ids.set(legacyId, set.id);
     for (const section of set.sections) {
       if (!isRxfp1Body(section.type, section.title)) continue;
       for (const text of section.paragraphs) allowed.add(rxfp1PassageKey(set.id, section.title, "", text));
@@ -71,15 +75,15 @@ async function loadIndex(corpus: ReturnType<typeof loadRxfp1Corpus>, storeStamps
   for (const [i, store] of stores.entries()) {
     if (!storeStamps[i].every(Boolean)) continue;
     try {
-      const vectors = await readStore(store, allowed);
-      if (vectors.size) return { store: store.name, vectors, notes };
+      const vectors = await readStore(store, allowed, ids);
+      if (vectors.size) return { store: store.name, vectors, notes: [...corpus.errors, ...notes] };
       notes.push(`RXFP1 ${store.name} index has no exact matches to the available body text.`);
     } catch {
       notes.push(`Could not read the RXFP1 ${store.name} index.`);
     }
   }
   notes.push("No reusable RXFP1 vectors were available. Search uses text matching.");
-  return { store: null, vectors: new Map(), notes };
+  return { store: null, vectors: new Map(), notes: [...corpus.errors, ...notes] };
 }
 
 let cached: { stamp: string; result: Promise<Rxfp1Index> } | undefined;
