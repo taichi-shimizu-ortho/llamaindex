@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "server": "tsx watch src/server/server.ts",
+    "server": "op run --env-file=.env.1password -- tsx watch src/server/server.ts",
     "dev:client": "vite",
     "dev": "node scripts/dev.mjs",
     "build:client": "vite build",
-    "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
+    "start": "op run --env-file=.env.1password -- cross-env NODE_ENV=production tsx src/server/server.ts",
     "import:structured": "node scripts/import-structured-set.mjs",
     "ingest": "tsx scripts/ingest-mhtml.ts",
     "ingest:pdf": "tsx scripts/ingest-pdf.ts",
