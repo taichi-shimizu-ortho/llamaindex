@@ -10,6 +10,7 @@
     "build:client": "vite build",
     "start": "op run --env-file=.env.1password -- cross-env NODE_ENV=production tsx src/server/server.ts",
     "import:structured": "node scripts/import-structured-set.mjs",
+    "embed:rxfp1": "node --import tsx scripts/embed-rxfp1.ts",
     "ingest": "tsx scripts/ingest-mhtml.ts",
     "ingest:pdf": "tsx scripts/ingest-pdf.ts",
     "ingest:offline": "tsx scripts/ingest-offline.ts"

@@ -258,8 +258,14 @@ node --import tsx scripts/migrate-rxfp1.ts --apply
 DOI・PMIDなどが一致する既存論文はそのIDに対応付ける。既存の本文と別フォルダへの割り当てを優先する。
 旧本文の入力先は `RXFP1_ARTICLES_JSON` と `RXFP1_MD_SOURCE_DIR` で指定できる。
 
-検索では `storage_all_ts` を優先し、利用できない場合は `storage_all` を読む。現行JSONの本文・節・小節が一致したベクトルを再利用する。
-ベクトルに対応しない本文は語句検索で引ける。旧ストアの場所は `RXFP1_STORAGE_ALL_DIR` と `RXFP1_PYTHON_STORAGE_DIR` で指定できる。
+RXFP1 の論文を取り込んだ後は、次のコマンドで本文と図表キャプションを段落単位でベクトル化する。
+
+```bash
+npm run embed:rxfp1 -- --dry-run
+op run --env-file=.env.1password -- npm run embed:rxfp1
+```
+
+ベクトルは `embeddings_cache/rxfp1/` に論文別で保存する。本文・節・小節が一致するベクトルは再利用し、不足分のテキストを OpenAI の `text-embedding-3-large` に送る。検索時は論文別キャッシュを優先し、再利用可能なベクトルを旧 `storage_all_ts` または `storage_all` で補う。旧ストアの場所は `RXFP1_STORAGE_ALL_DIR` と `RXFP1_PYTHON_STORAGE_DIR` で指定できる。
 
 ## 実行
 
