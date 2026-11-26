@@ -92,11 +92,10 @@ function capitalizeIdPart(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-// 構造化メタデータ（JATS など）から著者と年が取れている場合の ID。HTML 用の推定は使わない。
-export function citationIdFromAuthors(authors: string[], year: string, fallback: string): string {
-  const firstAuthor = authors.find(authorLooksComplete) || authors[0] || "";
-  const base = `${capitalizeIdPart(surname(firstAuthor))}${year.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? ""}`;
-  return base.replace(/[^A-Za-z0-9_.-]/g, "") || fallback || "Article";
+export function citationIdFromSurname(firstSurname: string, year: string, fallback: string): string {
+  const author = firstSurname.normalize("NFKD").replace(/\p{M}/gu, "").replace(/[^A-Za-z0-9-]/g, "");
+  const base = `${capitalizeIdPart(author)}${year.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? ""}`;
+  return base || fallback || "Article";
 }
 
 export function citationBaseId(html: string, articleTitle: string, fallback: string): string {

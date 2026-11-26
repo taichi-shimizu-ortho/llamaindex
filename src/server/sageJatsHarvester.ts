@@ -1,6 +1,6 @@
 import { ArticleSection, ArticleSet, ArticleSubsection } from "./articleHarvester.js";
 import { ReferenceRecord } from "./referenceHarvester.js";
-import { citationIdFromAuthors } from "./citationId.js";
+import { citationIdFromSurname } from "./citationId.js";
 
 function decodeHtmlEntities(s: string): string {
   const named: Record<string, string> = { amp: "&", apos: "'", gt: ">", lt: "<", nbsp: " ", quot: '"' };
@@ -37,8 +37,8 @@ function extractTagContent(xml: string, tag: string): string[] {
 // 著者の判定は <contrib> の開始タグの属性で行う。要素の中身には contrib-type が無く、
 // また `<contrib\b` だけでは <contrib-id> や <contrib-group> にも当たる。
 // 著者と編集者が別の contrib-group に分かれる JATS（PMC など）もあるので、article-meta 内の全グループを見る。
-export function parseJatsAuthors(articleMeta: string): string[] {
-  const authors: string[] = [];
+function jatsContributors(articleMeta: string): { name: string; surname: string }[] {
+  const authors: { name: string; surname: string }[] = [];
   for (const group of articleMeta.match(/<contrib-group\b[^>]*>[\s\S]*?<\/contrib-group>/gi) ?? []) {
     for (const contrib of group.matchAll(/<contrib(?![-\w])([^>]*)>([\s\S]*?)<\/contrib>/gi)) {
       if (!/\bcontrib-type\s*=\s*["']author["']/i.test(contrib[1])) continue;
@@ -47,18 +47,32 @@ export function parseJatsAuthors(articleMeta: string): string[] {
       const given = stripTags(body.match(/<given-names\b[^>]*>([\s\S]*?)<\/given-names>/i)?.[1] ?? "");
       const collab = stripTags(body.match(/<collab\b[^>]*>([\s\S]*?)<\/collab>/i)?.[1] ?? "");
       const name = surname ? [given, surname].filter(Boolean).join(" ") : collab;
-      if (name) authors.push(name);
+      if (name) authors.push({ name, surname: surname || collab });
     }
   }
   return authors;
+}
+
+export function parseJatsAuthors(articleMeta: string): string[] {
+  return jatsContributors(articleMeta).map(({ name }) => name);
+}
+
+function jatsPublicationDate(articleMeta: string): string {
+  for (const date of extractTagContent(articleMeta, "pub-date")) {
+    const year = stripTags(extractTagContent(date, "year")[0] ?? "");
+    if (!year) continue;
+    const month = stripTags(extractTagContent(date, "month")[0] ?? "");
+    const day = stripTags(extractTagContent(date, "day")[0] ?? "");
+    return [year, ...[month, day].filter(Boolean).map((part) => part.padStart(2, "0"))].join("-");
+  }
+  return "";
 }
 
 // HTML の無い JATS 取り込み（PMC など）で使う引用ID。HTML 用の citationBaseId に JATS を渡すと
 // <title>（節見出し）や本文中の語を著者・年と誤認する（例: "Yohei2026"、"2025"）。
 export function jatsCitationBaseId(jatsXml: string, fallback: string): string {
   const articleMeta = jatsXml.match(/<article-meta\b[^>]*>([\s\S]*?)<\/article-meta>/i)?.[1] ?? "";
-  const year = stripTags(articleMeta.match(/<pub-date\b[^>]*>[\s\S]*?<year\b[^>]*>([\s\S]*?)<\/year>/i)?.[1] ?? "");
-  return citationIdFromAuthors(parseJatsAuthors(articleMeta), year, fallback);
+  return citationIdFromSurname(jatsContributors(articleMeta)[0]?.surname ?? "", jatsPublicationDate(articleMeta), fallback);
 }
 
 export function parseJatsJournal(jatsXml: string): string {
@@ -81,23 +95,7 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
   const doiMatch = articleMeta.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
   const doi = doiMatch ? stripTags(doiMatch[1]).trim() : "";
 
-  let year = "";
-  const pubDateMatch = articleMeta.match(/<pub-date[^>]*>([\s\S]*?)<\/pub-date>/i);
-  if (pubDateMatch) {
-    const pubXml = pubDateMatch[1];
-    const y = pubXml.match(/<year[^>]*>([\s\S]*?)<\/year>/i)?.[1];
-    let m = pubXml.match(/<month[^>]*>([\s\S]*?)<\/month>/i)?.[1];
-    let d = pubXml.match(/<day[^>]*>([\s\S]*?)<\/day>/i)?.[1];
-    const cleanY = y ? stripTags(y).trim() : "";
-    const cleanM = m ? stripTags(m).trim().padStart(2, "0") : "";
-    const cleanD = d ? stripTags(d).trim().padStart(2, "0") : "";
-    
-    const parts = [cleanY, cleanM, cleanD].filter(Boolean);
-    if (parts.length > 0) {
-      year = parts.join("-"); // e.g. 2026-06 or 2026-06-20
-    }
-  }
-
+  const year = jatsPublicationDate(articleMeta);
   const authors = parseJatsAuthors(articleMeta);
   const journal = parseJatsJournal(jatsXml);
 

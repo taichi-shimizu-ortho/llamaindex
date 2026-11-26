@@ -354,11 +354,14 @@ def local_figure(name, number):
                 return f
     return None
 
-def extract_body(root):
+def extract_body(root, publisher):
     node = copy.deepcopy(root)
     for x in list(node.select('script,style,noscript,nav,header,footer,button,figure,.html-fig-wrap,.html-table-wrap,.fig,.table-section,.article-table-content,.table-wrap,.ArticleFigure,.ArticleTable,div.boxout:has(table),section.tw,table,.ref-list,.article-section__references,#html-references_list,#html-keywords,#html-graphical,#html-copyright,.gift-access-description,.figPopup,.figPopupLink')):
         if x.parent: x.decompose()
     sections=[];current=None;sub=None;excluded=False;stopped=False
+    paragraph_selector = 'p,div.html-p,div.para,div[role="paragraph"]'
+    if publisher == 'sd':
+        paragraph_selector += ',div.u-margin-s-bottom'
     def push(t):
         nonlocal current
         if not t or excluded:return
@@ -381,10 +384,10 @@ def extract_body(root):
             return
         classes=x.get('class') or []
         # ScienceDirect paragraphs are div.u-margin-s-bottom; their ids vary (p0005, para10, spar0010) or are absent.
-        sd_para=x.name=='div' and 'u-margin-s-bottom' in classes and not x.find(['h2','h3','h4','h5'])
+        sd_para=publisher=='sd' and x.name=='div' and 'u-margin-s-bottom' in classes and not x.find(['h2','h3','h4','h5'])
         is_para=x.name in ['p','li'] or x.get('role')=='paragraph' or sd_para or (x.name=='div' and (any(c in classes for c in ['html-p','para','paragraph']) or re.fullmatch(r'p\d+',x.get('id',''))))
         if is_para:
-            if x.name=='div' and x.select_one('p,div.html-p,div.para,div[role="paragraph"]'):
+            if x.name=='div' and x.select_one(paragraph_selector):
                 for child in x.children:walk(child)
             else:push(text_of(x))
             return
@@ -467,7 +470,7 @@ def convert(name):
         tables=[t for t in tables if t['title']!='Table 1']+[section('Table 1','table',[table_content])]
         tw=[w for w in tw if not w.startswith('Table body not embedded: Table 1.')]
         supplements.append({'file':'Breuil2021.table1.user.html','source':'user-provided publisher table HTML','sha256':hashlib.sha256(supplement.read_bytes()).hexdigest(),'dataRows':8,'columns':8})
-    sections=extract_body(combined)
+    sections=extract_body(combined, platform(name))
     idx=next((i+1 for i,s in enumerate(sections) if s['type']=='abstract'),0)
     sections[idx:idx]=figures
     sections.extend(tables)

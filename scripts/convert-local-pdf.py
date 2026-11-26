@@ -55,6 +55,19 @@ def join_lines(lines: list[str]) -> str:
     return normalize(out.replace("\u00ad", ""))
 
 
+def lines_by_row(lines, tolerance):
+    """Group nearby line fragments and order each row from left to right."""
+    rows = []
+    for line in sorted(lines, key=lambda l: (l["box"][1] + l["box"][3]) / 2):
+        centre = (line["box"][1] + line["box"][3]) / 2
+        if rows and centre - rows[-1][0] <= tolerance:
+            rows[-1][1].append(line)
+        else:
+            rows.append((centre, [line]))
+    for _, row in rows:
+        yield sorted(row, key=lambda line: line["box"][0])
+
+
 def region_lines(doc, region, citations=False):
     page = doc[region["page"] - 1]
     rect = pymupdf.Rect(region["box"])
@@ -98,15 +111,17 @@ def region_lines(doc, region, citations=False):
     if REBUILD_LINES:
         # Justified lines with wide word spacing can come back as several pieces on one row.
         merged = []
-        for line in sorted(lines, key=lambda l: ((l["box"][1] + l["box"][3]) / 2, l["box"][0])):
-            last = merged[-1] if merged else None
-            if last and abs((last["box"][1] + last["box"][3]) / 2 - (line["box"][1] + line["box"][3]) / 2) < 2.5 \
-                    and line["box"][0] >= last["box"][2] - 1:
-                last["text"] += " " + line["text"]
-                last["box"] = (last["box"][0], min(last["box"][1], line["box"][1]), line["box"][2], max(last["box"][3], line["box"][3]))
-                last["bold"] = last["bold"] and line["bold"]
-            else:
-                merged.append(dict(line))
+        for row in lines_by_row(lines, 2.5):
+            last = None
+            for line in row:
+                if last and line["box"][0] >= last["box"][2] - 1:
+                    last["text"] += " " + line["text"]
+                    last["box"] = (last["box"][0], min(last["box"][1], line["box"][1]),
+                                   line["box"][2], max(last["box"][3], line["box"][3]))
+                    last["bold"] = last["bold"] and line["bold"]
+                else:
+                    last = dict(line)
+                    merged.append(last)
         lines = sorted(merged, key=lambda line: (round(line["box"][1], 1), line["box"][0]))
     if not lines:
         raise ValueError(f"No text in region (OCR may be needed): {region}")
@@ -289,14 +304,7 @@ def convert(pdf: Path, profile: dict, output: Path):
     for region in profile.get("legendRegions", []):
         # A bold "Fig. 1." label can sit a few points off the baseline of the legend text
         # on the same row, so order lines by row (centre within 4 pt) and then by x.
-        rows = []
-        for line in sorted(region_lines(doc, region), key=lambda l: (l["box"][1] + l["box"][3]) / 2):
-            centre = (line["box"][1] + line["box"][3]) / 2
-            if rows and abs(rows[-1][0] - centre) <= 4:
-                rows[-1][1].append(line)
-            else:
-                rows.append([centre, [line]])
-        for line in [l for _, row in rows for l in sorted(row, key=lambda l: l["box"][0])]:
+        for line in (line for row in lines_by_row(region_lines(doc, region), 4) for line in row):
             label = re.match(r"^Fig(?:ure)?\.?\s*(S?\d+)\b", line["text"])
             if label and line["box"][0] - region["box"][0] <= 5:
                 legends.append(("Figure " + label[1], [line["text"]]))

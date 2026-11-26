@@ -47,6 +47,17 @@ test("JATS-only citation ID uses the first author's surname and publication year
   assert.equal(jatsCitationBaseId(jats, "fallback"), "Nagashima2026");
 });
 
+test("JATS-only citation ID preserves a surname-only first author", () => {
+  const input = jats.replace("Nagashima</surname><given-names initials=\"R\">Ryo</given-names>", "McGuane</surname>");
+  assert.equal(jatsCitationBaseId(input, "fallback"), "McGuane2026");
+});
+
+test("JATS citation ID and metadata use the same publication date", () => {
+  const input = jats.replace('<pub-date pub-type="epub">', '<pub-date><month>12</month></pub-date><pub-date pub-type="epub">');
+  assert.equal(jatsCitationBaseId(input, "fallback"), "Nagashima2026");
+  assert.equal(parseJatsArticle(input, { id: "x", sourceUrl: "" })?.year, "2026-03-26");
+});
+
 test("harvestArticle names a JATS-only import after the first author", async () => {
   const set = await harvestArticle({ sourceUrl: "https://pmc.example/PMC1/", html: "", jatsXml: jats });
   assert.equal(set.id, "Nagashima2026");

@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import pymupdf
 
@@ -56,6 +57,15 @@ class PdfImportTests(unittest.TestCase):
         self.profile["metadata"]["doi"] = "10.1234/different"
         with self.assertRaisesRegex(ValueError, "DOI"):
             converter.convert(self.pdf, self.profile, self.root / "out")
+
+    def test_rebuild_orders_fragments_left_to_right_on_the_same_row(self):
+        with pymupdf.open() as doc, patch.object(converter, "REBUILD_LINES", True):
+            page = doc.new_page(width=600, height=800)
+            page.insert_text((60, 101), "first", fontsize=10)
+            page.insert_text((120, 100), "second", fontsize=10)
+            page.insert_text((60, 116), "next row", fontsize=10)
+            lines = converter.region_lines(doc, {"page": 1, "box": [50, 80, 200, 130]})
+        self.assertEqual([line["text"] for line in lines], ["first second", "next row"])
 
     def test_scanned_or_empty_region_is_rejected(self):
         self.profile["abstractRegion"]["box"] = [49, 400, 550, 450]
