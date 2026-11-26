@@ -280,7 +280,12 @@ API:
 http://localhost:5174
 ```
 
-`OPENAI_API_KEY` と `ANTHROPIC_API_KEY` は、リポジトリ直下の `.env` から読み込みます。
+`OPENAI_API_KEY` と `ANTHROPIC_API_KEY` は 1Password に置き、起動時に 1Password CLI（`op`）で読み込みます。
+
+- 参照先はリポジトリ直下の `.env.1password`（OpenAI は `op://Personal/OpenAI API/credential`、Claude は Personal 保管庫の API認証情報アイテム「Claude」。同名のログインアイテムがあるのでアイテム ID で指している）。鍵の値はファイルに書きません。
+- `npm run server` / `npm run dev` / `npm start` は `op run --env-file=.env.1password -- …` で起動するので、1Password デスクトップアプリのロック解除（Touch ID）を求められます。
+- 1Password 側は「API認証情報」カテゴリのアイテムで、鍵は `credential` フィールド。名前を変えたら `.env.1password` も直す。
+- 取り込みスクリプト（`ingest*`, `import:structured`）は API を使わないので `op` を通しません。
 
 - 回答の生成は Claude Sonnet 5.5（`claude-sonnet-5-5`、`ANTHROPIC_API_KEY`）。安全上の理由で断られたときは、サーバ側で代替モデルに回します（`fallbacks: "default"`）。
 - 埋め込み（`text-embedding-3-small`）と JA→EN 翻訳は OpenAI（`OPENAI_API_KEY`）。

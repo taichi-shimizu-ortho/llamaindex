@@ -5,7 +5,9 @@ import path from "node:path";
 import dotenv from "dotenv";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
-// リポジトリ直下の .env（OPENAI_API_KEY / ANTHROPIC_API_KEY）を読み込む
+// API キー（OPENAI_API_KEY / ANTHROPIC_API_KEY）は 1Password から `op run` が環境変数で渡す
+// （参照は .env.1password）。.env は秘密でないローカル設定の上書き用に残しているだけで、
+// 既にある環境変数は上書きしない。
 dotenv.config({ path: path.join(ROOT, ".env") });
 
 export function resolveObsidianDir(

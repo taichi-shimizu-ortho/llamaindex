@@ -5,7 +5,7 @@ import { MODELS } from "./config.js";
 
 let client: Anthropic | null = null;
 function anthropic(): Anthropic {
-  // ANTHROPIC_API_KEY を環境変数（.env）から読む。
+  // ANTHROPIC_API_KEY を環境変数から読む（1Password から op run が渡す。.env.1password 参照）。
   if (!client) client = new Anthropic();
   return client;
 }
