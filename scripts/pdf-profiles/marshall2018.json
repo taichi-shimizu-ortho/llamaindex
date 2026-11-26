@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "pageCount": 11,
+  "sourceSha256": "bb62b9a1a1860c0e82468862bf56b8513f578b309d19fe40fde33372912d1101",
+  "metadata": {
+    "id": "rxfp1.Marshall2018",
+    "title": "Abnormal extracellular matrix remodelling in the cervix of pregnant relaxin-deficient mice is not associated with reduced matrix metalloproteinase expression or activity",
+    "authors": ["Marshall, Sarah A.", "McGuane, Jonathan T.", "Soh, Yu May", "Gehring, Helen M.", "Simpson, Emma", "Parry, Laura J."],
+    "journal": "Reproduction, Fertility, and Development",
+    "year": "2018",
+    "doi": "10.1071/RD17544",
+    "pmid": "29533760",
+    "sourceUrl": "https://doi.org/10.1071/RD17544",
+    "articleType": "original",
+    "articleTypeSource": "manual"
+  },
+  "fontGlyphs": {
+    "TeXCMMathsSymbols": {"\u0001": "−", "þ": "+", "¼": "=", "\u0004": "±", "\u0003": "×"},
+    "MathematicalPiOTF1": {",": "<", ".": ">", "8": "°", "b": "β", "a": "α"},
+    "MathematicalPiOTF3": {",": "∼"},
+    "MathematicalPi-One": {"\u0002": "+", "\u0003": "−", "\u0004": "=", "m": "μ", "a": "α"}
+  },
+  "dehyphenate": true,
+  "rebuildLines": true,
+  "textCorrections": {"Rln1−/ −": "Rln1−/−", "Rln1+/ +": "Rln1+/+"},
+  "abstractRegions": [
+    {"page": 1, "box": [76, 285, 540, 435]}
+  ],
+  "bodyRegions": [
+    {"page": 1, "box": [56, 494, 300, 722]},
+    {"page": 1, "box": [313, 494, 557, 722]},
+    {"page": 2, "box": [39, 105, 283, 748]},
+    {"page": 2, "box": [296, 230, 540, 748]},
+    {"page": 3, "box": [56, 105, 300, 748]},
+    {"page": 3, "box": [313, 105, 557, 748]},
+    {"page": 4, "box": [39, 455, 283, 748]},
+    {"page": 4, "box": [296, 455, 540, 748]},
+    {"page": 5, "box": [56, 512, 300, 748]},
+    {"page": 5, "box": [313, 512, 557, 748]},
+    {"page": 6, "box": [39, 500, 283, 748]},
+    {"page": 6, "box": [296, 500, 540, 748]},
+    {"page": 7, "box": [56, 545, 300, 748]},
+    {"page": 7, "box": [313, 545, 557, 748]},
+    {"page": 8, "box": [39, 648, 283, 748]},
+    {"page": 8, "box": [296, 648, 540, 748]},
+    {"page": 9, "box": [56, 345, 300, 748]},
+    {"page": 9, "box": [313, 105, 557, 378]}
+  ],
+  "headings": [
+    {"match": "Introduction", "title": "Introduction", "type": "intro"},
+    {"match": "Materials and methods", "title": "Materials and methods", "type": "methods"},
+    {"match": "Animals", "title": "Animals", "type": "methods"},
+    {"match": "Quantitative polymerase chain reaction (qPCR)", "title": "Quantitative polymerase chain reaction (qPCR)", "type": "methods"},
+    {"match": "Collagen assay", "title": "Collagen assay", "type": "methods"},
+    {"match": "Collagen density", "title": "Collagen density", "type": "methods"},
+    {"match": "Zymography", "title": "Zymography", "type": "methods"},
+    {"match": "MMP enzyme-linked immunosorbent assays (ELISAs)", "title": "MMP enzyme-linked immunosorbent assays (ELISAs)", "type": "methods"},
+    {"match": "Statistical analysis", "title": "Statistical analysis", "type": "methods"},
+    {"match": "Results", "title": "Results", "type": "results"},
+    {"match": "Collagen", "title": "Collagen", "type": "results"},
+    {"match": "Matrix metalloproteinases (MMPs)", "title": "Matrix metalloproteinases (MMPs)", "type": "results"},
+    {"match": "Oestrogen receptor expression in the mouse cervix", "title": "Oestrogen receptor expression in the mouse cervix", "type": "results"},
+    {"match": "Discussion", "title": "Discussion", "type": "discussion"}
+  ],
+  "paragraphIndent": 8,
+  "legendRegions": [
+    {"page": 4, "box": [79, 388, 500, 446]},
+    {"page": 5, "box": [124, 450, 490, 505]},
+    {"page": 6, "box": [118, 438, 462, 492]},
+    {"page": 7, "box": [121, 479, 492, 536]},
+    {"page": 8, "box": [98, 569, 481, 637]},
+    {"page": 9, "box": [56, 281, 300, 336]}
+  ],
+  "referenceStyle": "hanging",
+  "referenceRegions": [
+    {"page": 9, "box": [313, 543, 557, 748]},
+    {"page": 10, "box": [39, 105, 283, 732]},
+    {"page": 10, "box": [296, 105, 540, 732]},
+    {"page": 11, "box": [56, 105, 300, 482]},
+    {"page": 11, "box": [313, 105, 557, 452]}
+  ],
+  "warnings": [
+    "Table 1 (pubic symphysis length by day of pregnancy and genotype) is not extracted; check it in the PDF.",
+    "Symbols set in maths fonts (minus, plus, equals, ±, <, μ) were mapped from private glyph codes; check exact values against the PDF."
+  ]
+}
