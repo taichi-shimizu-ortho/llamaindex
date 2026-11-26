@@ -44,3 +44,11 @@ embeddings_cache/
 /msc-oxt-inventory.json
 *.mhtml
 *.mht
+
+.env.*
+!.env.example
+.dev.vars*
+.sites-runtime/
+.sites-preview/
+.wrangler/
+*.tar.gz

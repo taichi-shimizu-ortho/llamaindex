@@ -1164,7 +1164,7 @@ export function listReferenceSets() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-import { parseJatsReferences } from "./sageJatsHarvester.js";
+import { jatsCitationBaseId, parseJatsReferences } from "./sageJatsHarvester.js";
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
   if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
@@ -1173,7 +1173,9 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   const title = options.title?.trim() || inferTitle(html, sourceUrl);
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
   
-  const baseId = citationBaseId(html || options.jatsXml || "", title, slugify(title || sourceUrl));
+  const baseId = html || !options.jatsXml
+    ? citationBaseId(html, title, slugify(title || sourceUrl))
+    : jatsCitationBaseId(options.jatsXml, slugify(title || sourceUrl));
   // Try to get article DOI from html or jats
   const articleDoiMatch = options.jatsXml?.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
   const finalDoi = (articleDoiMatch ? articleDoiMatch[1].replace(/<[^>]+>/g, "").trim() : inferMeta(html, sourceUrl).doi) || "";

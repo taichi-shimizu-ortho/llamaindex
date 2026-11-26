@@ -755,7 +755,7 @@ export function articleIdForDoi(doi: string): string | undefined {
   return undefined;
 }
 
-import { parseJatsArticle } from "./sageJatsHarvester.js";
+import { jatsCitationBaseId, parseJatsArticle } from "./sageJatsHarvester.js";
 
 export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
   if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
@@ -763,7 +763,9 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
   const html = options.html ?? (sourceUrl ? await fetchText(sourceUrl) : "");
   const title = options.title?.trim() || (html ? inferTitle(html, sourceUrl) : "");
   
-  const baseId = citationBaseId(html || options.jatsXml || "", title, slugify(title || sourceUrl));
+  const baseId = html || !options.jatsXml
+    ? citationBaseId(html, title, slugify(title || sourceUrl))
+    : jatsCitationBaseId(options.jatsXml, slugify(title || sourceUrl));
   
   let set: ArticleSet | null = null;
   let finalDoi = "";
