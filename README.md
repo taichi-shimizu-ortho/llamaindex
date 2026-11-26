@@ -75,7 +75,7 @@ npm run ingest:offline -- -c "postless traction" ~/Downloads/Habib2018.mhtml
 | `--figure-dir <dir>` | 手で保存した図の置き場所（既定は Downloads） |
 | `--no-zotero` | Zotero に触れない（フォルダは未分類のまま） |
 
-- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`。
+- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`、`pmc.ncbi.nlm.nih.gov`（PMCの公開本文ページ）。
 - MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ保存する。既定は移動で、`--copy` を付けるとコピーする。`mhtml/` 配下であれば元の位置を使う。
 - Wiley の MHTML には図の画像が入っていないことが多い。警告に出る URL をブラウザで開き、`<ID>_fig<N>.jpg` の名前で Downloads に保存して `--replace` で取り込み直す。既存の `raw_html/<ID>_figures/Figure_<N>.*` も再利用する。
 - 変換本体は `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）。
@@ -102,6 +102,8 @@ Bryant 1975のスキャンは、ページ範囲を確認済みのプロファイ
 ```bash
 npm run ingest:pdf -- --profile scripts/pdf-profiles/bryant1975.json --folder RXFP1 "<BryantのPDF>"
 ```
+
+著者受理稿のような1段組・行間の広い原稿は、プロファイルに `paragraphGap`（段落とみなす行間、既定4pt）、`referenceStyle: "hanging"`（著者年方式のぶら下げインデント文献）、`legendRegions`（画像のない図の説明文）を指定する。例は `scripts/pdf-profiles/kim2022.json`。
 
 ## ORSブックマークレット
 

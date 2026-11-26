@@ -115,7 +115,8 @@ def body_sections(doc, profile):
             same_column = previous and previous["page"] == line["page"] and abs(previous["columnLeft"] - line["columnLeft"]) < 1
             indented = line["box"][1] >= drop_cap_bottom and line["box"][0] - line["columnLeft"] > profile.get("paragraphIndent", 8)
             gap = line["box"][1] - previous["box"][3] if same_column else 0
-            if buffer and (indented or gap > 4 or line["text"].startswith(paragraph_starts)):
+            # Double-spaced manuscripts need a larger gap than typeset pages (paragraphGap, default 4 pt).
+            if buffer and (indented or gap > profile.get("paragraphGap", 4) or line["text"].startswith(paragraph_starts)):
                 flush()
             buffer.append(drop_cap + line["text"])
             drop_cap = ""
@@ -131,15 +132,22 @@ def body_sections(doc, profile):
 
 def references(doc, profile, source_url):
     entries, current = [], None
+    hanging = profile.get("referenceStyle") == "hanging"
     for region in profile["referenceRegions"]:
         page = doc[region["page"] - 1]
         links = page.get_links()
         for line in region_lines(doc, region):
-            match = re.match(r"^(\d+)\.(?:\s+(.*)|$)", line["text"])
-            if line["box"][0] - region["box"][0] > 5:
-                match = None  # A page range such as "96. https://doi…" is not a new entry.
+            at_left = line["box"][0] - region["box"][0] <= 5
+            if hanging:
+                # Author-year lists: an entry starts at the left edge and continues with a hanging indent.
+                match = at_left
+            else:
+                match = re.match(r"^(\d+)\.(?:\s+(.*)|$)", line["text"])
+                if not at_left:
+                    match = None  # A page range such as "96. https://doi…" is not a new entry.
             if match:
-                current = {"index": int(match[1]), "lines": [match[2] or ""], "uris": []}
+                current = ({"index": len(entries) + 1, "lines": [line["text"]], "uris": []} if hanging
+                           else {"index": int(match[1]), "lines": [match[2] or ""], "uris": []})
                 entries.append(current)
             else:
                 if current is None:
@@ -206,6 +214,20 @@ def convert(pdf: Path, profile: dict, output: Path):
         (output / (figure["title"].replace(" ", "_") + ".png")).write_bytes(png)
         url = "data:image/png;base64," + base64.b64encode(png).decode("ascii")
         sections.append(make_section(figure["title"], "figure", [caption + "\n\n[Image URL: " + url + "]"]))
+    # Figure legends without images (e.g. an author manuscript): each legend starts at the
+    # left edge with "Fig. N" and continues with a hanging indent.
+    legends = []
+    for region in profile.get("legendRegions", []):
+        for line in region_lines(doc, region):
+            label = re.match(r"^Fig(?:ure)?\.?\s*(S?\d+)\b", line["text"])
+            if label and line["box"][0] - region["box"][0] <= 5:
+                legends.append(("Figure " + label[1], [line["text"]]))
+            elif legends:
+                legends[-1][1].append(line["text"])
+            else:
+                raise ValueError(f"Legend text before the first figure label: {line['text']}")
+    for title, lines in legends:
+        sections.append(make_section(title, "figure", [correct_text(join_lines(lines))]))
     records = references(doc, profile, metadata["sourceUrl"])
     now = datetime.now(timezone.utc).isoformat()
     article = {**metadata, "createdAt": now, "sections": sections,
