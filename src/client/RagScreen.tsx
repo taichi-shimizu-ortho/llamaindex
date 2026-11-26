@@ -160,7 +160,7 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
         <span className="panel-note">
           {papers.length} papers
           {prepared ? ` · ${prepared.totalParagraphs} paragraphs indexed` : ""}
-          {prepared?.rxfp1?.store && ` · ${prepared.rxfp1.vectors} passages using ${prepared.rxfp1.store} archive vectors`}
+          {prepared?.rxfp1?.store && ` · ${prepared.rxfp1.vectors} passages with RXFP1 vectors`}
         </span>
       </div>
       {!rxfp1 && papers.length > CORPUS_SOFT_LIMIT && (

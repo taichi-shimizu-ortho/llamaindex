@@ -12,7 +12,7 @@ import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/article
 import { isRxfp1Article, RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
 import { isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
 import { rxfp1DocumentIds } from "./library.js";
-import { loadRxfp1Index, rxfp1PassageKey, rxfp1QueryVectors, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
+import { loadRxfp1Index, rxfp1PassageKey, rxfp1PassageText, rxfp1QueryVectors, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
 import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
 // 節の種類を論文横断で揃えた分類。取り込み元によって type が "body" や "other" のこともあるので、
@@ -147,11 +147,12 @@ function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
     if (!TYPE_GROUPS[section.type] && BOILERPLATE_TITLE.test(section.title.trim())) continue;
 
     const push = (paragraphs: string[], subsection: string) => {
-      const texts = rxfp1 ? paragraphs
+      const texts = rxfp1 ? paragraphs.map(rxfp1PassageText)
         : group === "table"
           ? tableChunks(paragraphs)
           : paragraphs.map((p) => cleanText(p, group)).filter((text) => text && (group === "figure" || !inAbstract(text)));
-      texts.forEach((text, i) =>
+      texts.forEach((text, i) => {
+        if (!text) return;
         out.push({
           text,
           section: section.title,
@@ -159,8 +160,8 @@ function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
           group,
           paragraphIndex: i + 1,
           totalParagraphs: texts.length,
-        }),
-      );
+        });
+      });
     };
     push(section.paragraphs, "");
     for (const sub of section.subsections) {

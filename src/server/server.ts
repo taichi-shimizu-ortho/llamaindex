@@ -305,7 +305,7 @@ function sourceMarkdown(source: CorpusSource): string {
   ].filter(Boolean).join(" ");
   return [
     `#### S${source.n}. ${source.label} — ${section}${source.cited ? " (cited)" : ""}`,
-    `- ${source.ranking === "legacy_vector" ? "RXFP1 archive vector" : source.ranking === "text_match" ? "Text match" : `Score: ${source.score.toFixed(4)}`} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
+    `- ${source.ranking === "legacy_vector" ? "RXFP1 vector" : source.ranking === "text_match" ? "Text match" : `Score: ${source.score.toFixed(4)}`} · Paragraph ${source.paragraphIndex}/${source.totalParagraphs} · ${source.sectionGroup}`,
     source.title ? `- Title: ${source.title}` : "",
     cite ? `- Journal: ${cite}` : "",
     links ? `- Links: ${links}` : "",

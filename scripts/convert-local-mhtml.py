@@ -36,12 +36,13 @@ BY_NAME = {}
 FIGURE_DIRS = []
 NOW = datetime.now(timezone.utc).isoformat()
 EXCLUDED = re.compile(r'acknowledg|funding|conflicts?|competing interest|disclosure|author.?s?.? contributions?|author notes|ethical|ethics|^consent$|data availability|abbreviations|supplementary|supporting information|publisher.?s note|copyright', re.I)
-EXCLUDED = re.compile(EXCLUDED.pattern + r'|^Statements$|ORCID|Footnotes|authorship contribution|Declaration of AI|Institutional Review|Informed Consent|Supplemental Material', re.I)
+EXCLUDED = re.compile(EXCLUDED.pattern + r'|^Statements$|ORCID|Footnotes|authorship contribution|Declaration of AI|Institutional Review|Informed Consent|Supplemental Material|^Contributor Information$', re.I)
 # Publisher layout is chosen from the host of the saved page (Snapshot-Content-Location).
 HOST_PLATFORMS = [
  ('onlinelibrary.wiley.com', 'wiley'), ('journals.sagepub.com', 'sage'), ('mdpi.com', 'mdpi'),
  ('frontiersin.org', 'frontiers'), ('academic.oup.com', 'oup'), ('sciencedirect.com', 'sd'),
- ('iopscience.iop.org', 'iop'), ('boneandjoint.org.uk', 'bjr'), ('dovepress.com', 'dove')]
+ ('iopscience.iop.org', 'iop'), ('boneandjoint.org.uk', 'bjr'), ('dovepress.com', 'dove'),
+ ('pmc.ncbi.nlm.nih.gov', 'pmc')]
 # Fallback for the 2026-11 MSC-OXT batch, whose archives were converted before host detection.
 LEGACY_PLATFORMS = {
  'frontiers': ['Feixiang2023','Wang2024'],
@@ -121,7 +122,7 @@ def parse_mhtml(path):
 
 def roots(soup, name):
     publisher = platform(name)
-    root_selector = {'wiley': '.article-section__full', 'mdpi': '#article-contents', 'bjr': '#article-body .body', 'sage': '#bodymatter', 'oup': '.widget-ArticleFulltext', 'frontiers': '.ArticleContent', 'sd': '#body', 'iop': '.wd-jnl-art-full-text', 'dove': 'div[class~="$body"]'}[publisher]
+    root_selector = {'wiley': '.article-section__full', 'mdpi': '#article-contents', 'bjr': '#article-body .body', 'sage': '#bodymatter', 'oup': '.widget-ArticleFulltext', 'frontiers': '.ArticleContent', 'sd': '#body', 'iop': '.wd-jnl-art-full-text', 'dove': 'div[class~="$body"]', 'pmc': 'section.body.main-article-body'}[publisher]
     body = soup.select_one(root_selector)
     if body is None: raise ValueError(f'{name}: article body is missing')
     result = BeautifulSoup('<article></article>', 'html.parser').article
@@ -215,7 +216,7 @@ def in_supporting(node):
 
 def extract_tables(root, name):
     out, warnings, seen = [], [], set()
-    wraps = root.select('.html-table-wrap,.article-table-content,.article-table-wrapper,.table-wrap,.table-section,figure.table,.ArticleTable,div.boxout:has(table)')
+    wraps = root.select('.html-table-wrap,.article-table-content,.article-table-wrapper,.table-wrap,.table-section,figure.table,.ArticleTable,div.boxout:has(table),section.tw')
     for w in wraps:
         if any(p in wraps for p in w.parents): continue
         if in_supporting(w): continue
@@ -223,6 +224,11 @@ def extract_tables(root, name):
         parent_heading = ancestor_section.find(['h2','h3'], recursive=False) if ancestor_section else None
         if parent_heading and EXCLUDED.search(heading(parent_heading)): continue
         caption = w.select_one('.html-table_wrap_discription,.table-caption,.article-table-caption,figcaption,caption,.table__caption,.ArticleTable__caption,.ArticleTable__title')
+        if platform(name) == 'pmc':
+            # PMC: <h4 class="obj_head">TABLE 1.</h4> then div.caption with the title.
+            parts = [text_of(x) for x in (w.select_one('.obj_head'), w.select_one('div.caption')) if x]
+            caption = BeautifulSoup('<p></p>', 'html.parser').p if parts else None
+            if caption: caption.string = ' '.join(parts)
         if not caption and 'boxout' in (w.get('class') or []):caption=w.find('p')
         label = text_of(caption) if caption else ''
         if w.select_one('.ArticleTable__description'):label+=' '+text_of(w.select_one('.ArticleTable__description'))
@@ -260,6 +266,10 @@ def extract_figures(root, name, url, assets, output):
         if not img: continue
         cap = fig.select_one('figcaption,.html-fig_description,.captions')
         label = fig.select_one('.figure__title,.fig-label,.figure-label,.label')
+        if platform(name) == 'pmc':
+            # PMC: <h4 class="obj_head">FIG. 1.</h4> and the legend in figcaption or div.caption.
+            cap = fig.select_one('figcaption') or fig.select_one('div.caption')
+            label = fig.select_one('.obj_head') or label
         if not label and cap: label = cap.find(['b','strong'])
         rawlabel = text_of(label) if label else ''
         legend = text_of(cap) if cap else img.get('alt','')
@@ -344,11 +354,14 @@ def local_figure(name, number):
                 return f
     return None
 
-def extract_body(root):
+def extract_body(root, publisher):
     node = copy.deepcopy(root)
-    for x in list(node.select('script,style,noscript,nav,header,footer,button,figure,.html-fig-wrap,.html-table-wrap,.fig,.table-section,.article-table-content,.table-wrap,.ArticleFigure,.ArticleTable,div.boxout:has(table),table,.ref-list,.article-section__references,#html-references_list,#html-keywords,#html-graphical,#html-copyright,.gift-access-description,.figPopup,.figPopupLink')):
+    for x in list(node.select('script,style,noscript,nav,header,footer,button,figure,.html-fig-wrap,.html-table-wrap,.fig,.table-section,.article-table-content,.table-wrap,.ArticleFigure,.ArticleTable,div.boxout:has(table),section.tw,table,.ref-list,.article-section__references,#html-references_list,#html-keywords,#html-graphical,#html-copyright,.gift-access-description,.figPopup,.figPopupLink')):
         if x.parent: x.decompose()
     sections=[];current=None;sub=None;excluded=False;stopped=False
+    paragraph_selector = 'p,div.html-p,div.para,div[role="paragraph"]'
+    if publisher == 'sd':
+        paragraph_selector += ',div.u-margin-s-bottom'
     def push(t):
         nonlocal current
         if not t or excluded:return
@@ -370,9 +383,11 @@ def extract_body(root):
                 sub={'title':title,'content':'','paragraphs':[]};current['subsections'].append(sub)
             return
         classes=x.get('class') or []
-        is_para=x.name in ['p','li'] or x.get('role')=='paragraph' or (x.name=='div' and (any(c in classes for c in ['html-p','para','paragraph']) or re.fullmatch(r'p\d+',x.get('id',''))))
+        # ScienceDirect paragraphs are div.u-margin-s-bottom; their ids vary (p0005, para10, spar0010) or are absent.
+        sd_para=publisher=='sd' and x.name=='div' and 'u-margin-s-bottom' in classes and not x.find(['h2','h3','h4','h5'])
+        is_para=x.name in ['p','li'] or x.get('role')=='paragraph' or sd_para or (x.name=='div' and (any(c in classes for c in ['html-p','para','paragraph']) or re.fullmatch(r'p\d+',x.get('id',''))))
         if is_para:
-            if x.name=='div' and x.select_one('p,div.html-p,div.para,div[role="paragraph"]'):
+            if x.name=='div' and x.select_one(paragraph_selector):
                 for child in x.children:walk(child)
             else:push(text_of(x))
             return
@@ -385,7 +400,7 @@ def extract_body(root):
     return [s for s in sections if s['paragraphs'] or s['subsections']]
 
 def extract_refs(soup,name,url):
-    selectors={'wiley':'.article-section__references li[data-bib-id]','mdpi':'#html-references_list li','bjr':'#article-body .ref-list p.reference','sage':'#bibliography .biblioentry','oup':'.widget-ArticleFulltext .ref-list .ref-content','frontiers':'ul.References > li.References__item','sd':'.references li','iop':'#references-wrapper .ref','dove':'p[class~="$reftext"][id]'}
+    selectors={'wiley':'.article-section__references li[data-bib-id]','mdpi':'#html-references_list li','bjr':'#article-body .ref-list p.reference','sage':'#bibliography .biblioentry','oup':'.widget-ArticleFulltext .ref-list .ref-content','frontiers':'ul.References > li.References__item','sd':'.references li','iop':'#references-wrapper .ref','dove':'p[class~="$reftext"][id]','pmc':'section.ref-list li'}
     records=[];seen=set()
     for idx,r in enumerate(soup.select(selectors[platform(name)]),1):
         doi=pmid=''
@@ -395,6 +410,7 @@ def extract_refs(soup,name,url):
             m=re.search(r'pubmed(?:\.ncbi\.nlm\.nih\.gov)?/(\d+)|pubmed\.ncbi\.nlm\.nih\.gov/(\d+)',href)
             if m:pmid=next(v for v in m.groups() if v)
         content=copy.deepcopy(r.select_one('.citation-content,.reference-mixed-citation,.mixed-citation,.References__content,.reference') or r)
+        if platform(name)=='pmc':content=copy.deepcopy(r.find('cite') or r)  # drop the [DOI] [PubMed] link row
         for link in content.select('.ReferenceLinks,.References__links'):link.decompose()
         text=text_of(content)
         if platform(name) == 'dove':
@@ -454,7 +470,7 @@ def convert(name):
         tables=[t for t in tables if t['title']!='Table 1']+[section('Table 1','table',[table_content])]
         tw=[w for w in tw if not w.startswith('Table body not embedded: Table 1.')]
         supplements.append({'file':'Breuil2021.table1.user.html','source':'user-provided publisher table HTML','sha256':hashlib.sha256(supplement.read_bytes()).hexdigest(),'dataRows':8,'columns':8})
-    sections=extract_body(combined)
+    sections=extract_body(combined, platform(name))
     idx=next((i+1 for i,s in enumerate(sections) if s['type']=='abstract'),0)
     sections[idx:idx]=figures
     sections.extend(tables)

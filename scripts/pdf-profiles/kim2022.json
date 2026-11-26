@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "pageCount": 21,
+  "sourceSha256": "0007781256bbae184c6d31c1a71ca6a8f4d28bff2cee2d94d0180c1cbb0f3669",
+  "metadata": {
+    "id": "rxfp1.Kim2022",
+    "title": "Spheroid culture for chondrocytes triggers the initial stage of endochondral ossification",
+    "authors": ["Kim, Jeonghyun", "Tomida, Kosei", "Matsumoto, Takeo", "Adachi, Taiji"],
+    "journal": "Biotechnology and Bioengineering",
+    "year": "2022",
+    "doi": "10.1002/bit.28203",
+    "pmid": "35923099",
+    "sourceUrl": "https://nagoya.repo.nii.ac.jp/record/2004245/files/Manuscript_final.pdf",
+    "articleType": "original",
+    "articleTypeSource": "manual"
+  },
+  "abstractRegions": [
+    {"page": 2, "box": [88, 95, 520, 505]}
+  ],
+  "paragraphGap": 20,
+  "bodyRegions": [
+    {"page": 2, "box": [88, 645, 520, 760]},
+    {"page": 3, "box": [88, 60, 520, 760]},
+    {"page": 4, "box": [88, 60, 520, 760]},
+    {"page": 5, "box": [88, 60, 520, 760]},
+    {"page": 6, "box": [88, 60, 520, 760]},
+    {"page": 7, "box": [88, 60, 520, 760]},
+    {"page": 8, "box": [88, 60, 520, 760]},
+    {"page": 9, "box": [88, 60, 520, 760]},
+    {"page": 10, "box": [88, 60, 520, 760]},
+    {"page": 11, "box": [88, 60, 520, 760]},
+    {"page": 12, "box": [88, 60, 520, 760]},
+    {"page": 13, "box": [88, 60, 520, 760]},
+    {"page": 14, "box": [88, 60, 520, 505]}
+  ],
+  "headings": [
+    {"match": "1. Introduction", "title": "Introduction", "type": "intro"},
+    {"match": "2. Materials and methods", "title": "Materials and methods", "type": "methods"},
+    {"match": "2.1 Cell culture", "title": "Cell culture", "type": "methods"},
+    {"match": "2.2 Real time-PCR", "title": "Real time-PCR", "type": "methods"},
+    {"match": "2.3 Immunostaining", "title": "Immunostaining", "type": "methods"},
+    {"match": "2.4 Histochemical assay", "title": "Histochemical assay", "type": "methods"},
+    {"match": "2.5 Statistics", "title": "Statistics", "type": "methods"},
+    {"match": "3. Results", "title": "Results", "type": "results"},
+    {"match": "3.1 Fabrication of spheroids", "title": "Fabrication of spheroids", "type": "results"},
+    {"match": "3.2 ATDC5 spheroid exhibited greater chondrocyte differentiation markers in the inner region of the spheroid.", "title": "ATDC5 spheroid exhibited greater chondrocyte differentiation markers in the inner region of the spheroid", "type": "results"},
+    {"match": "3.3 ATDC5 spheroid exhibited greater hypertrophic chondrocyte differentiation markers in the surface region of the spheroid.", "title": "ATDC5 spheroid exhibited greater hypertrophic chondrocyte differentiation markers in the surface region of the spheroid", "type": "results"},
+    {"match": "3.4 ATDC5 spheroid remarkably up-regulated osteocyte markers in the spheroid.", "title": "ATDC5 spheroid remarkably up-regulated osteocyte markers in the spheroid", "type": "results"},
+    {"match": "3.5 3D spheroid culture is essential for up-regulations of chondrocyte, hypertrophic chondrocyte, and osteocyte markers.", "title": "3D spheroid culture is essential for up-regulations of chondrocyte, hypertrophic chondrocyte, and osteocyte markers", "type": "results"},
+    {"match": "3.6 Spheroids became hypertrophied after 4 days", "title": "Spheroids became hypertrophied after 4 days", "type": "results"},
+    {"match": "4. Discussion", "title": "Discussion", "type": "discussion"}
+  ],
+  "legendRegions": [
+    {"page": 19, "box": [88, 312, 520, 760]},
+    {"page": 20, "box": [88, 60, 520, 760]},
+    {"page": 21, "box": [88, 60, 520, 760]}
+  ],
+  "referenceStyle": "hanging",
+  "referenceRegions": [
+    {"page": 15, "box": [88, 395, 520, 760]},
+    {"page": 16, "box": [88, 60, 520, 760]},
+    {"page": 17, "box": [88, 60, 520, 760]},
+    {"page": 18, "box": [88, 60, 520, 760]},
+    {"page": 19, "box": [88, 60, 520, 285]}
+  ],
+  "warnings": [
+    "Author accepted manuscript from the Nagoya University repository, not the publisher's version of record. Check quoted values against the published article.",
+    "The manuscript PDF has figure legends but no figure images."
+  ]
+}

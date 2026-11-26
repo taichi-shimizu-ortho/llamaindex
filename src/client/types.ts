@@ -130,7 +130,7 @@ export interface CorpusPrepareResult {
   papers: CorpusPaper[];
   skipped: CorpusSkipped[];
   totalParagraphs: number;
-  rxfp1?: { store: "TypeScript" | "Python" | null; vectors: number; notes: string[] };
+  rxfp1?: { store: "RXFP1" | "TypeScript" | "Python" | null; vectors: number; notes: string[] };
 }
 
 export interface CorpusSource {

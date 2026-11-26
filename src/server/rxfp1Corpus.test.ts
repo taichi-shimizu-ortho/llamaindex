@@ -15,7 +15,7 @@ after(() => fs.rmSync(root, { recursive: true, force: true }));
 
 const { PATHS } = await import("./config.js");
 const { loadLegacyRxfp1Corpus, loadRxfp1Corpus, parseRxfp1Markdown } = await import("./rxfp1Corpus.js");
-const { loadRxfp1Index, rxfp1PassageKey } = await import("./rxfp1Index.js");
+const { loadRxfp1Index, rxfp1PassageKey, rxfp1VectorPassages, saveRxfp1PaperVectors } = await import("./rxfp1Index.js");
 const { harvestArticle, listArticleSets } = await import("./articleHarvester.js");
 const { prepareCorpus, runCorpusQuery } = await import("./corpusRag.js");
 const { loadLiterature, retrieveLiterature } = await import("./literatureEvidence.js");
@@ -162,6 +162,33 @@ test("falls back to the Python vector store when TypeScript is invalid", async (
   assert.equal(index.store, "Python");
   assert.equal(index.vectors.size, 1);
   assert.match(index.notes.join(" "), /TypeScript/);
+});
+
+test("uses saved RXFP1 vectors alongside the archive and drops vectors for changed text", async () => {
+  const key = rxfp1PassageKey(importedId, "Results", "", markdownText);
+  await saveRxfp1PaperVectors(importedId, new Map([[key, Float32Array.from(axis)]]));
+  let index = await loadRxfp1Index();
+  assert.equal(index.store, "RXFP1");
+  assert(index.cachedPapers.has(importedId));
+  assert.equal((await prepareCorpus([articleId, noteId])).rxfp1?.vectors, 2);
+
+  const article = loadRxfp1Corpus().articles.get(importedId)!;
+  const figure = {
+    title: "Figure 1", type: "figure", content: "", subsections: [],
+    paragraphs: ["A caption.\n[Image URL: data:image/png;base64,abc]", "[Image URL: data:image/png;base64,xyz]"],
+  };
+  const sections = [
+    { ...article.sections[0], paragraphs: ["The current text is different."] },
+    figure,
+  ];
+  assert.deepEqual([...rxfp1VectorPassages({ ...article, sections }).values()], ["The current text is different.", "A caption."]);
+  writeJson(path.join(PATHS.articleOutputDir, importedId + ".json"), { ...article, sections });
+  index = await loadRxfp1Index();
+  assert(!index.vectors.has(key));
+  assert(!index.cachedPapers.has(importedId));
+  const prep = await prepareCorpus([articleId, noteId]);
+  assert.equal(prep.totalParagraphs, 3);
+  assert.equal(prep.rxfp1?.vectors, 1);
 });
 
 test("a DOI reimport updates the same article and keeps the migrated alias", async () => {

@@ -17,6 +17,27 @@ from pathlib import Path
 import pymupdf
 
 
+# Set from the profile in convert(): fontGlyphs maps characters per font name (fonts that
+# encode minus, plus or Greek letters as private codes), dehyphenate marks line-end hyphens.
+FONT_GLYPHS: dict[str, dict[str, str]] = {}
+DEHYPHENATE = False
+REBUILD_LINES = False  # rebuild line text from character gaps (text layers that omit spaces)
+
+
+def span_text(span) -> str:
+    """Text of a rawdict span with a space wherever the gap between glyphs looks like one."""
+    out, previous = "", None
+    for char in span["chars"]:
+        c = char["c"]
+        if previous is not None and c != " " and not out.endswith(" ") \
+                and char["bbox"][0] - previous["bbox"][2] > span["size"] * 0.1:
+            out += " "
+        out += c
+        previous = char
+    return out
+LINE_HYPHEN = "\u2061"  # marks a hyphen that ended a line until resolve_hyphens() decides
+
+
 def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
@@ -28,10 +49,23 @@ def join_lines(lines: list[str]) -> str:
         if out.endswith("\u00ad"):
             out = out[:-1] + line
         elif out.endswith("-"):
-            out += line
+            out += (LINE_HYPHEN if DEHYPHENATE else "") + line
         else:
             out += (" " if out else "") + line
     return normalize(out.replace("\u00ad", ""))
+
+
+def lines_by_row(lines, tolerance):
+    """Group nearby line fragments and order each row from left to right."""
+    rows = []
+    for line in sorted(lines, key=lambda l: (l["box"][1] + l["box"][3]) / 2):
+        centre = (line["box"][1] + line["box"][3]) / 2
+        if rows and centre - rows[-1][0] <= tolerance:
+            rows[-1][1].append(line)
+        else:
+            rows.append((centre, [line]))
+    for _, row in rows:
+        yield sorted(row, key=lambda line: line["box"][0])
 
 
 def region_lines(doc, region, citations=False):
@@ -40,17 +74,32 @@ def region_lines(doc, region, citations=False):
     if rect.is_empty or not page.rect.contains(rect):
         raise ValueError(f"Region outside page: {region}")
     lines = []
-    for block in page.get_text("dict", clip=rect)["blocks"]:
+    mode = "rawdict" if REBUILD_LINES else "dict"
+    for block in page.get_text(mode, clip=rect)["blocks"]:
         for line in block.get("lines", []):
             if line["dir"] != (1.0, 0.0):
                 continue
             text = ""
             spans = line["spans"]
+            if REBUILD_LINES:
+                for span in spans:
+                    span["text"] = span_text(span)
             bold = all(s["flags"] & 16 for s in spans if s["text"].strip())
+            previous_end = None
             for span in spans:
                 value = span["text"]
+                for font, glyphs in FONT_GLYPHS.items():
+                    if font in span["font"]:
+                        value = "".join(glyphs.get(ch, ch) for ch in value)
+                if REBUILD_LINES and previous_end is not None and value[:1] != " " and not text.endswith(" ") \
+                        and span["bbox"][0] - previous_end > span["size"] * 0.1:
+                    text += " "
+                previous_end = span["bbox"][2]
                 if citations and span["flags"] & 1 and re.fullmatch(r"[\d,–\-]+", value.strip()):
-                    if re.search(r"(?:\d|[cmμ]m)$", text):
+                    if text.endswith("−"):
+                        text = text[:-1] + "⁻"  # a unit exponent such as mL⁻¹
+                        value = value.strip().translate(str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"))
+                    elif re.search(r"(?:\d|[cmμ]m)$", text):
                         value = value.translate(str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"))
                     else:
                         value = "[" + value.strip() + "]"
@@ -59,9 +108,39 @@ def region_lines(doc, region, citations=False):
                 lines.append({"text": text.strip(), "box": line["bbox"], "bold": bold,
                               "page": region["page"], "columnLeft": rect.x0})
     lines.sort(key=lambda line: (round(line["box"][1], 1), line["box"][0]))
+    if REBUILD_LINES:
+        # Justified lines with wide word spacing can come back as several pieces on one row.
+        merged = []
+        for row in lines_by_row(lines, 2.5):
+            last = None
+            for line in row:
+                if last and line["box"][0] >= last["box"][2] - 1:
+                    last["text"] += " " + line["text"]
+                    last["box"] = (last["box"][0], min(last["box"][1], line["box"][1]),
+                                   line["box"][2], max(last["box"][3], line["box"][3]))
+                    last["bold"] = last["bold"] and line["bold"]
+                else:
+                    last = dict(line)
+                    merged.append(last)
+        lines = sorted(merged, key=lambda line: (round(line["box"][1], 1), line["box"][0]))
     if not lines:
         raise ValueError(f"No text in region (OCR may be needed): {region}")
     return lines
+
+
+def resolve_hyphens(text: str, vocabulary: set[str]) -> str:
+    """Drop a line-end hyphen when the joined word occurs elsewhere in the document, or
+    when the word continues in lower case and the hyphenated form does not occur."""
+    def decide(match):
+        left, right = match[1], match[2]
+        joined = (left + right).lower()
+        if joined in vocabulary:
+            return left + right
+        if (left + "-" + right).lower() in vocabulary:
+            return left + "-" + right
+        return left + right if right[:1].islower() else left + "-" + right
+    text = re.sub(r"([A-Za-z]+)-" + LINE_HYPHEN + r"([A-Za-z]+)", decide, text)
+    return text.replace(LINE_HYPHEN, "")
 
 
 def make_section(title, kind, paragraphs):
@@ -115,7 +194,8 @@ def body_sections(doc, profile):
             same_column = previous and previous["page"] == line["page"] and abs(previous["columnLeft"] - line["columnLeft"]) < 1
             indented = line["box"][1] >= drop_cap_bottom and line["box"][0] - line["columnLeft"] > profile.get("paragraphIndent", 8)
             gap = line["box"][1] - previous["box"][3] if same_column else 0
-            if buffer and (indented or gap > 4 or line["text"].startswith(paragraph_starts)):
+            # Double-spaced manuscripts need a larger gap than typeset pages (paragraphGap, default 4 pt).
+            if buffer and (indented or gap > profile.get("paragraphGap", 4) or line["text"].startswith(paragraph_starts)):
                 flush()
             buffer.append(drop_cap + line["text"])
             drop_cap = ""
@@ -131,15 +211,22 @@ def body_sections(doc, profile):
 
 def references(doc, profile, source_url):
     entries, current = [], None
+    hanging = profile.get("referenceStyle") == "hanging"
     for region in profile["referenceRegions"]:
         page = doc[region["page"] - 1]
         links = page.get_links()
         for line in region_lines(doc, region):
-            match = re.match(r"^(\d+)\.(?:\s+(.*)|$)", line["text"])
-            if line["box"][0] - region["box"][0] > 5:
-                match = None  # A page range such as "96. https://doi…" is not a new entry.
+            at_left = line["box"][0] - region["box"][0] <= 5
+            if hanging:
+                # Author-year lists: an entry starts at the left edge and continues with a hanging indent.
+                match = at_left
+            else:
+                match = re.match(r"^(\d+)\.(?:\s+(.*)|$)", line["text"])
+                if not at_left:
+                    match = None  # A page range such as "96. https://doi…" is not a new entry.
             if match:
-                current = {"index": int(match[1]), "lines": [match[2] or ""], "uris": []}
+                current = ({"index": len(entries) + 1, "lines": [line["text"]], "uris": []} if hanging
+                           else {"index": int(match[1]), "lines": [match[2] or ""], "uris": []})
                 entries.append(current)
             else:
                 if current is None:
@@ -167,6 +254,11 @@ def references(doc, profile, source_url):
 
 
 def convert(pdf: Path, profile: dict, output: Path):
+    global DEHYPHENATE, REBUILD_LINES
+    REBUILD_LINES = bool(profile.get("rebuildLines"))
+    FONT_GLYPHS.clear()
+    FONT_GLYPHS.update(profile.get("fontGlyphs", {}))
+    DEHYPHENATE = bool(profile.get("dehyphenate"))
     doc = pymupdf.open(pdf)
     if len(doc) != profile["pageCount"]:
         raise ValueError("PDF page count does not match the reviewed profile")
@@ -206,7 +298,32 @@ def convert(pdf: Path, profile: dict, output: Path):
         (output / (figure["title"].replace(" ", "_") + ".png")).write_bytes(png)
         url = "data:image/png;base64," + base64.b64encode(png).decode("ascii")
         sections.append(make_section(figure["title"], "figure", [caption + "\n\n[Image URL: " + url + "]"]))
+    # Figure legends without images (e.g. an author manuscript): each legend starts at the
+    # left edge with "Fig. N" and continues with a hanging indent.
+    legends = []
+    for region in profile.get("legendRegions", []):
+        # A bold "Fig. 1." label can sit a few points off the baseline of the legend text
+        # on the same row, so order lines by row (centre within 4 pt) and then by x.
+        for line in (line for row in lines_by_row(region_lines(doc, region), 4) for line in row):
+            label = re.match(r"^Fig(?:ure)?\.?\s*(S?\d+)\b", line["text"])
+            if label and line["box"][0] - region["box"][0] <= 5:
+                legends.append(("Figure " + label[1], [line["text"]]))
+            elif legends:
+                legends[-1][1].append(line["text"])
+            else:
+                raise ValueError(f"Legend text before the first figure label: {line['text']}")
+    for title, lines in legends:
+        sections.append(make_section(title, "figure", [correct_text(join_lines(lines))]))
     records = references(doc, profile, metadata["sourceUrl"])
+    if DEHYPHENATE:
+        words = set()
+        for page in doc:
+            words.update(w.lower() for w in re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)*", page.get_text()))
+        for item in sections:
+            item["paragraphs"] = [resolve_hyphens(text, words) for text in item["paragraphs"]]
+            item["content"] = "\n\n".join(item["paragraphs"])
+        for record in records:
+            record["text"] = resolve_hyphens(record["text"], words)
     now = datetime.now(timezone.utc).isoformat()
     article = {**metadata, "createdAt": now, "sections": sections,
                "chunkCount": sum(len(s["paragraphs"]) for s in sections), "extractionSource": "pdf",

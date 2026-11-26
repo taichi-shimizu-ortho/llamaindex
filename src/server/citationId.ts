@@ -92,6 +92,12 @@ function capitalizeIdPart(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+export function citationIdFromSurname(firstSurname: string, year: string, fallback: string): string {
+  const author = firstSurname.normalize("NFKD").replace(/\p{M}/gu, "").replace(/[^A-Za-z0-9-]/g, "");
+  const base = `${capitalizeIdPart(author)}${year.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? ""}`;
+  return base || fallback || "Article";
+}
+
 export function citationBaseId(html: string, articleTitle: string, fallback: string): string {
   const authors = citationAuthors(html);
   const firstAuthor = authors.find(authorLooksComplete) || authors[0] || firstAuthorFromTitle(html, articleTitle);

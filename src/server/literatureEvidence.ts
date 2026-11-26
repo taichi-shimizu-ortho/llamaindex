@@ -9,7 +9,7 @@ import type { ReferenceSet } from "./referenceHarvester.js";
 import type { CitationCheck, Evidence, LiteratureCollection, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
 import { rxfp1DocumentIds } from "./library.js";
 import { isRxfp1Article } from "../shared/rxfp1.js";
-import { rxfp1PassageKey, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
+import { rxfp1PassageKey, rxfp1PassageText, rxfp1Similarity, type Rxfp1Index } from "./rxfp1Index.js";
 import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
 type Section = ArticleSet["sections"][number];
@@ -83,7 +83,7 @@ function passagesOf(sections: Section[], articleType?: ArticleSet["articleType"]
         : ["discussion", "conclusion"].includes(group) ? "author_interpretation"
         : articleType === "original" && group === "results" ? "primary_result" : "other";
       return paragraphs.flatMap((raw, paragraphIndex): Passage[] => {
-        const text = group === "figure" ? raw.replace(/\[Image URL:[^\]]+\]\s*/g, "").trim() : raw;
+        const text = group === "figure" || group === "table" ? rxfp1PassageText(raw) : raw;
         return !text.trim() ? [] : [{
           text,
           locator: {
@@ -289,7 +289,7 @@ export function retrieveLiterature(
   if (semantic) {
     coverage.push(...semantic.index.notes);
     if (semantic.query && semantic.index.store) {
-      coverage.push(`RXFP1 search combined ${semantic.index.store} archive vectors with text matching.`);
+      coverage.push("RXFP1 search combined vector similarity with text matching.");
     } else if (semantic.index.vectors.size) {
       coverage.push("RXFP1 query embedding unavailable. Search used text matching.");
     }

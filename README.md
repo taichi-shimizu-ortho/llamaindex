@@ -75,7 +75,7 @@ npm run ingest:offline -- -c "postless traction" ~/Downloads/Habib2018.mhtml
 | `--figure-dir <dir>` | 手で保存した図の置き場所（既定は Downloads） |
 | `--no-zotero` | Zotero に触れない（フォルダは未分類のまま） |
 
-- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`。
+- 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`、`pmc.ncbi.nlm.nih.gov`（PMCの公開本文ページ）。
 - MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ保存する。既定は移動で、`--copy` を付けるとコピーする。`mhtml/` 配下であれば元の位置を使う。
 - Wiley の MHTML には図の画像が入っていないことが多い。警告に出る URL をブラウザで開き、`<ID>_fig<N>.jpg` の名前で Downloads に保存して `--replace` で取り込み直す。既存の `raw_html/<ID>_figures/Figure_<N>.*` も再利用する。
 - 変換本体は `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）。
@@ -102,6 +102,8 @@ Bryant 1975のスキャンは、ページ範囲を確認済みのプロファイ
 ```bash
 npm run ingest:pdf -- --profile scripts/pdf-profiles/bryant1975.json --folder RXFP1 "<BryantのPDF>"
 ```
+
+著者受理稿のような1段組・行間の広い原稿は、プロファイルに `paragraphGap`（段落とみなす行間、既定4pt）、`referenceStyle: "hanging"`（著者年方式のぶら下げインデント文献）、`legendRegions`（画像のない図の説明文）を指定する。例は `scripts/pdf-profiles/kim2022.json`。
 
 ## ORSブックマークレット
 
@@ -256,8 +258,14 @@ node --import tsx scripts/migrate-rxfp1.ts --apply
 DOI・PMIDなどが一致する既存論文はそのIDに対応付ける。既存の本文と別フォルダへの割り当てを優先する。
 旧本文の入力先は `RXFP1_ARTICLES_JSON` と `RXFP1_MD_SOURCE_DIR` で指定できる。
 
-検索では `storage_all_ts` を優先し、利用できない場合は `storage_all` を読む。現行JSONの本文・節・小節が一致したベクトルを再利用する。
-ベクトルに対応しない本文は語句検索で引ける。旧ストアの場所は `RXFP1_STORAGE_ALL_DIR` と `RXFP1_PYTHON_STORAGE_DIR` で指定できる。
+RXFP1 の論文を取り込んだ後は、次のコマンドで本文と図表キャプションを段落単位でベクトル化する。
+
+```bash
+npm run embed:rxfp1 -- --dry-run
+op run --env-file=.env.1password -- npm run embed:rxfp1
+```
+
+ベクトルは `embeddings_cache/rxfp1/` に論文別で保存する。本文・節・小節が一致するベクトルは再利用し、不足分のテキストを OpenAI の `text-embedding-3-large` に送る。検索時は論文別キャッシュを優先し、再利用可能なベクトルを旧 `storage_all_ts` または `storage_all` で補う。旧ストアの場所は `RXFP1_STORAGE_ALL_DIR` と `RXFP1_PYTHON_STORAGE_DIR` で指定できる。
 
 ## 実行
 
