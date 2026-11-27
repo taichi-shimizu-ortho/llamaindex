@@ -760,9 +760,10 @@ import { jatsCitationBaseId, parseJatsArticle } from "./sageJatsHarvester.js";
 export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
   if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
-  const html = options.html ?? (sourceUrl ? await fetchText(sourceUrl) : "");
+  // JATS があれば本文もメタデータも JATS から取るので、元URLは取りに行かない（HTML は渡されたときだけ図のURL補完に使う）。
+  const html = options.html ?? (sourceUrl && !options.jatsXml ? await fetchText(sourceUrl) : "");
   const title = options.title?.trim() || (html ? inferTitle(html, sourceUrl) : "");
-  
+
   const baseId = html || !options.jatsXml
     ? citationBaseId(html, title, slugify(title || sourceUrl))
     : jatsCitationBaseId(options.jatsXml, slugify(title || sourceUrl));
@@ -770,7 +771,8 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
   let set: ArticleSet | null = null;
   let finalDoi = "";
   if (options.jatsXml) {
-    const parsed = parseJatsArticle(options.jatsXml, { id: "dummy", sourceUrl, title });
+    // 題名は JATS の article-title を優先する。明示された title だけが上書きできる。
+    const parsed = parseJatsArticle(options.jatsXml, { id: "dummy", sourceUrl, title: options.title?.trim() });
     if (parsed) {
       set = parsed as ArticleSet;
       finalDoi = set.doi || "";
@@ -834,7 +836,7 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
 
   if (!set) throw new Error("Failed to extract article content");
   
-  const id = articleIdForDoi(finalDoi) ?? uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, title);
+  const id = articleIdForDoi(finalDoi) ?? uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, set.title || title);
   set.id = id;
   if (fs.existsSync(articleSetPath(id))) {
     const previous = loadArticleSet(id);

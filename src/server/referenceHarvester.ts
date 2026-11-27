@@ -1164,13 +1164,15 @@ export function listReferenceSets() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-import { jatsCitationBaseId, parseJatsReferences } from "./sageJatsHarvester.js";
+import { jatsCitationBaseId, parseJatsReferences, parseJatsTitle } from "./sageJatsHarvester.js";
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
-  if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
+  if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
-  const html = options.html ?? (await fetchText(sourceUrl, {}));
-  const title = options.title?.trim() || inferTitle(html, sourceUrl);
+  // JATS があれば参考文献は JATS から取るので、元URLは取りに行かない（harvestArticle と同じ理由）。
+  const html = options.html ?? (options.jatsXml ? "" : await fetchText(sourceUrl, {}));
+  const title =
+    options.title?.trim() || (html ? inferTitle(html, sourceUrl) : parseJatsTitle(options.jatsXml ?? "")) || sourceUrl;
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
   
   const baseId = html || !options.jatsXml
