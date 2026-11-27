@@ -34,6 +34,14 @@ function authorSurname(name: string): string {
   return trimmed.split(/\s+/).filter((part) => !suffixRe.test(part)).at(-1) ?? "";
 }
 
+// どこから読んだ論文か。正本（article-ingest）なら正本 id、そうでなければ article_sets/ の取り込み経路。
+export function sourceLabel(set: { canonicalId?: string; extractionSource?: string }): { text: string; title: string } {
+  if (set.canonicalId) {
+    return { text: `canonical ${set.canonicalId}`, title: `Read from the shared article JSON (${set.extractionSource ?? "article-json"})` };
+  }
+  return { text: `article_sets${set.extractionSource ? ` · ${set.extractionSource}` : ""}`, title: "Read from article_sets/ (not migrated to the shared article JSON)" };
+}
+
 // 「Altschuler et al., 2026」形式。著者が取れていない論文は id（取り込み時の AuthorYear）で代用する。
 export function authorYearLabel(set: { id: string; authors?: string[]; year?: string }): string {
   const surnames = (set.authors ?? []).map(authorSurname).filter(Boolean);

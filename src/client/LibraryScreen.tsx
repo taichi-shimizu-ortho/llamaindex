@@ -14,6 +14,7 @@ import {
   folderPath,
   formatDate,
   matchingReferenceSet,
+  sourceLabel,
 } from "./documents.js";
 import type {
   ArticleSetSummary,
@@ -478,6 +479,7 @@ function DocumentCard({
 
       <div className="doc-meta">
         <span className="doc-id">{set.id}</span>
+        <span className="doc-origin" title={sourceLabel(set).title}>{sourceLabel(set).text}</span>
         <span>{set.chunkCount} paragraphs</span>
         <span className={referenceSet ? "" : "warn-text"}>
           {referenceSet

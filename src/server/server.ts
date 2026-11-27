@@ -10,6 +10,7 @@ import { prepareCorpus, runCorpusQuery, type CorpusQueryResult, type CorpusSourc
 import { assignDocument, createFolder, deleteFolder, moveFolder, readLibrary, renameFolder } from "./library.js";
 import { syncZotero, zoteroStatus } from "./zotero.js";
 import { MODELS, PATHS } from "./config.js";
+import { CANONICAL_FIGURE_ROUTE, canonicalFiguresDir } from "./canonicalStore.js";
 import { modelLabel } from "../shared/modelLabel.js";
 import { listRxfp1Articles } from "./rxfp1Corpus.js";
 import { readManuscript } from "./manuscriptDocx.js";
@@ -33,6 +34,9 @@ const PORT = Number(process.env.PORT ?? 5174);
 if (fs.existsSync(PATHS.rawHtmlDir)) {
   app.use("/raw_html", express.static(PATHS.rawHtmlDir));
 }
+
+// 正本（article-ingest）の図。<DATA_HOME>/figures/<正本id>/<file> を読み取り専用で配信する。
+app.use(CANONICAL_FIGURE_ROUTE, express.static(canonicalFiguresDir(), { dotfiles: "deny", index: false }));
 
 // 状態確認
 app.get("/api/status", (_req, res) => {

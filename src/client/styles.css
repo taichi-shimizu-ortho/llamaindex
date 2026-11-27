@@ -1196,6 +1196,7 @@ body {
   font-size: 12px;
 }
 .doc-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+.doc-origin { font-size: 11px; color: var(--muted); }
 .doc-source {
   font-size: 12px;
   overflow: hidden;

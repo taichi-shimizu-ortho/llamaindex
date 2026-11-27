@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { MODELS } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { generateAnswer, hasJapanese, translateToEnglish } from "./llm.js";
-import { articleSetPath, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
+import { articleSetSourcePath, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
 import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
 import { isRxfp1Article, RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
 import { isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
@@ -186,7 +186,7 @@ async function buildPaperIndex(id: string, mtimeMs: number): Promise<PaperIndex>
 
 // 論文JSONが再取り込みで更新されたら（mtime が変われば）作り直す。
 async function paperIndex(id: string): Promise<PaperIndex> {
-  const mtimeMs = fs.statSync(articleSetPath(id)).mtimeMs;
+  const mtimeMs = fs.statSync(articleSetSourcePath(id)).mtimeMs;
   const cached = cache.get(id);
   if (cached) {
     const index = await cached.catch(() => null);

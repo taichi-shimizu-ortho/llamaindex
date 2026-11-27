@@ -6,6 +6,8 @@ import { after, test } from "node:test";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "jats-harvester-test-"));
 process.env.OBSIDIAN_DIR = root;
+// 正本（article-ingest）も一時フォルダを見る。実データ（Dropbox の箱）を読まない。
+process.env.ARTICLE_JSON_DATA_HOME = path.join(root, "article-json");
 after(() => fs.rmSync(root, { recursive: true, force: true }));
 
 const { jatsCitationBaseId, parseJatsArticle, parseJatsAuthors } = await import("./sageJatsHarvester.js");

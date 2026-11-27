@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
-import { inferMeta } from "./articleHarvester.js";
+import { canonicalEntryFor, inferMeta, listArticleSets, resolveArticleId } from "./articleHarvester.js";
+import { canonicalReferenceSet } from "./canonicalStore.js";
 import { classifyArticleType, type ArticleType } from "../shared/articleType.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
@@ -1137,31 +1138,45 @@ export function referenceHtmlPath(id: string): string {
   return path.join(PATHS.rawHtmlDir, `${id}.source.html`);
 }
 
-export function loadReferenceSet(id: string): ReferenceSet {
-  const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  const raw = fs.readFileSync(referenceSetPath(safeId), "utf-8");
+function loadLegacyReferenceSet(id: string): ReferenceSet {
+  const raw = fs.readFileSync(referenceSetPath(id), "utf-8");
   return decodeEntityStrings(JSON.parse(raw) as ReferenceSet);
 }
 
+// 正本から読む論文の参考文献は正本から作り、旧 reference_sets/<id>.json の PubMed 情報を重ねる。
+export function loadReferenceSet(id: string): ReferenceSet {
+  const safeId = resolveArticleId(id);
+  const canonical = canonicalEntryFor(safeId);
+  if (!canonical) return loadLegacyReferenceSet(safeId);
+  const legacy = fs.existsSync(referenceSetPath(safeId)) ? loadLegacyReferenceSet(safeId) : undefined;
+  return canonicalReferenceSet(canonical, safeId, legacy);
+}
+
 export function listReferenceSets() {
-  if (!fs.existsSync(PATHS.referenceOutputDir)) return [];
-  return fs
-    .readdirSync(PATHS.referenceOutputDir)
-    .filter((f) => f.endsWith(".json"))
-    .map((file) => {
-      const set = decodeEntityStrings(
-        JSON.parse(fs.readFileSync(path.join(PATHS.referenceOutputDir, file), "utf-8")) as ReferenceSet,
-      );
-      return {
-        id: set.id,
-        title: set.title,
-        sourceUrl: set.sourceUrl,
-        totalReferences: set.totalReferences,
-        abstractFound: set.abstractFound,
-        createdAt: set.createdAt,
-      };
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const summary = (set: ReferenceSet) => ({
+    id: set.id,
+    title: set.title,
+    sourceUrl: set.sourceUrl,
+    totalReferences: set.totalReferences,
+    abstractFound: set.abstractFound,
+    createdAt: set.createdAt,
+  });
+  const byId = new Map<string, ReturnType<typeof summary>>();
+  if (fs.existsSync(PATHS.referenceOutputDir)) {
+    for (const file of fs.readdirSync(PATHS.referenceOutputDir).filter((f) => f.endsWith(".json"))) {
+      const set = loadLegacyReferenceSet(file.slice(0, -5));
+      byId.set(set.id, summary(set));
+    }
+  }
+  for (const article of listArticleSets()) {
+    if (!article.canonicalId) continue;
+    try {
+      byId.set(article.id, summary(loadReferenceSet(article.id)));
+    } catch (e) {
+      console.warn(`[canonical] references of ${article.id}: ${String((e as Error)?.message ?? e)}`);
+    }
+  }
+  return [...byId.values()].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 }
 
 import { assertNotBotCheckPage } from "./botCheck.js";

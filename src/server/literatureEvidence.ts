@@ -1,11 +1,8 @@
 // Read-only retrieval over the configured local literature. Keep quotations and locators
 // server-owned so generation can only link to records that were actually retrieved.
 import { createHash } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { PATHS } from "./config.js";
-import type { ArticleSet } from "./articleHarvester.js";
-import type { ReferenceSet } from "./referenceHarvester.js";
+import { listArticleSets, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { listReferenceSets, loadReferenceSet, type ReferenceSet } from "./referenceHarvester.js";
 import type { CitationCheck, Evidence, LiteratureCollection, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
 import { rxfp1DocumentIds } from "./library.js";
 import { isRxfp1Article } from "../shared/rxfp1.js";
@@ -113,19 +110,12 @@ function sourceFromSet(set: ArticleSet): Source {
   };
 }
 
-function readSets<T>(dir: string, errors: string[]): T[] {
-  let files: string[];
-  try {
-    files = fs.readdirSync(dir);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") errors.push(`Could not read ${path.basename(dir)}.`);
-    return [];
-  }
-  return files.filter((file) => file.endsWith(".json")).flatMap((file) => {
+function readCatalog<T>(items: { id: string }[], load: (id: string) => T, label: string, errors: string[]): T[] {
+  return items.flatMap(({ id }) => {
     try {
-      return [JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")) as T];
+      return [load(id)];
     } catch {
-      errors.push(`Could not read ${path.basename(dir)}/${file}.`);
+      errors.push(`Could not read ${label}/${id}.json.`);
       return [];
     }
   });
@@ -160,7 +150,8 @@ export function loadLiterature(collection: LiteratureCollection = "current") {
   const includes = (id: string) => !selected || selected.has(id);
   if (selected && !selected.size) errors.push("The current RXFP1 folder has no assigned articles.");
   const sources: Source[] = [];
-  for (const set of readSets<ArticleSet>(PATHS.articleOutputDir, errors)) {
+  // 正本の射影と article_sets/ を合わせた目録から読む（articleHarvester.ts の catalog）
+  for (const set of readCatalog<ArticleSet>(listArticleSets(), loadArticleSet, "article_sets", errors)) {
     if (!includes(set?.id)) continue;
     try {
       sources.push(sourceFromSet(set));
@@ -168,7 +159,7 @@ export function loadLiterature(collection: LiteratureCollection = "current") {
       errors.push(`Could not extract article ${set?.id ?? "(unknown ID)"}.`);
     }
   }
-  const abstractSources = readSets<ReferenceSet>(PATHS.referenceOutputDir, errors).filter((set) => includes(set?.id)).flatMap((set) =>
+  const abstractSources = readCatalog<ReferenceSet>(listReferenceSets(), loadReferenceSet, "reference_sets", errors).filter((set) => includes(set?.id)).flatMap((set) =>
     (Array.isArray(set?.records) ? set.records : []).flatMap((record): Source[] => {
       const meta = record?.pubmed;
       if (!meta?.title || !meta.abstract?.trim() || !meta.pmid) return [];

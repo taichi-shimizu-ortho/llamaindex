@@ -11,6 +11,7 @@ export default defineConfig({
     proxy: {
       "/api": `http://localhost:${process.env.PORT ?? 5174}`,
       "/raw_html": `http://localhost:${process.env.PORT ?? 5174}`,
+      "/canonical-figures": `http://localhost:${process.env.PORT ?? 5174}`,
     },
   },
   build: {

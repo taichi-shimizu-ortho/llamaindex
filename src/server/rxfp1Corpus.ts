@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
-import { articleSetPath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
+import { articleSetSourcePath, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
 import { PATHS } from "./config.js";
 import { rxfp1DocumentIds } from "./library.js";
 import { rxfp1ArticleId } from "../shared/rxfp1.js";
@@ -229,12 +229,12 @@ let cached: Rxfp1Catalogue | undefined;
 
 export function loadRxfp1Corpus(): Rxfp1Catalogue {
   const ids = [...rxfp1DocumentIds()].sort();
-  const stamp = JSON.stringify(ids.map((id) => [id, fileStamp(articleSetPath(id))]));
+  const stamp = JSON.stringify(ids.map((id) => [id, fileStamp(articleSetSourcePath(id))]));
   if (cached?.stamp === stamp) return cached;
   const articles = new Map<string, ArticleSet>();
   const errors: string[] = [];
   for (const id of ids) {
-    if (!fs.existsSync(articleSetPath(id))) continue;
+    if (!fs.existsSync(articleSetSourcePath(id))) continue;
     try {
       articles.set(id, loadArticleSet(id));
     } catch {
