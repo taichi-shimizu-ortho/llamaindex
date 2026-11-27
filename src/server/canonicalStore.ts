@@ -81,7 +81,14 @@ export function projectCanonical(entry: CanonicalEntry, id: string): ArticleSet 
       `${CANONICAL_FIGURE_ROUTE}/${encodeURIComponent(article.id)}/${encodeURIComponent(file)}`,
   });
   const checkedAt = entry.article.classification?.checkedAt;
-  return { ...projected, ...(checkedAt ? { pubmedCheckedAt: checkedAt } : {}) } as ArticleSet;
+  // 引用キー以外の別名（旧 rxfp1.* の id、出版前の原稿 id など）は、旧データと同じく legacyRxfp1Ids で渡す。
+  // RXFP1 の索引とクライアントの id の引き当てがこれを見る。
+  const others = entry.aliases.filter((alias) => alias !== id);
+  return {
+    ...projected,
+    ...(checkedAt ? { pubmedCheckedAt: checkedAt } : {}),
+    ...(others.length ? { legacyRxfp1Ids: others } : {}),
+  } as ArticleSet;
 }
 
 // 参考文献。PubMed の abstract・MeSH は正本にまだ無いので、旧 reference_sets/<id>.json があれば
