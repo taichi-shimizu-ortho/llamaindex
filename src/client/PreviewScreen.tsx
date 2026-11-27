@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { ArticleContentBrowser, locateParagraph, ReferenceRow, TARGET_PARAGRAPH_ID } from "./ArticleBrowser.js";
 import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
-import { authorYearLabel, documentLabel, documentsInFolder, flattenFolders, matchingReferenceSet } from "./documents.js";
+import { authorYearLabel, documentLabel, documentsInFolder, flattenFolders, matchingReferenceSet, sourceLabel } from "./documents.js";
 import { ReferenceMapContext } from "./markdown.js";
 import type {
   ArticleSet,
@@ -200,6 +200,8 @@ export function PreviewScreen({
               {shown.authors?.length > 0 && <div className="article-authors">{shown.authors.join(", ")}</div>}
               <p className="article-source-url">
                 <span className="doc-id">{shown.id}</span>
+                {" · "}
+                <span className="doc-origin" title={sourceLabel(shown).title}>{sourceLabel(shown).text}</span>
                 {shown.doi && (
                   <>
                     {" · "}

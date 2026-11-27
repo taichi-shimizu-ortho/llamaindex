@@ -24,14 +24,65 @@ function cleanJatsText(html: string): string {
   return stripTags(cited);
 }
 
+// タグ名の直後に \b を使うと <fig-count/> が <fig、<def-item> が <def、<ref-list> が <ref に当たる
+// （"-" は単語境界）。名前が続かないことを先読みで確かめる。
+const tagStart = (tag: string) => `<${tag}(?![-\\w])`;
+
 function extractTagContent(xml: string, tag: string): string[] {
   const results: string[] = [];
-  const regex = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, "gi");
+  const regex = new RegExp(`${tagStart(tag)}[^>]*>([\\s\\S]*?)</${tag}>`, "gi");
   let match;
   while ((match = regex.exec(xml)) !== null) {
     results.push(match[1]);
   }
   return results;
+}
+
+// 本文の <p> に見えて本文段落ではないもの。表のセル・脚注と図の説明文は <p> を含むことがあり
+// （Springer / BMC の JATS では各セルが <p>）、そのまま拾うとセル1つが1段落になる。表と図は別の節として取り込む。
+// 略語一覧（def-list）も1語ずつの段落になるので、略語の節としてまとめる。
+const NON_PARAGRAPH_BLOCKS = ["table-wrap-group", "table-wrap", "fig-group", "fig", "def-list"];
+
+// ラベルも説明も無い table-wrap は表ではなく囲み記事（Springer の Key Points など）。セルの文を本文として残す。
+function isBoxedTextTable(tableWrap: string): boolean {
+  return !/<(?:label|caption)\b/i.test(tableWrap);
+}
+
+function withoutNonParagraphBlocks(xml: string): string {
+  return NON_PARAGRAPH_BLOCKS.reduce(
+    (out, tag) =>
+      out.replace(new RegExp(`${tagStart(tag)}[^>]*?(?:/>|>[\\s\\S]*?</${tag}>)`, "gi"), (block) =>
+        tag === "table-wrap" && isBoxedTextTable(block)
+          ? extractTagContent(block, "td").map((cell) => `<p>${cell}</p>`).join("")
+          : " ",
+      ),
+    xml,
+  );
+}
+
+function bodyParagraphs(xml: string): string[] {
+  return extractTagContent(withoutNonParagraphBlocks(xml), "p").map(cleanJatsText).filter(Boolean);
+}
+
+function parseDefLists(body: string): ArticleSection[] {
+  return extractTagContent(body, "def-list").flatMap((list) => {
+    const items = extractTagContent(list, "def-item")
+      .map((item) => {
+        const term = cleanJatsText(extractTagContent(item, "term")[0] ?? "");
+        const def = cleanJatsText(extractTagContent(item, "def")[0] ?? "");
+        return term && def ? `${term}: ${def}` : "";
+      })
+      .filter(Boolean);
+    if (!items.length) return [];
+    const title = cleanJatsText(list.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "") || "Abbreviations";
+    const text = items.join("; ");
+    return [{ title, type: "body", content: text, paragraphs: [text], subsections: [] }];
+  });
+}
+
+export function parseJatsTitle(jatsXml: string): string {
+  const articleMeta = jatsXml.match(/<article-meta\b[^>]*>([\s\S]*?)<\/article-meta>/i)?.[1] ?? "";
+  return stripTags(articleMeta.match(/<article-title[^>]*>([\s\S]*?)<\/article-title>/i)?.[1] ?? "");
 }
 
 // 著者の判定は <contrib> の開始タグの属性で行う。要素の中身には contrib-type が無く、
@@ -86,11 +137,7 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
   const articleMetaMatch = jatsXml.match(/<article-meta[^>]*>([\s\S]*?)<\/article-meta>/i);
   const articleMeta = articleMetaMatch ? articleMetaMatch[1] : "";
 
-  let title = baseInfo.title;
-  if (!title) {
-    const titleMatch = articleMeta.match(/<article-title[^>]*>([\s\S]*?)<\/article-title>/i);
-    if (titleMatch) title = stripTags(titleMatch[1]);
-  }
+  const title = baseInfo.title || parseJatsTitle(jatsXml);
 
   const doiMatch = articleMeta.match(/<article-id[^>]*pub-id-type=["']doi["'][^>]*>([\s\S]*?)<\/article-id>/i);
   const doi = doiMatch ? stripTags(doiMatch[1]).trim() : "";
@@ -147,7 +194,7 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
     // Check if there is text before the first <sec> (usually Introduction)
     const firstSecMatch = bodyContent.match(/<sec\b/i);
     const beforeSecContent = firstSecMatch ? bodyContent.substring(0, firstSecMatch.index) : bodyContent;
-    const introParagraphs = extractTagContent(beforeSecContent, "p").map(cleanJatsText);
+    const introParagraphs = bodyParagraphs(beforeSecContent);
     if (introParagraphs.length > 0) {
       sections.push({
         title: "Introduction",
@@ -192,14 +239,13 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
       for (const sub of subSecs) {
         contentNoSubSec = contentNoSubSec.replace(sub, "");
       }
-      const paragraphs: string[] = [];
-      paragraphs.push(...extractTagContent(contentNoSubSec, "p").map(cleanJatsText));
+      const paragraphs = bodyParagraphs(contentNoSubSec);
 
       const subsections: ArticleSubsection[] = [];
       for (const sub of subSecs) {
         const subTitleMatch = sub.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
         const subTitle = subTitleMatch ? stripTags(subTitleMatch[1]) : "";
-        const subParagraphs = extractTagContent(sub, "p").map(cleanJatsText);
+        const subParagraphs = bodyParagraphs(sub);
         if (subTitle && subParagraphs.length > 0) {
           subsections.push({ title: subTitle, content: subParagraphs.join(" "), paragraphs: subParagraphs });
         }
@@ -207,11 +253,14 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
 
       sections.push({ title: secTitle, type: "body", content: paragraphs.join("\n"), paragraphs, subsections });
     }
+
+    sections.push(...parseDefLists(bodyContent));
   }
 
   const parseTables = (xml: string) => {
     const tws = extractTagContent(xml, "table-wrap");
     for (const tw of tws) {
+      if (isBoxedTextTable(tw)) continue; // 本文として取り込み済み
       const labelMatch = tw.match(/<label[^>]*>([\s\S]*?)<\/label>/i);
       const label = labelMatch ? stripTags(labelMatch[1]) : "Table";
       const capMatch = tw.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
@@ -247,12 +296,15 @@ export function parseJatsArticle(jatsXml: string, baseInfo: { id: string, source
           if (i === 0) mdRows.push(`| ${Array(width).fill("---").join(" | ")} |`);
         });
       }
+      // 脚注（略語・統計の注・群の定義など）は表の読み方に要るので、本文ではなく表の節に付ける。
+      const foot = cleanJatsText(tw.match(/<table-wrap-foot\b[^>]*>([\s\S]*?)<\/table-wrap-foot>/i)?.[1] ?? "");
       if (mdRows.length) {
+        const text = [`${label}. ${caption}`, mdRows.join("\n"), foot].filter(Boolean).join("\n");
         sections.push({
           title: label,
           type: "table",
-          content: `${label}. ${caption}\n${mdRows.join("\n")}`,
-          paragraphs: [`${label}. ${caption}\n${mdRows.join("\n")}`],
+          content: text,
+          paragraphs: [text],
           subsections: []
         });
       }

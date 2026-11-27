@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
-import { inferMeta } from "./articleHarvester.js";
+import { canonicalEntryFor, inferMeta, listArticleSets, resolveArticleId } from "./articleHarvester.js";
+import { canonicalReferenceSet } from "./canonicalStore.js";
 import { classifyArticleType, type ArticleType } from "../shared/articleType.js";
 
 const ENTREZ_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
@@ -1137,40 +1138,73 @@ export function referenceHtmlPath(id: string): string {
   return path.join(PATHS.rawHtmlDir, `${id}.source.html`);
 }
 
-export function loadReferenceSet(id: string): ReferenceSet {
-  const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  const raw = fs.readFileSync(referenceSetPath(safeId), "utf-8");
+function loadLegacyReferenceSet(id: string): ReferenceSet {
+  const raw = fs.readFileSync(referenceSetPath(id), "utf-8");
   return decodeEntityStrings(JSON.parse(raw) as ReferenceSet);
 }
 
-export function listReferenceSets() {
-  if (!fs.existsSync(PATHS.referenceOutputDir)) return [];
-  return fs
-    .readdirSync(PATHS.referenceOutputDir)
-    .filter((f) => f.endsWith(".json"))
-    .map((file) => {
-      const set = decodeEntityStrings(
-        JSON.parse(fs.readFileSync(path.join(PATHS.referenceOutputDir, file), "utf-8")) as ReferenceSet,
-      );
-      return {
-        id: set.id,
-        title: set.title,
-        sourceUrl: set.sourceUrl,
-        totalReferences: set.totalReferences,
-        abstractFound: set.abstractFound,
-        createdAt: set.createdAt,
-      };
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+// 正本から読む論文の参考文献は正本から作り、旧 reference_sets/<id>.json の PubMed 情報を重ねる。
+export function loadReferenceSet(id: string): ReferenceSet {
+  const safeId = resolveArticleId(id);
+  const canonical = canonicalEntryFor(safeId);
+  if (!canonical) return loadLegacyReferenceSet(safeId);
+  let legacy: ReferenceSet | undefined;
+  if (fs.existsSync(referenceSetPath(safeId))) {
+    try {
+      legacy = loadLegacyReferenceSet(safeId);
+    } catch (error) {
+      console.warn(`Could not read reference_sets/${safeId}.json.`, error);
+    }
+  }
+  return canonicalReferenceSet(canonical, safeId, legacy);
 }
 
-import { jatsCitationBaseId, parseJatsReferences } from "./sageJatsHarvester.js";
+export function readReferenceSets(report: (message: string) => void = console.warn): ReferenceSet[] {
+  const byId = new Map<string, ReferenceSet>();
+  let files: string[] = [];
+  try {
+    files = fs.readdirSync(PATHS.referenceOutputDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") report("Could not read reference_sets.");
+  }
+  for (const file of files.filter((name) => name.endsWith(".json"))) {
+    try {
+      const set = loadLegacyReferenceSet(file.slice(0, -5));
+      byId.set(set.id, set);
+    } catch {
+      report(`Could not read reference_sets/${file}.`);
+    }
+  }
+  for (const article of listArticleSets()) {
+    if (!article.canonicalId) continue;
+    try {
+      const entry = canonicalEntryFor(article.id);
+      if (entry) byId.set(article.id, canonicalReferenceSet(entry, article.id, byId.get(article.id)));
+    } catch (error) {
+      report(`[canonical] references of ${article.id}: ${String(error)}`);
+    }
+  }
+  return [...byId.values()];
+}
+
+export function listReferenceSets() {
+  return readReferenceSets()
+    .map(({ id, title, sourceUrl, totalReferences, abstractFound, createdAt }) =>
+      ({ id, title, sourceUrl, totalReferences, abstractFound, createdAt }))
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+}
+
+import { assertNotBotCheckPage } from "./botCheck.js";
+import { jatsCitationBaseId, parseJatsReferences, parseJatsTitle } from "./sageJatsHarvester.js";
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
-  if (!options.sourceUrl && !options.html) throw new Error("Enter a URL or HTML");
+  if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
-  const html = options.html ?? (await fetchText(sourceUrl, {}));
-  const title = options.title?.trim() || inferTitle(html, sourceUrl);
+  // JATS があれば参考文献は JATS から取るので、元URLは取りに行かない（harvestArticle と同じ理由）。
+  const html = options.html ?? (options.jatsXml ? "" : await fetchText(sourceUrl, {}));
+  if (html) assertNotBotCheckPage(html, sourceUrl);
+  const title =
+    options.title?.trim() || (html ? inferTitle(html, sourceUrl) : parseJatsTitle(options.jatsXml ?? "")) || sourceUrl;
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));
   
   const baseId = html || !options.jatsXml

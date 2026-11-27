@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { assertNotBotCheckPage } from "./botCheck.js";
+import { canonicalEntries, doiKey, projectCanonical, type CanonicalEntry } from "./canonicalStore.js";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 import type { MainArticleType } from "../shared/articleType.js";
@@ -44,6 +46,9 @@ export interface ArticleSet {
   // "manual" は PubMed に未収載の論文（accept 直後の原稿など）に手で付けた種別。分類し直さない
   articleTypeSource?: "pubmed" | "manual";
   pubmedCheckedAt?: string;
+  // 正本（article-ingest）から射影した論文だけが持つ。extractionSource は "article-json:<flavor>"
+  canonicalId?: string;
+  qualityWarnings?: string[];
 }
 
 export interface ArticleHarvestOptions {
@@ -699,30 +704,131 @@ export function buildSections(html: string): ArticleSection[] {
   return validSections;
 }
 
+// 旧形式（article_sets/<id>.json）のパス。取り込み・PDF・分類の書き込み先はこちら。
 export function articleSetPath(id: string): string {
   return path.join(PATHS.articleOutputDir, `${id}.json`);
 }
 
+/* ------------------------------------------------------------------ *
+ * 論文の目録：正本（article-ingest）の射影と旧 article_sets/ を合わせたもの
+ *
+ * - 同じ DOI が両方にあれば正本を優先し、旧 JSON は読まない（消しもしない）。
+ * - 射影の id は同じ DOI の旧 id、無ければ正本の aliases[0]、それも無ければ正本の id。
+ *   引用キーが変わらないので library.json・フォルダ・引用ラベル・保存済みの md・埋め込みはそのまま使える。
+ * - DOI の無い論文と、正本に無い論文（PDF 由来など）は article_sets/ から読む。
+ * ------------------------------------------------------------------ */
+
+interface LegacyEntry {
+  id: string;
+  file: string;
+  set: ArticleSet;
+}
+
+type CatalogEntry =
+  | { id: string; source: "canonical"; file: string; canonical: CanonicalEntry }
+  | { id: string; source: "legacy"; file: string; legacy: LegacyEntry };
+
+let legacyCache: { stamp: string; entries: LegacyEntry[] } | null = null;
+
+function legacyEntries(): LegacyEntry[] {
+  let names: string[];
+  try {
+    names = fs.readdirSync(PATHS.articleOutputDir).filter((f) => f.endsWith(".json")).sort();
+  } catch {
+    return [];
+  }
+  const files = names.map((name) => path.join(PATHS.articleOutputDir, name));
+  const stamp = files.map((file) => `${file}:${fs.statSync(file).mtimeMs}`).join("|");
+  if (legacyCache?.stamp === stamp) return legacyCache.entries;
+  const entries: LegacyEntry[] = [];
+  for (const file of files) {
+    try {
+      const set = JSON.parse(fs.readFileSync(file, "utf-8")) as ArticleSet;
+      entries.push({ id: path.basename(file, ".json"), file, set });
+    } catch {
+      // 読めない JSON は一覧に出さない（従来どおり、開こうとしたときにエラーになる）
+    }
+  }
+  legacyCache = { stamp, entries };
+  return entries;
+}
+
+function catalog(): Map<string, CatalogEntry> {
+  const legacy = legacyEntries();
+  const legacyById = new Map(legacy.map((entry) => [entry.id, entry]));
+  const legacyByDoi = new Map<string, string>();
+  for (const entry of legacy) {
+    const doi = doiKey(entry.set.doi);
+    if (doi && !legacyByDoi.has(doi)) legacyByDoi.set(doi, entry.id);
+  }
+
+  const out = new Map<string, CatalogEntry>();
+  const shadowed = new Set<string>();
+  for (const canonical of canonicalEntries()) {
+    const legacyId = canonical.doi ? legacyByDoi.get(canonical.doi) : undefined;
+    let id = legacyId ?? canonical.aliases[0] ?? canonical.canonicalId;
+    const clash = legacyById.get(id);
+    if (clash && doiKey(clash.set.doi) !== canonical.doi) {
+      console.warn(`[canonical] alias ${id} of ${canonical.canonicalId} is another paper in article_sets; using ${canonical.canonicalId}`);
+      id = canonical.canonicalId;
+    }
+    if (out.has(id)) {
+      console.warn(`[canonical] ${canonical.canonicalId} and ${(out.get(id) as { canonical: CanonicalEntry }).canonical.canonicalId} both map to ${id}; keeping the first`);
+      continue;
+    }
+    out.set(id, { id, source: "canonical", file: canonical.file, canonical });
+    if (legacyId) shadowed.add(legacyId);
+    if (legacyById.has(id)) shadowed.add(id);
+  }
+  for (const entry of legacy) {
+    if (shadowed.has(entry.id) || out.has(entry.id)) continue;
+    out.set(entry.id, { id: entry.id, source: "legacy", file: entry.file, legacy: entry });
+  }
+  return out;
+}
+
+function safeArticleId(id: string): string {
+  return id.replace(/[^a-zA-Z0-9_.-]/g, "");
+}
+
+// 論文の本文がどこにあるか（正本ならそのファイル）。埋め込みのキャッシュの鮮度判定に使う。
+export function articleSetSourcePath(id: string): string {
+  return catalog().get(safeArticleId(id))?.file ?? articleSetPath(safeArticleId(id));
+}
+
+export function canonicalEntryFor(id: string): CanonicalEntry | undefined {
+  const entry = catalog().get(safeArticleId(id));
+  return entry?.source === "canonical" ? entry.canonical : undefined;
+}
+
 export function loadArticleSet(id: string): ArticleSet {
-  const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
+  const safeId = safeArticleId(id);
+  const entry = catalog().get(safeId);
+  if (entry?.source === "canonical") return projectCanonical(entry.canonical, entry.id);
+  // 旧形式は毎回読み直す（呼び出し側が書き換えて保存することがあるので、共有の物を返さない）
   return JSON.parse(fs.readFileSync(articleSetPath(safeId), "utf-8")) as ArticleSet;
 }
 
 export function resolveArticleId(id: string): string {
-  const safeId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
-  if (!safeId.startsWith("rxfp1.") || fs.existsSync(articleSetPath(safeId))) return safeId;
+  const safeId = safeArticleId(id);
+  const entries = catalog();
+  if (entries.has(safeId)) return safeId;
+  // 正本の id（DOI 由来）や別名で呼ばれたら、目録の id に直す
+  for (const entry of entries.values()) {
+    if (entry.source === "canonical" && (entry.canonical.canonicalId === safeId || entry.canonical.aliases.includes(safeId))) {
+      return entry.id;
+    }
+  }
+  if (!safeId.startsWith("rxfp1.")) return safeId;
   return listArticleSets().find((set) => set.legacyRxfp1Ids?.includes(safeId))?.id ?? safeId;
 }
 
 export function listArticleSets() {
-  if (!fs.existsSync(PATHS.articleOutputDir)) return [];
-  return fs
-    .readdirSync(PATHS.articleOutputDir)
-    .filter((f) => f.endsWith(".json"))
-    .map((file) => {
-      const set = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, file), "utf-8")) as ArticleSet;
+  return [...catalog().values()]
+    .map((entry) => {
+      const set = entry.source === "canonical" ? projectCanonical(entry.canonical, entry.id) : entry.legacy.set;
       return {
-        id: set.id,
+        id: entry.id,
         title: set.title,
         // Preview の論文選択で「著者 年」表示に使う。
         authors: set.authors ?? [],
@@ -734,24 +840,21 @@ export function listArticleSets() {
         legacyRxfp1Ids: set.legacyRxfp1Ids,
         chunkCount: set.chunkCount,
         createdAt: set.createdAt,
+        // どこから読んだか（UI に小さく出す）
+        canonicalId: set.canonicalId,
+        extractionSource: set.extractionSource ?? "",
       };
     })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 }
 
 export function articleIdForDoi(doi: string): string | undefined {
-  const key = (value: string) => value.trim().toLowerCase().replace(/^https?:\/\/(?:dx\.)?doi\.org\//, "");
-  const target = key(doi);
-  if (!target || !fs.existsSync(PATHS.articleOutputDir)) return undefined;
-  for (const name of fs.readdirSync(PATHS.articleOutputDir).sort()) {
-    if (!name.endsWith(".json")) continue;
-    try {
-      const article = JSON.parse(fs.readFileSync(path.join(PATHS.articleOutputDir, name), "utf8")) as ArticleSet;
-      if (key(article.doi ?? "") === target) return name.slice(0, -5);
-    } catch {
-      // An unreadable article does not establish a DOI match.
-    }
-  }
+  const target = doiKey(doi);
+  if (!target) return undefined;
+  const entries = [...catalog().values()];
+  // 正本を先に見る（同じ DOI の旧 JSON は目録から外れているが、念のため順を決めておく）
+  for (const entry of entries) if (entry.source === "canonical" && entry.canonical.doi === target) return entry.id;
+  for (const entry of entries) if (entry.source === "legacy" && doiKey(entry.legacy.set.doi) === target) return entry.id;
   return undefined;
 }
 
@@ -760,9 +863,11 @@ import { jatsCitationBaseId, parseJatsArticle } from "./sageJatsHarvester.js";
 export async function harvestArticle(options: ArticleHarvestOptions): Promise<ArticleSet> {
   if (!options.sourceUrl && !options.html && !options.jatsXml) throw new Error("Enter a URL, HTML, or JATS XML");
   const sourceUrl = options.sourceUrl?.trim() ?? "";
-  const html = options.html ?? (sourceUrl ? await fetchText(sourceUrl) : "");
+  // JATS があれば本文もメタデータも JATS から取るので、元URLは取りに行かない（HTML は渡されたときだけ図のURL補完に使う）。
+  const html = options.html ?? (sourceUrl && !options.jatsXml ? await fetchText(sourceUrl) : "");
+  if (html) assertNotBotCheckPage(html, sourceUrl);
   const title = options.title?.trim() || (html ? inferTitle(html, sourceUrl) : "");
-  
+
   const baseId = html || !options.jatsXml
     ? citationBaseId(html, title, slugify(title || sourceUrl))
     : jatsCitationBaseId(options.jatsXml, slugify(title || sourceUrl));
@@ -770,7 +875,8 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
   let set: ArticleSet | null = null;
   let finalDoi = "";
   if (options.jatsXml) {
-    const parsed = parseJatsArticle(options.jatsXml, { id: "dummy", sourceUrl, title });
+    // 題名は JATS の article-title を優先する。明示された title だけが上書きできる。
+    const parsed = parseJatsArticle(options.jatsXml, { id: "dummy", sourceUrl, title: options.title?.trim() });
     if (parsed) {
       set = parsed as ArticleSet;
       finalDoi = set.doi || "";
@@ -834,7 +940,7 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
 
   if (!set) throw new Error("Failed to extract article content");
   
-  const id = articleIdForDoi(finalDoi) ?? uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, title);
+  const id = articleIdForDoi(finalDoi) ?? uniqueJsonId(PATHS.articleOutputDir, baseId, sourceUrl, finalDoi, set.title || title);
   set.id = id;
   if (fs.existsSync(articleSetPath(id))) {
     const previous = loadArticleSet(id);

@@ -186,7 +186,7 @@ Documents で選んだフォルダ（または手動で選んだ論文）の本�
   論文間で結果が違うときは論文ラベルを添えて比べ、総説に拠る記述はそう断るよう指示している。
 - **埋め込み**: 論文ごとにディスクキャッシュする（`embeddings_cache/corpus/<id>.json`）。組み合わせを変えても再埋め込みしない。
   RAG 画面を開いた時点で未作成の分だけ作る。論文JSONを取り込み直すと（更新日時が変われば）作り直す。
-- 毎回の質問と回答・根拠段落は `<Obsidian>/50_coding/llamaindex/<日時>_corpus_rag.md` に追記する。
+- 毎回の質問と回答・根拠段落は、文献セット（フォルダ）ごとの `<Obsidian>/50_coding/llamaindex/<文献セット名>_corpus_rag.md`（例: `MSC-OXT_corpus_rag.md`）に追記する。
 - 対象論文一覧の論文ラベルを押すとその論文の Preview を、根拠段落の `Open in paper →` を押すと Preview の該当段落（図なら該当の図）を開く。
 
 ### 3. Preview（取り込み済み論文を1本読む）
@@ -269,8 +269,15 @@ op run --env-file=.env.1password -- npm run embed:rxfp1
 
 ## 実行
 
+`llamaindex` と同じ親ディレクトリに `article-ingest` が必要です。初回は `llamaindex` のルートで次を実行します。すでにクローン済みの場合は1行目を省略できます。
+
 ```bash
-npm install
+git clone https://github.com/taichi-shimizu-ortho/article-ingest.git ../article-ingest
+npm ci --prefix ../article-ingest
+```
+
+```bash
+npm ci
 npm run dev
 ```
 

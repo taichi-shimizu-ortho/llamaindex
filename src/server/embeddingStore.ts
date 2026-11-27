@@ -58,6 +58,12 @@ function loadCache(namespace: string, id: string, signature: string): number[][]
   return null;
 }
 
+// 保存済みの埋め込みだけを返す（API は呼ばない）。texts が保存時と違えば null。
+export function cachedEmbeddings(namespace: string, id: string, texts: string[]): number[][] | null {
+  const cached = loadCache(namespace, id, signatureOf(texts));
+  return cached && cached.length === texts.length ? cached : null;
+}
+
 function saveCache(namespace: string, id: string, signature: string, embeddings: number[][]): void {
   const file = cacheFilePath(namespace, id);
   fs.mkdirSync(path.dirname(file), { recursive: true });

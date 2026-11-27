@@ -6,6 +6,8 @@ import { after, test } from "node:test";
 
 const testDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "manuscript-review-test-"));
 process.env.OBSIDIAN_DIR = testDirectory;
+// 正本（article-ingest）も一時フォルダを見る。実データ（Dropbox の箱）を読まない。
+process.env.ARTICLE_JSON_DATA_HOME = path.join(testDirectory, "article-json");
 process.env.MANUSCRIPT_LITERATURE_FILE = "";
 after(() => fs.rmSync(testDirectory, { recursive: true, force: true }));
 

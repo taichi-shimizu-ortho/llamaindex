@@ -56,6 +56,9 @@ export interface ArticleSetSummary {
   legacyRxfp1Ids?: string[];
   chunkCount: number;
   createdAt: string;
+  // 正本（article-ingest）から読んだ論文だけが持つ。extractionSource は "article-json:<flavor>" など、読み込みの経路
+  canonicalId?: string;
+  extractionSource?: string;
 }
 
 export interface Rxfp1ArticleSummary extends ArticleSetSummary {
@@ -93,6 +96,8 @@ export interface ArticleSet {
   pmid?: string;
   publicationTypes?: string[];
   articleType?: MainArticleType | null;
+  canonicalId?: string;
+  extractionSource?: string;
 }
 
 /** Preview で開く論文と、RAG の段落から来たときの飛び先 */
@@ -105,7 +110,7 @@ export interface PreviewTarget {
 
 // ---- 複数論文 RAG（corpus） ----
 
-export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "figure" | "table" | "other";
+export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "review" | "figure" | "table" | "other";
 
 export interface CorpusPaper {
   id: string;
@@ -164,6 +169,7 @@ export interface CorpusQueryResult {
   skipped: CorpusSkipped[];
   originalQuery: string;
   enQuery: string;
+  articleTypes?: MainArticleType[];
   sectionGroups: SectionGroup[];
   topK: number;
   perPaper: number;

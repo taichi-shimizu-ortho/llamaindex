@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { MODELS } from "./config.js";
 import { cosineSimilarity, embedModel, getEmbeddings } from "./embeddingStore.js";
 import { generateAnswer, hasJapanese, translateToEnglish } from "./llm.js";
-import { articleSetPath, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
+import { articleSetSourcePath, loadArticleSet, resolveArticleId, type ArticleSet } from "./articleHarvester.js";
 import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
 import { isRxfp1Article, RXFP1_ARTICLE_PREFIX } from "../shared/rxfp1.js";
 import { isRxfp1Body, loadRxfp1Corpus } from "./rxfp1Corpus.js";
@@ -17,7 +17,7 @@ import { fusePassageRanks, rankByText, searchTerms } from "./passageRanking.js";
 
 // 節の種類を論文横断で揃えた分類。取り込み元によって type が "body" や "other" のこともあるので、
 // そのときは見出しから推定する。
-export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "figure" | "table" | "other";
+export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "review" | "figure" | "table" | "other";
 
 const TYPE_GROUPS: Record<string, SectionGroup> = {
   intro: "intro",
@@ -109,7 +109,7 @@ function baseLabel(id: string): string {
   return id.replace(/-\d+$/, "");
 }
 
-interface Paragraph {
+export interface Paragraph {
   text: string;
   section: string;
   subsection: string;
@@ -127,7 +127,8 @@ interface PaperIndex {
 
 // abstract は入れない。構造化 abstract が Purpose / Methods / Results … の節として本文側にも
 // 取り込まれている論文があるので（例: Yang2021）、abstract と同じ文の段落も本文から除く。
-function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
+// 検索・埋め込みの単位になる段落。scripts/export-corpus-embeddings.ts も同じ分け方で書き出す。
+export function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
   const abstract = normalized(
     set.sections
       .filter((section) => section.type === "abstract")
@@ -143,8 +144,11 @@ function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
   for (const section of set.sections) {
     if (section.type === "abstract") continue;
     if (rxfp1 && !isRxfp1Body(section.type, section.title)) continue;
-    const group = sectionGroup(section.type, section.title);
+    const rawGroup = sectionGroup(section.type, section.title);
     if (!TYPE_GROUPS[section.type] && BOILERPLATE_TITLE.test(section.title.trim())) continue;
+    // Review 論文では Figure / Table 以外の本文セクションをすべて "review" にまとめる。
+    const group: SectionGroup =
+      set.articleType === "review" && rawGroup !== "figure" && rawGroup !== "table" ? "review" : rawGroup;
 
     const push = (paragraphs: string[], subsection: string) => {
       const texts = rxfp1 ? paragraphs.map(rxfp1PassageText)
@@ -183,7 +187,7 @@ async function buildPaperIndex(id: string, mtimeMs: number): Promise<PaperIndex>
 
 // 論文JSONが再取り込みで更新されたら（mtime が変われば）作り直す。
 async function paperIndex(id: string): Promise<PaperIndex> {
-  const mtimeMs = fs.statSync(articleSetPath(id)).mtimeMs;
+  const mtimeMs = fs.statSync(articleSetSourcePath(id)).mtimeMs;
   const cached = cache.get(id);
   if (cached) {
     const index = await cached.catch(() => null);
@@ -350,6 +354,8 @@ export interface CorpusQueryResult {
   skipped: CorpusSkipped[];
   originalQuery: string;
   enQuery: string;
+  // 絞り込んだ論文種別（空 = すべて）
+  articleTypes?: MainArticleType[];
   // 絞り込んだ節の種類（空 = すべて）
   sectionGroups: SectionGroup[];
   topK: number;
@@ -364,12 +370,19 @@ export interface CorpusQueryResult {
 export interface CorpusQueryOptions {
   topK?: number;
   perPaper?: number;
+  articleTypes?: unknown;
   sectionGroups?: unknown;
   translate?: boolean;
   scopeLabel?: unknown;
 }
 
-const ALL_GROUPS: SectionGroup[] = ["intro", "methods", "results", "discussion", "conclusion", "figure", "table", "other"];
+const ALL_ARTICLE_TYPES: MainArticleType[] = ["original", "review"];
+const ALL_GROUPS: SectionGroup[] = ["intro", "methods", "results", "discussion", "conclusion", "review", "figure", "table", "other"];
+
+function normalizeArticleTypes(value: unknown): MainArticleType[] {
+  if (!Array.isArray(value)) return [];
+  return ALL_ARTICLE_TYPES.filter((t) => value.includes(t));
+}
 
 function normalizeGroups(value: unknown): SectionGroup[] {
   if (!Array.isArray(value)) return [];
@@ -432,6 +445,8 @@ export async function runCorpusQuery(
 ): Promise<CorpusQueryResult> {
   const topK = Math.max(1, Math.min(40, Number(opts.topK ?? 10) || 10));
   const perPaper = Math.max(0, Math.min(40, Number(opts.perPaper ?? 0) || 0));
+  const articleTypes = normalizeArticleTypes(opts.articleTypes);
+  const allowedArticleTypes = articleTypes.length ? new Set<MainArticleType | null>(articleTypes) : null;
   const sectionGroups = normalizeGroups(opts.sectionGroups);
   const allowed = sectionGroups.length ? new Set(sectionGroups) : null;
 
@@ -440,11 +455,20 @@ export async function runCorpusQuery(
 
   const shouldTranslate = opts.translate ?? hasJapanese(originalQuery);
   const enQuery = shouldTranslate ? await translateToEnglish(originalQuery) : originalQuery;
-  const passages = indexes.flatMap((index, p) =>
-    index.paragraphs.flatMap((para, i) =>
-      !allowed || allowed.has(para.group) ? [{ p, para, i, id: index.set.id }] : []),
-  );
-  if (!passages.length) throw new Error(`No paragraphs in the selected section types: ${sectionGroups.join(", ")}`);
+  const passages = indexes.flatMap((index, p) => {
+    if (allowedArticleTypes && !allowedArticleTypes.has(papers[p].articleType)) return [];
+    return index.paragraphs.flatMap((para, i) =>
+      !allowed || allowed.has(para.group) ? [{ p, para, i, id: index.set.id }] : []);
+  });
+  if (!passages.length) {
+    const filters = [
+      articleTypes.length ? `article types (${articleTypes.join(", ")})` : "",
+      sectionGroups.length ? `sections (${sectionGroups.join(", ")})` : "",
+    ]
+      .filter(Boolean)
+      .join(" / ");
+    throw new Error(`No paragraphs matched the selected filters${filters ? `: ${filters}` : ""}`);
+  }
 
   const searchNotes = [...(rxfp1?.notes ?? [])];
   let scored: { p: number; para: Paragraph; score: number; ranking?: CorpusSource["ranking"] }[];
@@ -517,6 +541,7 @@ export async function runCorpusQuery(
     skipped,
     originalQuery,
     enQuery,
+    articleTypes,
     sectionGroups,
     topK,
     perPaper,

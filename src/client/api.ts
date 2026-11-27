@@ -1,4 +1,5 @@
 // サーバAPIの薄いラッパ。エラーはすべて Error として投げ直す。
+import type { MainArticleType } from "../shared/articleType.js";
 import type {
   ArticleSet,
   ArticleSetSummary,
@@ -54,6 +55,7 @@ export interface CorpusQueryRequest {
   query: string;
   topK: number;
   perPaper: number;
+  articleTypes?: MainArticleType[];
   sectionGroups: SectionGroup[];
   translate: boolean;
 }
@@ -97,8 +99,8 @@ export const api = {
     postJson<ManuscriptReviewResult>("/api/manuscript/review", { manuscript, mode, scope, locations, collection }),
   saveManuscriptReview: (markdown: string) => postJson<{ file: string }>("/api/manuscript/save", { markdown }),
 
-  saveSession: (sessionId: string, result: unknown) =>
-    postJson<{ file?: string }>("/api/session/save", { sessionId, result }),
+  saveSession: (result: unknown) =>
+    postJson<{ file?: string }>("/api/session/save", { result }),
 };
 
 export function errorMessage(e: unknown): string {

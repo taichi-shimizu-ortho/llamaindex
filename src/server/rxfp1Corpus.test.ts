@@ -7,6 +7,8 @@ import { after, test } from "node:test";
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "rxfp1-corpus-test-"));
 process.env.OBSIDIAN_DIR = root;
+// 正本（article-ingest）も一時フォルダを見る。実データ（Dropbox の箱）を読まない。
+process.env.ARTICLE_JSON_DATA_HOME = path.join(root, "article-json");
 process.env.RXFP1_ARTICLES_JSON = path.join(root, "articles_all3.json");
 process.env.RXFP1_MD_SOURCE_DIR = path.join(root, "markdown");
 process.env.RXFP1_STORAGE_ALL_DIR = path.join(root, "typescript");

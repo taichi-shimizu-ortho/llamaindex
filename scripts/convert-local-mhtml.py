@@ -45,7 +45,7 @@ HOST_PLATFORMS = [
  ('pmc.ncbi.nlm.nih.gov', 'pmc')]
 # Fallback for the 2026-11 MSC-OXT batch, whose archives were converted before host detection.
 LEGACY_PLATFORMS = {
- 'frontiers': ['Feixiang2023','Wang2024'],
+ 'frontiers': ['Feixiang2023','Wang2024','Nishimura2026'],
  'mdpi': ['Breuil2021','Ferrero2021','Pampanella2024','Petrocelli2023','Philippon2025','Roux2020','Roux2023'],
  'wiley': ['Ahmed2021','Hatakeyama2017','Kim2010','Murata2020'],
  'sage': ['Colaianni2014','Murata2018','Nakashima2022','Utsunomiya2013','Zhang2026','Tamma2009'],
@@ -257,7 +257,7 @@ def extract_tables(root, name):
     return out, warnings
 
 def extract_figures(root, name, url, assets, output):
-    candidates = root.select('.html-fig-wrap,figure')
+    candidates = root.select('.html-fig-wrap,.ArticleFigure,figure')
     out, warnings, details, seen = [], [], [], set()
     for fig in candidates:
         if any(p in candidates for p in fig.parents): continue
@@ -265,7 +265,7 @@ def extract_figures(root, name, url, assets, output):
         img = fig.find('img')
         if not img: continue
         cap = fig.select_one('figcaption,.html-fig_description,.captions')
-        label = fig.select_one('.figure__title,.fig-label,.figure-label,.label')
+        label = fig.select_one('.figure__title,.fig-label,.figure-label,.label,.ArticleFigure__header')
         if platform(name) == 'pmc':
             # PMC: <h4 class="obj_head">FIG. 1.</h4> and the legend in figcaption or div.caption.
             cap = fig.select_one('figcaption') or fig.select_one('div.caption')

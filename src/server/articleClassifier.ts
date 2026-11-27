@@ -2,8 +2,11 @@
 // 取り込み時に1本ずつ、サーバ起動時に未確認の論文をまとめて分類する。
 // PubMed に無い論文（プレプリント・原稿など）は articleType を null にして、確認済みとして記録する。
 // 手で種別を付けた論文（articleTypeSource: "manual"）は上書きしない。
+// 書き込み先：正本（article-ingest）から読む論文は正本の classification と meta.pmid だけ、
+// article_sets/ から読む論文（PDF など）は今までどおり article_sets/<id>.json。
 import fs from "node:fs";
-import { articleSetPath, listArticleSets, loadArticleSet } from "./articleHarvester.js";
+import { articleSetPath, canonicalEntryFor, listArticleSets, loadArticleSet } from "./articleHarvester.js";
+import { writeCanonicalClassification } from "./canonicalStore.js";
 import { findPubmedRecord } from "./referenceHarvester.js";
 import { classifyMainArticle } from "../shared/articleType.js";
 
@@ -16,7 +19,21 @@ export async function classifyArticle(id: string) {
   set.articleType = record ? classifyMainArticle(record.publicationTypes) : null;
   set.articleTypeSource = "pubmed";
   set.pubmedCheckedAt = new Date().toISOString();
-  fs.writeFileSync(articleSetPath(set.id), JSON.stringify(set, null, 2), "utf-8");
+  const canonical = canonicalEntryFor(set.id);
+  if (canonical) {
+    writeCanonicalClassification(
+      canonical,
+      {
+        articleType: set.articleType ?? null,
+        source: "pubmed",
+        publicationTypes: set.publicationTypes,
+        checkedAt: set.pubmedCheckedAt,
+      },
+      set.pmid,
+    );
+  } else {
+    fs.writeFileSync(articleSetPath(set.id), JSON.stringify(set, null, 2), "utf-8");
+  }
   return set;
 }
 
