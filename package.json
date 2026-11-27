@@ -14,7 +14,8 @@
     "ingest": "tsx scripts/ingest-mhtml.ts",
     "ingest:pdf": "tsx scripts/ingest-pdf.ts",
     "ingest:offline": "tsx scripts/ingest-offline.ts",
-    "export:embeddings": "tsx scripts/export-corpus-embeddings.ts"
+    "export:embeddings": "tsx scripts/export-corpus-embeddings.ts",
+    "migrate:canonical": "tsx scripts/migrate-to-canonical.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
