@@ -297,6 +297,9 @@ function migrate(plan: Plan, options: Options): Outcome {
 
 // --- レポート -------------------------------------------------------------------
 
+// 日付はこの Mac の現地時刻で（UTC だと朝の実行が前日の日付になる）
+const localDate = () => new Date().toLocaleDateString("sv-SE");
+
 const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 function summaryRow(o: Outcome): string {
@@ -325,7 +328,7 @@ function writeReport(file: string, outcomes: Outcome[], backup: string | null, s
   const withMissingTables = outcomes.filter((o) => o.comparison?.missingTables.length);
   const lines = [
     "---",
-    `date: ${new Date().toISOString().slice(0, 10)}`,
+    `date: ${localDate()}`,
     "instructions: 2026-11-27 llamaindexエージェント指示書_article-ingest移行.md",
     "---",
     "",
@@ -401,7 +404,7 @@ function main() {
     }
   }
   updateCorpus();
-  const date = new Date().toISOString().slice(0, 10);
+  const date = localDate();
   const report = options.report ?? path.join(PATHS.outputDir, `${date}_canonical移行レポート${rehearsal ? "（リハーサル）" : ""}.md`);
   writeReport(report, outcomes, backup, stopped);
   console.log(`\nReport: ${report}`);
