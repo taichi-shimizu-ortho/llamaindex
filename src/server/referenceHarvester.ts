@@ -1148,35 +1148,50 @@ export function loadReferenceSet(id: string): ReferenceSet {
   const safeId = resolveArticleId(id);
   const canonical = canonicalEntryFor(safeId);
   if (!canonical) return loadLegacyReferenceSet(safeId);
-  const legacy = fs.existsSync(referenceSetPath(safeId)) ? loadLegacyReferenceSet(safeId) : undefined;
+  let legacy: ReferenceSet | undefined;
+  if (fs.existsSync(referenceSetPath(safeId))) {
+    try {
+      legacy = loadLegacyReferenceSet(safeId);
+    } catch (error) {
+      console.warn(`Could not read reference_sets/${safeId}.json.`, error);
+    }
+  }
   return canonicalReferenceSet(canonical, safeId, legacy);
 }
 
-export function listReferenceSets() {
-  const summary = (set: ReferenceSet) => ({
-    id: set.id,
-    title: set.title,
-    sourceUrl: set.sourceUrl,
-    totalReferences: set.totalReferences,
-    abstractFound: set.abstractFound,
-    createdAt: set.createdAt,
-  });
-  const byId = new Map<string, ReturnType<typeof summary>>();
-  if (fs.existsSync(PATHS.referenceOutputDir)) {
-    for (const file of fs.readdirSync(PATHS.referenceOutputDir).filter((f) => f.endsWith(".json"))) {
+export function readReferenceSets(report: (message: string) => void = console.warn): ReferenceSet[] {
+  const byId = new Map<string, ReferenceSet>();
+  let files: string[] = [];
+  try {
+    files = fs.readdirSync(PATHS.referenceOutputDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") report("Could not read reference_sets.");
+  }
+  for (const file of files.filter((name) => name.endsWith(".json"))) {
+    try {
       const set = loadLegacyReferenceSet(file.slice(0, -5));
-      byId.set(set.id, summary(set));
+      byId.set(set.id, set);
+    } catch {
+      report(`Could not read reference_sets/${file}.`);
     }
   }
   for (const article of listArticleSets()) {
     if (!article.canonicalId) continue;
     try {
-      byId.set(article.id, summary(loadReferenceSet(article.id)));
-    } catch (e) {
-      console.warn(`[canonical] references of ${article.id}: ${String((e as Error)?.message ?? e)}`);
+      const entry = canonicalEntryFor(article.id);
+      if (entry) byId.set(article.id, canonicalReferenceSet(entry, article.id, byId.get(article.id)));
+    } catch (error) {
+      report(`[canonical] references of ${article.id}: ${String(error)}`);
     }
   }
-  return [...byId.values()].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+  return [...byId.values()];
+}
+
+export function listReferenceSets() {
+  return readReferenceSets()
+    .map(({ id, title, sourceUrl, totalReferences, abstractFound, createdAt }) =>
+      ({ id, title, sourceUrl, totalReferences, abstractFound, createdAt }))
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 }
 
 import { assertNotBotCheckPage } from "./botCheck.js";

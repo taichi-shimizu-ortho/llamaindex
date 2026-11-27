@@ -713,7 +713,7 @@ export function articleSetPath(id: string): string {
  * 論文の目録：正本（article-ingest）の射影と旧 article_sets/ を合わせたもの
  *
  * - 同じ DOI が両方にあれば正本を優先し、旧 JSON は読まない（消しもしない）。
- * - 射影の id は正本の aliases[0]、無ければ同じ DOI の旧 id、それも無ければ正本の id。
+ * - 射影の id は同じ DOI の旧 id、無ければ正本の aliases[0]、それも無ければ正本の id。
  *   引用キーが変わらないので library.json・フォルダ・引用ラベル・保存済みの md・埋め込みはそのまま使える。
  * - DOI の無い論文と、正本に無い論文（PDF 由来など）は article_sets/ から読む。
  * ------------------------------------------------------------------ */
@@ -766,7 +766,7 @@ function catalog(): Map<string, CatalogEntry> {
   const shadowed = new Set<string>();
   for (const canonical of canonicalEntries()) {
     const legacyId = canonical.doi ? legacyByDoi.get(canonical.doi) : undefined;
-    let id = canonical.aliases[0] ?? legacyId ?? canonical.canonicalId;
+    let id = legacyId ?? canonical.aliases[0] ?? canonical.canonicalId;
     const clash = legacyById.get(id);
     if (clash && doiKey(clash.set.doi) !== canonical.doi) {
       console.warn(`[canonical] alias ${id} of ${canonical.canonicalId} is another paper in article_sets; using ${canonical.canonicalId}`);

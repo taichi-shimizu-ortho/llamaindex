@@ -41,8 +41,8 @@ const legacy = (id: string, doi: string, extra: Record<string, unknown> = {}) =>
 });
 const write = (file: string, data: unknown) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n");
 
-// Martins2026 は旧 JSON と正本の両方にある（別名なし）。Smith2025 は正本だけ（別名あり）。Grassi2020 は PDF 由来の旧 JSON だけ。
-write(path.join(canonicalDir, "10-1-martins.json"), canonical("10-1-martins", "10.1/martins"));
+// Martins2026 は旧 JSON と別名付きの正本の両方にある。Smith2025 は正本だけ。Grassi2020 は PDF 由来の旧 JSON だけ。
+write(path.join(canonicalDir, "10-1-martins.json"), canonical("10-1-martins", "10.1/martins", { aliases: ["MartinsAlias"] }));
 write(path.join(canonicalDir, "10-1-smith.json"), canonical("10-1-smith", "10.1/smith", { aliases: ["Smith2025"] }));
 write(path.join(PATHS.articleOutputDir, "Martins2026.json"), legacy("Martins2026", "10.1/martins"));
 write(path.join(PATHS.articleOutputDir, "Grassi2020.json"), legacy("Grassi2020", "10.1/grassi", { extractionSource: "pdf" }));
@@ -71,6 +71,7 @@ test("papers only in article_sets (PDF) are read as before", () => {
 
 test("canonical ids, aliases and DOIs resolve to the catalog id", () => {
   assert.equal(resolveArticleId("10-1-martins"), "Martins2026");
+  assert.equal(resolveArticleId("MartinsAlias"), "Martins2026");
   assert.equal(resolveArticleId("10-1-smith"), "Smith2025");
   assert.equal(articleIdForDoi("https://doi.org/10.1/MARTINS"), "Martins2026");
   assert.equal(articleIdForDoi("10.1/grassi"), "Grassi2020");
@@ -88,6 +89,15 @@ test("canonical references carry the PubMed abstract from the old reference set"
   assert.equal(refs.records[0].pmid, "123");
   assert.equal(refs.abstractFound, 1);
   assert.equal(loadReferenceSet("Smith2025").records[0].pubmed, undefined);
+});
+
+test("manuscript review reports an unreadable reference file and keeps the other papers and abstracts", async () => {
+  const { loadLiterature } = await import("./literatureEvidence.js");
+  fs.writeFileSync(path.join(PATHS.referenceOutputDir, "Broken.json"), "{");
+  const { sources, abstractSources, errors } = loadLiterature();
+  assert.ok(errors.includes("Could not read reference_sets/Broken.json."));
+  assert.ok(sources.some((source) => source.id === "Martins2026"));
+  assert.ok(abstractSources.some((source) => source.pmid === "123"));
 });
 
 test("classification writes only classification and meta.pmid into the canonical JSON", () => {

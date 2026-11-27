@@ -2,7 +2,7 @@
 // server-owned so generation can only link to records that were actually retrieved.
 import { createHash } from "node:crypto";
 import { listArticleSets, loadArticleSet, type ArticleSet } from "./articleHarvester.js";
-import { listReferenceSets, loadReferenceSet, type ReferenceSet } from "./referenceHarvester.js";
+import { readReferenceSets } from "./referenceHarvester.js";
 import type { CitationCheck, Evidence, LiteratureCollection, RetrievalMode, RetrievalResult } from "../shared/manuscript.js";
 import { rxfp1DocumentIds } from "./library.js";
 import { isRxfp1Article } from "../shared/rxfp1.js";
@@ -159,7 +159,7 @@ export function loadLiterature(collection: LiteratureCollection = "current") {
       errors.push(`Could not extract article ${set?.id ?? "(unknown ID)"}.`);
     }
   }
-  const abstractSources = readCatalog<ReferenceSet>(listReferenceSets(), loadReferenceSet, "reference_sets", errors).filter((set) => includes(set?.id)).flatMap((set) =>
+  const abstractSources = readReferenceSets((message) => errors.push(message)).filter((set) => includes(set?.id)).flatMap((set) =>
     (Array.isArray(set?.records) ? set.records : []).flatMap((record): Source[] => {
       const meta = record?.pubmed;
       if (!meta?.title || !meta.abstract?.trim() || !meta.pmid) return [];

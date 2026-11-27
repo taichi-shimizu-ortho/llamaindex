@@ -269,8 +269,15 @@ op run --env-file=.env.1password -- npm run embed:rxfp1
 
 ## 実行
 
+`llamaindex` と同じ親ディレクトリに `article-ingest` が必要です。初回は `llamaindex` のルートで次を実行します。すでにクローン済みの場合は1行目を省略できます。
+
 ```bash
-npm install
+git clone https://github.com/taichi-shimizu-ortho/article-ingest.git ../article-ingest
+npm ci --prefix ../article-ingest
+```
+
+```bash
+npm ci
 npm run dev
 ```
 
