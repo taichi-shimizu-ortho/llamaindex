@@ -109,7 +109,7 @@ function baseLabel(id: string): string {
   return id.replace(/-\d+$/, "");
 }
 
-interface Paragraph {
+export interface Paragraph {
   text: string;
   section: string;
   subsection: string;
@@ -127,7 +127,8 @@ interface PaperIndex {
 
 // abstract は入れない。構造化 abstract が Purpose / Methods / Results … の節として本文側にも
 // 取り込まれている論文があるので（例: Yang2021）、abstract と同じ文の段落も本文から除く。
-function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
+// 検索・埋め込みの単位になる段落。scripts/export-corpus-embeddings.ts も同じ分け方で書き出す。
+export function paragraphsOf(set: ArticleSet, rxfp1 = false): Paragraph[] {
   const abstract = normalized(
     set.sections
       .filter((section) => section.type === "abstract")

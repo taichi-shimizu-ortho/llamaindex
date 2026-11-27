@@ -13,7 +13,8 @@
     "embed:rxfp1": "node --import tsx scripts/embed-rxfp1.ts",
     "ingest": "tsx scripts/ingest-mhtml.ts",
     "ingest:pdf": "tsx scripts/ingest-pdf.ts",
-    "ingest:offline": "tsx scripts/ingest-offline.ts"
+    "ingest:offline": "tsx scripts/ingest-offline.ts",
+    "export:embeddings": "tsx scripts/export-corpus-embeddings.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
