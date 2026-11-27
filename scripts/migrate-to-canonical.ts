@@ -149,6 +149,14 @@ function findMhtml(set: LegacySet, index: Map<string, string>): string | undefin
   return index.get(set.id.toLowerCase()) ?? (doiName ? index.get(doiName) : undefined);
 }
 
+function hostnameOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
 function planAll(options: Options): Plan[] {
   const index = mhtmlIndex();
   const plans: Plan[] = [];
@@ -199,7 +207,7 @@ function planAll(options: Options): Plan[] {
       plans.push({ ...base, ...withRef, route: "jats", reason: source, jats });
       continue;
     }
-    const why = mhtml ? `MHTML from an unsupported publisher (${new URL(snapshotUrl(mhtml) || "about:blank").hostname || "no URL"})`
+    const why = mhtml ? `MHTML from an unsupported publisher (${hostnameOf(snapshotUrl(mhtml)) || "no URL"})`
       : /-jats$/.test(source) ? `${source} without source.xml` : source || "no extraction record";
     plans.push({ ...base, ...withRef, route: "json", reason: why });
   }

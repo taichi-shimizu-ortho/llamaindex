@@ -170,7 +170,7 @@ async function classify(id: string): Promise<string> {
 }
 
 // article-ingest 経由（正本へ）の取り込み
-async function ingestCanonical(file: string, id: string, publisher: string, options: Options, ctx: ZoteroContext | null) {
+async function ingestCanonical(file: string, id: string, sourceUrl: string, options: Options, ctx: ZoteroContext | null) {
   const figureDirs = [...options.figureDirs, path.join(PATHS.rawHtmlDir, `${id}_figures`)].filter((d) => fs.existsSync(d));
   const preview = importMhtml(file, { key: id, figureDirs, dryRun: true });
   const s = preview.summary;
@@ -197,7 +197,7 @@ async function ingestCanonical(file: string, id: string, publisher: string, opti
   if (options.dryRun) {
     console.log(`  MHTML: ${stored === file || alreadyArchived ? "stays at" : options.copy ? "would copy to" : "would move to"} ${relData(stored)}`);
     console.log(`  JSON: would ${existing ? "rebuild" : "write"} the canonical article ${existing?.id ?? preview.slug} with alias ${id}`);
-    if (ctx) await addToZotero(doi, snapshotUrl(file), ctx, true);
+    if (ctx) await addToZotero(doi, sourceUrl, ctx, true);
     return;
   }
 
@@ -209,7 +209,7 @@ async function ingestCanonical(file: string, id: string, publisher: string, opti
   const type = await classify(id);
   console.log(`  JSON: canonical ${canonical.id} (alias ${id}) written, ${type}`);
   if (legacy) console.log(`  Note: article_sets/${id}.json is kept but no longer read (the canonical article has the same DOI)`);
-  if (ctx) await addToZotero(doi, snapshotUrl(file), ctx, false);
+  if (ctx) await addToZotero(doi, sourceUrl, ctx, false);
 }
 
 const backupStamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -221,8 +221,9 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
     throw new Error(`Invalid article ID: ${id}`);
   }
 
-  const publisher = options.legacy ? null : articleIngestPublisher(snapshotUrl(file));
-  if (publisher) return ingestCanonical(file, id, publisher, options, ctx);
+  const sourceUrl = snapshotUrl(file);
+  const publisher = options.legacy ? null : articleIngestPublisher(sourceUrl);
+  if (publisher) return ingestCanonical(file, id, sourceUrl, options, ctx);
 
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), "llamaindex-offline-"));
   try {

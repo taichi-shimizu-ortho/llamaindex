@@ -129,12 +129,22 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
 // 新しい引用キー: 著者の姓＋年。article_sets と正本の別名のどちらにも、別の論文として使われていないものにする。
 function newCitationKey(html: string, doi: string): string {
   const base = citationBaseId(html, "", "Article");
+  const targetDoi = doiKey(doi);
+  const existingCanonicalId = findCanonicalByDoi(doi)?.id;
   for (let n = 1; ; n++) {
     const id = n === 1 ? base : `${base}-${n}`;
     const legacy = path.join(PATHS.articleOutputDir, `${id}.json`);
-    const legacyDoi = fs.existsSync(legacy) ? doiKey(JSON.parse(fs.readFileSync(legacy, "utf-8")).doi) : "";
+    let legacyConflict = false;
+    if (fs.existsSync(legacy)) {
+      try {
+        const legacyDoi = doiKey(JSON.parse(fs.readFileSync(legacy, "utf-8")).doi);
+        legacyConflict = !legacyDoi || legacyDoi !== targetDoi;
+      } catch {
+        legacyConflict = true;
+      }
+    }
     const owner = aliasOwner(id);
-    if ((!legacyDoi || legacyDoi === doiKey(doi)) && (!owner || owner === findCanonicalByDoi(doi)?.id)) return id;
+    if (!legacyConflict && (!owner || owner === existingCanonicalId)) return id;
   }
 }
 

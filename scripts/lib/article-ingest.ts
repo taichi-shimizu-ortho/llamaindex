@@ -175,7 +175,10 @@ export function transferClassification(article: Article, legacy: LegacyClassific
   const known = manual || !!legacy.pubmedCheckedAt;
   if (!known) return false;
   if (article.classification && !manual) {
-    if (!article.meta.pmid && legacy.pmid) article.meta.pmid = legacy.pmid;
+    if (!article.meta.pmid && legacy.pmid) {
+      article.meta.pmid = legacy.pmid;
+      return true;
+    }
     return false;
   }
   article.classification = {
