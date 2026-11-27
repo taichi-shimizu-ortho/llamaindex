@@ -12,6 +12,10 @@
 //   3. Zotero に DOI で登録して指定コレクションへ入れる（既にあれば登録しない）
 //   4. 主論文JSON・参考文献JSONを作り、PubMed で Original / Review に分類する
 // 最後に Zotero のコレクション構成をフォルダへ同期する（Web UI の Sync collections → Apply と同じ）。
+//
+// 4 の本文は出版社で分かれる（2026-11-28〜）。article-ingest が扱える出版社（ScienceDirect・Wiley・SAGE・PMC・MDPI・
+// Frontiers・OUP・IOP・Bone & Joint・Dove）は article-ingest で正本 <DATA_HOME>/articles/ を作り、引用キー
+// （著者の姓＋年、例 Smith2026）を aliases の先頭に入れる。それ以外の出版社は今までどおり TS のパーサで article_sets/ に書く。
 import fs from "node:fs";
 import path from "node:path";
 import { PATHS } from "../src/server/config.js";
@@ -21,6 +25,9 @@ import { harvestReferences } from "../src/server/referenceHarvester.js";
 import { classifyArticle } from "../src/server/articleClassifier.js";
 import { normalizeDoi, syncZotero } from "../src/server/zotero.js";
 import { addToZotero, downloadsDir, isSameFile, moveFile, zoteroContext } from "./lib/ingest-common.js";
+import { aliasOwner, articleIngestPublisher, doiKey, findCanonicalByDoi, importMhtml, setCitationKey } from "./lib/article-ingest.js";
+import { articleIdForDoi } from "../src/server/articleHarvester.js";
+import { citationBaseId } from "../src/server/citationId.js";
 import type { ZoteroContext } from "./lib/ingest-common.js";
 
 interface Options {
@@ -97,6 +104,11 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
   }
 
   if (ctx) await addToZotero(doi, page.sourceUrl, ctx, options.dryRun);
+
+  if (articleIngestPublisher(page.sourceUrl)) {
+    await ingestCanonical(options.dryRun ? file : stored, doi, page.html, options.dryRun);
+    return;
+  }
   if (options.dryRun) return;
 
   const article = await harvestArticle({ html: page.html, sourceUrl: page.sourceUrl });
@@ -112,6 +124,54 @@ async function ingest(file: string, options: Options, ctx: ZoteroContext | null)
     type = `classification failed (${String(e?.message ?? e)}; retried on next server start)`;
   }
   console.log(`  JSON: ${article.id} — ${article.sections.length} sections, ${article.chunkCount} paragraphs, ${reference.totalReferences} references, ${type}`);
+}
+
+// 新しい引用キー: 著者の姓＋年。article_sets と正本の別名のどちらにも、別の論文として使われていないものにする。
+function newCitationKey(html: string, doi: string): string {
+  const base = citationBaseId(html, "", "Article");
+  const targetDoi = doiKey(doi);
+  const existingCanonicalId = findCanonicalByDoi(doi)?.id;
+  for (let n = 1; ; n++) {
+    const id = n === 1 ? base : `${base}-${n}`;
+    const legacy = path.join(PATHS.articleOutputDir, `${id}.json`);
+    let legacyConflict = false;
+    if (fs.existsSync(legacy)) {
+      try {
+        const legacyDoi = doiKey(JSON.parse(fs.readFileSync(legacy, "utf-8")).doi);
+        legacyConflict = !legacyDoi || legacyDoi !== targetDoi;
+      } catch {
+        legacyConflict = true;
+      }
+    }
+    const owner = aliasOwner(id);
+    if (!legacyConflict && (!owner || owner === existingCanonicalId)) return id;
+  }
+}
+
+// article-ingest 経由（正本へ）の本文の取り込み。file は保管後の MHTML（dry run では元の場所）。
+async function ingestCanonical(file: string, doi: string, html: string, dryRun: boolean) {
+  const id = articleIdForDoi(doi) ?? newCitationKey(html, doi);
+  const existing = findCanonicalByDoi(doi);
+  const preview = importMhtml(file, { key: id, figureDirs: [downloadsDir()], dryRun: true });
+  const s = preview.summary;
+  for (const warning of [...s.warnings, ...s.notices]) console.log(`  ⚠ ${warning}`);
+  if (dryRun) {
+    console.log(`  JSON: would ${existing ? "rebuild" : "write"} the canonical article ${existing?.id ?? preview.slug} (alias ${id}) via article-ingest [${s.publisher}]`);
+    console.log(`        ${s.sections} sections, ${s.paragraphs} paragraphs, ${s.references} references, ${s.figures} figures, ${s.tables} tables`);
+    return;
+  }
+  importMhtml(file, { key: id, figureDirs: [downloadsDir()], force: !!existing });
+  const canonical = findCanonicalByDoi(doi);
+  if (!canonical) throw new Error(`article-ingest did not produce a canonical article with DOI ${doi}`);
+  setCitationKey(canonical.id, id);
+  let type = "";
+  try {
+    const classified = await classifyArticle(id);
+    type = classified.articleType ?? "not in PubMed";
+  } catch (e: any) {
+    type = `classification failed (${String(e?.message ?? e)}; retried on next server start)`;
+  }
+  console.log(`  JSON: canonical ${canonical.id} (alias ${id}) — ${s.sections} sections, ${s.paragraphs} paragraphs, ${s.references} references, ${type}`);
 }
 
 async function main() {

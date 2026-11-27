@@ -76,9 +76,34 @@ npm run ingest:offline -- -c "postless traction" ~/Downloads/Habib2018.mhtml
 | `--no-zotero` | Zotero に触れない（フォルダは未分類のまま） |
 
 - 対応ホスト: `onlinelibrary.wiley.com`（Arthroscopy 系などサブドメインも）、`journals.sagepub.com`、`sciencedirect.com`、`mdpi.com`、`frontiersin.org`、`academic.oup.com`、`iopscience.iop.org`、`boneandjoint.org.uk`、`dovepress.com`、`pmc.ncbi.nlm.nih.gov`（PMCの公開本文ページ）。
-- MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ保存する。既定は移動で、`--copy` を付けるとコピーする。`mhtml/` 配下であれば元の位置を使う。
+- **これらの出版社は article-ingest 経由で取り込む（2026-11-28〜）。** `../article-ingest/src/tools/importMhtml.py`（標準ライブラリだけの Python）が MHTML を JATS にし、`npm run build` で正本 `<DATA_HOME>/articles/<DOI由来id>.json` を作る。論文IDは正本の `aliases` の先頭に入り、一覧・Preview・RAG はその ID のまま正本から読む。`article_sets/` には書かない（同じ DOI の旧 JSON があっても消さず、読まない）。
+- それ以外の出版社と `--legacy` を付けたときは、今までどおり `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）で `article_sets/` に書く。
+- MHTML が `mhtml/` の外にあれば `mhtml/<出版社>/<ID>.mhtml` へ保存する。既定は移動で、`--copy` を付けるとコピーする。`mhtml/` 配下であれば元の位置を使う。article-ingest も `<DATA_HOME>/raw/<id>.mhtml` に写しを持つ。
 - Wiley の MHTML には図の画像が入っていないことが多い。警告に出る URL をブラウザで開き、`<ID>_fig<N>.jpg` の名前で Downloads に保存して `--replace` で取り込み直す。既存の `raw_html/<ID>_figures/Figure_<N>.*` も再利用する。
-- 変換本体は `scripts/convert-local-mhtml.py`（`.venv` の Python。依存は `scripts/offline-mhtml-requirements.txt`）。
+
+### 既存論文の正本への移行（`migrate:canonical`）
+
+`article_sets/` の論文を article-ingest の正本へ移す。まず `--dry-run` で、論文ごとの経路（計画）だけを確かめる。
+
+```bash
+npm run migrate:canonical -- --dry-run
+npm run migrate:canonical -- --dry-run --only Habib2018,Li2026
+ARTICLE_JSON_DATA_HOME=/tmp/box npm run migrate:canonical   # 共有の箱のコピーで試す
+npm run migrate:canonical
+```
+
+| 経路 | 対象 | 移し方 |
+|---|---|---|
+| `alias` | 正本に同じ DOI の論文がある | 作り直さず、別名だけを付ける |
+| `mhtml` | MHTML があり、上の対応ホストのもの | `importMhtml.py` で作り直す（失敗したら `json` に切り替える） |
+| `jats` | `sage-jats` / `pmc-jats` で `raw_html/<ID>.source.xml` がある | `<DATA_HOME>/raw/` に置いて build |
+| `json` | それ以外（`rxfp1-legacy-json`・`html`・記録なし・未対応の出版社） | article-ingest の `import-json`（最小限の JATS。図・表も移す） |
+| `keep` | PDF・Word・DOI なし | 移さない（`article_sets/` のまま読む） |
+
+- 実行すると、先に `article_sets/` と `reference_sets/` を `backups/canonical-migration-<時刻>/` に丸ごとコピーする（`ARTICLE_JSON_DATA_HOME` を指定したリハーサルではコピーしない）。どちらも書き換えない。
+- どの経路でも、論文IDを `aliases` の先頭に入れ（`legacyRxfp1Ids` も別名にする）、PubMed の分類を `classification` に移し、旧データにだけある図の画像を `<DATA_HOME>/figures/` にコピーする。
+- 別名が別の論文と衝突したら、そこで止める。
+- 終わると、射影と旧 JSON を比べた表を `<日付>_canonical移行レポート.md` に書く（`ARTICLE_JSON_DATA_HOME` を指定したときは「（リハーサル）」付き）。
 
 ### ArthroscopyとOJSMの保存ページ
 
@@ -222,7 +247,9 @@ Documents のカード・Preview・RAG の論文一覧と根拠段落にバッ�
 | `src/server/zotero.ts` | Zotero ローカルAPIの読み取りと、コレクション→フォルダ同期 |
 | `src/server/zoteroConnector.ts` | CLI 取り込み用の Zotero 書き込み（DOI → アイテム登録 → コレクション指定） |
 | `src/server/mhtml.ts` | MHTML から本体の HTML と元URLを取り出す |
-| `scripts/ingest-mhtml.ts` | CLI 取り込み（`npm run ingest`）: 移動 → Zotero 登録 → JSON 化 → フォルダ同期 |
+| `scripts/ingest-mhtml.ts` | CLI 取り込み（`npm run ingest`）: 移動 → Zotero 登録 → JSON 化（対応出版社は article-ingest の正本）→ フォルダ同期 |
+| `scripts/migrate-to-canonical.ts` | 既存の `article_sets/` を正本へ移す（`npm run migrate:canonical`） |
+| `scripts/lib/article-ingest.ts` | article-ingest の呼び出し（`importMhtml.py`、別名、分類の移し替え、図の対応） |
 | `src/client/App.tsx` | 画面シェル（Documents / RAG / Preview の切り替え、データ読み込み） |
 | `src/client/LibraryScreen.tsx` | ドキュメント選択・取り込み画面（フォルダツリー、Import、文献カード） |
 | `src/client/ZoteroPanel.tsx` | Zotero同期パネル（接続状態、プレビュー、適用） |
