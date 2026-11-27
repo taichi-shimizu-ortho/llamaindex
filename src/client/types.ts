@@ -105,7 +105,7 @@ export interface PreviewTarget {
 
 // ---- 複数論文 RAG（corpus） ----
 
-export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "figure" | "table" | "other";
+export type SectionGroup = "intro" | "methods" | "results" | "discussion" | "conclusion" | "review" | "figure" | "table" | "other";
 
 export interface CorpusPaper {
   id: string;
@@ -164,6 +164,7 @@ export interface CorpusQueryResult {
   skipped: CorpusSkipped[];
   originalQuery: string;
   enQuery: string;
+  articleTypes?: MainArticleType[];
   sectionGroups: SectionGroup[];
   topK: number;
   perPaper: number;

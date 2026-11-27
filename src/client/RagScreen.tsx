@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, errorMessage } from "./api.js";
 import { documentLabel } from "./documents.js";
 import { MarkdownText, PassageMapContext, type PassageMap } from "./markdown.js";
+import { MAIN_ARTICLE_TYPE_LABEL, type MainArticleType } from "../shared/articleType.js";
 import { modelLabel } from "../shared/modelLabel.js";
 import { ArticleTypeBadge } from "./ArticleTypeBadge.js";
 import { CorpusSourceCard, SECTION_GROUP_LABEL } from "./Sources.js";
@@ -12,25 +13,6 @@ import type { ArticleSetSummary, CorpusPrepareResult, CorpusQueryResult, Preview
 const SECTION_GROUPS = Object.keys(SECTION_GROUP_LABEL) as SectionGroup[];
 // これを超えると上位段落が一部の論文に偏りやすい。検索は止めず注意だけ出す。
 const CORPUS_SOFT_LIMIT = 30;
-
-function sessionStamp(): string {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(2);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  const ss = String(d.getSeconds()).padStart(2, "0");
-  return `${yy}${mm}${dd}_${hh}${mi}${ss}`;
-}
-
-function initialSessionId(): string {
-  const saved = sessionStorage.getItem("ragSessionId");
-  if (saved) return saved;
-  const next = sessionStamp();
-  sessionStorage.setItem("ragSessionId", next);
-  return next;
-}
 
 interface RagScreenProps {
   rxfp1: boolean;
@@ -50,6 +32,8 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
   const [topK, setTopK] = useState(10);
   const [perPaper, setPerPaper] = useState(3);
   const [translate, setTranslate] = useState(true);
+  // 空 = すべての論文種別（Original / Review）
+  const [articleTypes, setArticleTypes] = useState<MainArticleType[]>([]);
   // 空 = すべての節
   const [groups, setGroups] = useState<SectionGroup[]>([]);
   const [prepared, setPrepared] = useState<CorpusPrepareResult | null>(null);
@@ -57,7 +41,6 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [savedFile, setSavedFile] = useState("");
-  const [sessionId] = useState(initialSessionId);
   const [result, setResult] = useState<CorpusQueryResult | null>(null);
   const [flash, setFlash] = useState(0);
   const flashTimer = useRef<number | undefined>(undefined);
@@ -98,6 +81,10 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
     [result],
   );
 
+  function toggleArticleType(type: MainArticleType) {
+    setArticleTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+  }
+
   function toggleGroup(group: SectionGroup) {
     setGroups((prev) => (prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]));
   }
@@ -113,11 +100,12 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
         query: query.trim(),
         topK,
         perPaper,
+        articleTypes,
         sectionGroups: groups,
         translate,
       });
       setResult(data);
-      const saved = await api.saveSession(sessionId, data);
+      const saved = await api.saveSession(data);
       setSavedFile(saved.file ?? "");
     } catch (e) {
       setError(errorMessage(e));
@@ -248,6 +236,24 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
           </button>
         </div>
         <div className="section-filter">
+          <span className="section-filter-label">Articles</span>
+          <button className={articleTypes.length ? "fchip" : "fchip active"} onClick={() => setArticleTypes([])}>
+            All
+          </button>
+          <button
+            className={articleTypes.includes("original") ? "fchip active" : "fchip"}
+            onClick={() => toggleArticleType("original")}
+          >
+            Original article
+          </button>
+          <button
+            className={articleTypes.includes("review") ? "fchip active" : "fchip"}
+            onClick={() => toggleArticleType("review")}
+          >
+            Review
+          </button>
+        </div>
+        <div className="section-filter">
           <span className="section-filter-label">Sections</span>
           <button className={groups.length ? "fchip" : "fchip active"} onClick={() => setGroups([])}>
             All
@@ -272,6 +278,11 @@ export function RagScreen({ papers, scopeLabel, rxfp1, active, onRemove, onPrevi
                   </span>
                 )}
                 {result.enQuery !== result.originalQuery && <span className="trans">EN: {result.enQuery}</span>}
+                {result.articleTypes?.length ? (
+                  <span className="trans">
+                    Articles: {result.articleTypes.map((t) => MAIN_ARTICLE_TYPE_LABEL[t]).join(", ")}
+                  </span>
+                ) : null}
                 {result.sectionGroups.length ? (
                   <span className="trans">Sections: {result.sectionGroups.map((g) => SECTION_GROUP_LABEL[g]).join(", ")}</span>
                 ) : null}

@@ -20,17 +20,23 @@ export function documentLabel(set: { title?: string; id: string }): string {
   return set.title?.trim() || set.id;
 }
 
+function authorSurname(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  const suffixRe = /^(jr|sr|ii|iii|iv|md|phd|msc|frcs|mba|do|dds|dvm)\.?$/i;
+  // 出版社メタデータ（Frontiers / MDPI 等）の "Family, Given" 形式はカンマの前が姓。
+  // ただし "John Smith, Jr." のようにカンマ後ろが称号サフィックスのみの場合は前半の末尾単語を姓とする。
+  if (trimmed.includes(",")) {
+    const [before, after = ""] = trimmed.split(",", 2).map((s) => s.trim());
+    if (before && !suffixRe.test(after)) return before;
+    return before.split(/\s+/).filter((part) => !suffixRe.test(part)).at(-1) ?? "";
+  }
+  return trimmed.split(/\s+/).filter((part) => !suffixRe.test(part)).at(-1) ?? "";
+}
+
 // 「Altschuler et al., 2026」形式。著者が取れていない論文は id（取り込み時の AuthorYear）で代用する。
 export function authorYearLabel(set: { id: string; authors?: string[]; year?: string }): string {
-  const suffix = /^(jr|sr|ii|iii|iv)\.?$/i;
-  const surnames = (set.authors ?? [])
-    .map((name) => {
-      const [first, rest] = name.split(",", 2).map((part) => part.trim());
-      // Imported names can be stored as "Family, Given" or "Given Family".
-      if (rest && !suffix.test(rest)) return first;
-      return first.split(/\s+/).filter((part) => !suffix.test(part)).at(-1) ?? "";
-    })
-    .filter(Boolean);
+  const surnames = (set.authors ?? []).map(authorSurname).filter(Boolean);
   if (!surnames.length) return set.id;
   const who =
     surnames.length === 1 ? surnames[0] : surnames.length === 2 ? `${surnames[0]} & ${surnames[1]}` : `${surnames[0]} et al.`;

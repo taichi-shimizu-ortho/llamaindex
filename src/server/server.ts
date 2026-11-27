@@ -202,10 +202,19 @@ app.post("/api/corpus/prepare", async (req, res) => {
 });
 
 app.post("/api/corpus/query", async (req, res) => {
-  const { articleIds, scopeLabel, query, topK, perPaper, sectionGroups, translate } = req.body ?? {};
+  const { articleIds, scopeLabel, query, topK, perPaper, articleTypes, sectionGroups, translate } = req.body ?? {};
   if (!query) return res.status(400).json({ error: "Enter a question" });
   try {
-    res.json(await runCorpusQuery(articleIds, String(query).trim(), { topK, perPaper, sectionGroups, translate, scopeLabel }));
+    res.json(
+      await runCorpusQuery(articleIds, String(query).trim(), {
+        topK,
+        perPaper,
+        articleTypes,
+        sectionGroups,
+        translate,
+        scopeLabel,
+      }),
+    );
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: String(e?.message ?? e) });
@@ -290,10 +299,78 @@ app.post("/api/zotero/sync", async (req, res) => {
   }
 });
 
-function safeSessionId(value: unknown): string {
-  const raw = typeof value === "string" ? value : "";
-  const id = raw.replace(/[^0-9A-Za-z_.-]/g, "");
-  return /^\d{6}_\d{6}/.test(id) ? id : new Date().toISOString().slice(2, 19).replace(/[-:T]/g, "");
+// フォルダ（Zotero コレクション）の最上位名を文献セット名として解決する。
+// - Scope が "Folder: MSC-OXT (with subfolders)" や "Folder: MSC-OXT / Reference" なら最上位の "MSC-OXT"
+// - 手動選択（"Custom selection"）でも、選んだ論文の半数以上が同じ最上位フォルダに属していればそのフォルダ名にする
+function resolveLiteratureSetName(result: CorpusQueryResult): string {
+  const scope = (result.scopeLabel ?? "").trim();
+  if (scope.startsWith("Folder:")) {
+    const folderPath = scope
+      .replace(/^Folder:\s*/, "")
+      .replace(/\s*\(with subfolders\)\s*$/, "")
+      .trim();
+    const rootName = folderPath.split(/\s*\/\s*/)[0]?.trim();
+    if (rootName) return rootName;
+  }
+
+  const library = readLibrary();
+  const byId = new Map(library.folders.map((f) => [f.id, f]));
+  function rootFolderName(folderId: string): string | null {
+    let cur = byId.get(folderId);
+    const seen = new Set<string>();
+    while (cur && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      if (!cur.parentId || !byId.has(cur.parentId)) return cur.name;
+      cur = byId.get(cur.parentId);
+    }
+    return null;
+  }
+
+  const counts = new Map<string, number>();
+  for (const paper of result.papers ?? []) {
+    const folderIds = new Set<string>(library.zoteroFolders?.[paper.id] ?? []);
+    const primary = library.assignments[paper.id];
+    if (primary) folderIds.add(primary);
+    const roots = new Set<string>();
+    for (const fid of folderIds) {
+      const root = rootFolderName(fid);
+      if (root) roots.add(root);
+    }
+    for (const root of roots) {
+      counts.set(root, (counts.get(root) ?? 0) + 1);
+    }
+  }
+
+  let bestName = "";
+  let bestCount = 0;
+  for (const [name, count] of counts) {
+    if (count > bestCount) {
+      bestName = name;
+      bestCount = count;
+    }
+  }
+  if (bestName && bestCount >= Math.ceil((result.papers?.length ?? 1) / 2)) {
+    return bestName;
+  }
+
+  return "Custom";
+}
+
+function safeFileStem(name: string): string {
+  const cleaned = name
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return cleaned || "Custom";
+}
+
+function formatTimestamp(d = new Date()): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
 
 function sourceMarkdown(source: CorpusSource): string {
@@ -317,6 +394,7 @@ function sourceMarkdown(source: CorpusSource): string {
 function resultMarkdown(result: CorpusQueryResult): string {
   const parts = ["---", "", `## Q: ${result.originalQuery}`];
   if (result.enQuery && result.enQuery !== result.originalQuery) parts.push("", `*EN: ${result.enQuery}*`);
+  parts.push("", `*Date: ${formatTimestamp()}*`);
   if (result.model) {
     const ids = String(result.model).split(/,\s*/);
     parts.push("", `*Model: ${ids.map((id) => `${modelLabel(id)} (${id})`).join(", ")}*`);
@@ -324,6 +402,7 @@ function resultMarkdown(result: CorpusQueryResult): string {
   const settings = [
     `Top-K ${result.topK}`,
     result.perPaper ? `max ${result.perPaper}/paper` : "",
+    result.articleTypes?.length ? `articles: ${result.articleTypes.join(", ")}` : "",
     result.sectionGroups?.length ? `sections: ${result.sectionGroups.join(", ")}` : "",
   ].filter(Boolean).join(" · ");
   if (result.scopeLabel) parts.push("", `*Scope: ${result.scopeLabel}*`);
@@ -337,16 +416,17 @@ function resultMarkdown(result: CorpusQueryResult): string {
   return parts.join("\n");
 }
 
-// 1回の画面セッション（タブ）ごとに 1つの md へ追記する。論文の組み合わせは各回の見出しに残す。
+// 文献セット（MSC-OXT などのフォルダ単位）ごとに 1つの md へ Q&A を追記する。
 app.post("/api/session/save", (req, res) => {
-  const { sessionId, result } = req.body ?? {};
+  const { result } = req.body ?? {};
   if (!result) return res.status(400).json({ error: "No search result to save" });
   try {
     fs.mkdirSync(PATHS.outputDir, { recursive: true });
-    const id = safeSessionId(sessionId);
-    const file = path.join(PATHS.outputDir, `${id}_corpus_rag.md`);
+    const setName = resolveLiteratureSetName(result);
+    const stem = safeFileStem(setName);
+    const file = path.join(PATHS.outputDir, `${stem}_corpus_rag.md`);
     if (!fs.existsSync(file)) {
-      fs.writeFileSync(file, `# Corpus RAG Session\n\n- Session: ${id}\n\n`, "utf-8");
+      fs.writeFileSync(file, `# Corpus RAG: ${setName}\n\n`, "utf-8");
     }
     fs.appendFileSync(file, resultMarkdown(result), "utf-8");
     res.json({ ok: true, file });

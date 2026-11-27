@@ -10,6 +10,7 @@ export const SECTION_GROUP_LABEL: Record<SectionGroup, string> = {
   results: "Results",
   discussion: "Discussion",
   conclusion: "Conclusion",
+  review: "Review",
   figure: "Figures",
   table: "Tables",
   other: "Other",
