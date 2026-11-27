@@ -107,6 +107,11 @@ test("harvestReferences with JATS does not fetch the source URL", async () => {
   });
 });
 
+test("a bot-check page is rejected instead of being imported under its <title>", async () => {
+  await withFetchSpy(async () => {
+    await assert.rejects(harvestArticle({ sourceUrl: "https://publisher.example/article" }), /bot-check page/);
+  });
+});
 
 test("table cells, table footnotes, figure captions and abbreviation lists are not body paragraphs", () => {
   const input = jats.replace(

@@ -1164,6 +1164,7 @@ export function listReferenceSets() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+import { assertNotBotCheckPage } from "./botCheck.js";
 import { jatsCitationBaseId, parseJatsReferences, parseJatsTitle } from "./sageJatsHarvester.js";
 
 export async function harvestReferences(options: HarvestOptions): Promise<ReferenceSet> {
@@ -1171,6 +1172,7 @@ export async function harvestReferences(options: HarvestOptions): Promise<Refere
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   // JATS があれば参考文献は JATS から取るので、元URLは取りに行かない（harvestArticle と同じ理由）。
   const html = options.html ?? (options.jatsXml ? "" : await fetchText(sourceUrl, {}));
+  if (html) assertNotBotCheckPage(html, sourceUrl);
   const title =
     options.title?.trim() || (html ? inferTitle(html, sourceUrl) : parseJatsTitle(options.jatsXml ?? "")) || sourceUrl;
   const limit = Math.max(1, Math.min(200, Number(options.limit ?? 200)));

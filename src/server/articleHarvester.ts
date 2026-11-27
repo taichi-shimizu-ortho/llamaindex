@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { assertNotBotCheckPage } from "./botCheck.js";
 import { citationBaseId, uniqueJsonId } from "./citationId.js";
 import { PATHS } from "./config.js";
 import type { MainArticleType } from "../shared/articleType.js";
@@ -762,6 +763,7 @@ export async function harvestArticle(options: ArticleHarvestOptions): Promise<Ar
   const sourceUrl = options.sourceUrl?.trim() ?? "";
   // JATS があれば本文もメタデータも JATS から取るので、元URLは取りに行かない（HTML は渡されたときだけ図のURL補完に使う）。
   const html = options.html ?? (sourceUrl && !options.jatsXml ? await fetchText(sourceUrl) : "");
+  if (html) assertNotBotCheckPage(html, sourceUrl);
   const title = options.title?.trim() || (html ? inferTitle(html, sourceUrl) : "");
 
   const baseId = html || !options.jatsXml
