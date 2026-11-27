@@ -1,0 +1,307 @@
+{
+  "version": 1,
+  "pageCount": 7,
+  "sourceSha256": "ca17d90d0d4f193aa38672b582426d8cbe0474d543367307fbaa512d093eb946",
+  "metadata": {
+    "id": "Grassi2020",
+    "title": "Eighty-two per cent of male professional football (soccer) players return to play at the previous level two seasons after Achilles tendon rupture treated with surgical repair",
+    "authors": [
+      "Grassi, Alberto",
+      "Rossi, Guendalina",
+      "D'Hooghe, Pieter",
+      "Aujla, Randeep",
+      "Mosca, Massimiliano",
+      "Samuelsson, Kristian",
+      "Zaffagnini, Stefano"
+    ],
+    "journal": "British Journal of Sports Medicine",
+    "year": "2020",
+    "doi": "10.1136/bjsports-2019-100556",
+    "pmid": "31362925",
+    "sourceUrl": "https://doi.org/10.1136/bjsports-2019-100556",
+    "articleType": "original",
+    "articleTypeSource": "manual"
+  },
+  "dehyphenate": true,
+  "rebuildLines": true,
+  "textCorrections": {
+    "participation1 2 and": "participation[1, 2] and",
+    "robust data.12 13": "robust data.[12, 13]",
+    "injuries,14 15": "injuries,[14, 15]",
+    "colleagues21 22": "colleagues[21, 22]",
+    "other sports3 12 13": "other sports[3, 12, 13]",
+    "after ATR,11 20 23–25": "after ATR,[11, 20, 23–25]",
+    "performance.26 27": "performance.[26, 27]",
+    "repair.4 7 ": "repair.[4, 7] ",
+    "χ[2]": "χ²",
+    "► ► ": "• ",
+    "career-⁡ending": "career-ending"
+  },
+  "abstractRegions": [
+    {
+      "page": 1,
+      "box": [
+        140,
+        190,
+        350,
+        585
+      ]
+    }
+  ],
+  "bodyRegions": [
+    {
+      "page": 1,
+      "box": [
+        144,
+        612,
+        350,
+        752
+      ]
+    },
+    {
+      "page": 1,
+      "box": [
+        354,
+        190,
+        560,
+        752
+      ]
+    },
+    {
+      "page": 2,
+      "box": [
+        40,
+        40,
+        295,
+        752
+      ]
+    },
+    {
+      "page": 2,
+      "box": [
+        305,
+        300,
+        560,
+        752
+      ]
+    },
+    {
+      "page": 3,
+      "box": [
+        40,
+        195,
+        295,
+        490
+      ]
+    },
+    {
+      "page": 3,
+      "box": [
+        305,
+        195,
+        560,
+        565
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        40,
+        520,
+        295,
+        752
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        305,
+        520,
+        560,
+        600
+      ]
+    },
+    {
+      "page": 5,
+      "box": [
+        40,
+        205,
+        295,
+        600
+      ]
+    },
+    {
+      "page": 5,
+      "box": [
+        305,
+        210,
+        560,
+        565
+      ]
+    },
+    {
+      "page": 6,
+      "box": [
+        40,
+        235,
+        295,
+        752
+      ]
+    },
+    {
+      "page": 6,
+      "box": [
+        305,
+        40,
+        560,
+        485
+      ]
+    },
+    {
+      "page": 7,
+      "box": [
+        40,
+        40,
+        295,
+        106
+      ]
+    }
+  ],
+  "headings": [
+    {
+      "match": "Introduction",
+      "title": "Introduction",
+      "type": "intro"
+    },
+    {
+      "match": "Methods",
+      "title": "Methods",
+      "type": "methods"
+    },
+    {
+      "match": "Study sample and data extraction",
+      "title": "Study sample and data extraction",
+      "type": "methods"
+    },
+    {
+      "match": "Return to sport outcomes and Achilles tendon re-ruptures",
+      "title": "Return to sport outcomes and Achilles tendon re-ruptures",
+      "type": "methods"
+    },
+    {
+      "match": "Equity, diversity, inclusion (EDI)",
+      "title": "Equity, diversity, inclusion (EDI)",
+      "type": "other"
+    },
+    {
+      "match": "Statistical analysis",
+      "title": "Statistical analysis",
+      "type": "methods"
+    },
+    {
+      "match": "Results",
+      "title": "Results",
+      "type": "results"
+    },
+    {
+      "match": "Discussion",
+      "title": "Discussion",
+      "type": "discussion"
+    },
+    {
+      "match": "Study limitations",
+      "title": "Study limitations",
+      "type": "discussion"
+    },
+    {
+      "match": "Conclusions",
+      "title": "Conclusions",
+      "type": "conclusion"
+    }
+  ],
+  "paragraphIndent": 8,
+  "paragraphIndentMax": 14,
+  "legendRegions": [
+    {
+      "page": 2,
+      "box": [
+        305,
+        270,
+        560,
+        292
+      ]
+    },
+    {
+      "page": 3,
+      "box": [
+        40,
+        712,
+        295,
+        752
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        40,
+        442,
+        295,
+        515
+      ]
+    },
+    {
+      "page": 4,
+      "box": [
+        305,
+        440,
+        560,
+        515
+      ]
+    },
+    {
+      "page": 5,
+      "box": [
+        305,
+        702,
+        560,
+        752
+      ]
+    },
+    {
+      "page": 6,
+      "box": [
+        40,
+        178,
+        295,
+        230
+      ]
+    }
+  ],
+  "referenceStyle": "hanging",
+  "referenceRegions": [
+    {
+      "page": 7,
+      "box": [
+        40,
+        256,
+        295,
+        520
+      ]
+    },
+    {
+      "page": 7,
+      "box": [
+        305,
+        44,
+        560,
+        520
+      ]
+    }
+  ],
+  "expectedReferences": 27,
+  "warnings": [
+    "Tables 1-6 (demographics; regression and logistic models for return to practice, competition, re-rupture and same level of play) are not extracted; check them in the PDF.",
+    "Results and Discussion subheadings that appear in both sections (Return to competition, Re-ruptures, Return to same level of activity, Return to unrestricted practice) are kept as the opening words of their paragraph, not as separate sections.",
+    "The 'What are the new findings?' box on page 6 is not extracted."
+  ]
+}

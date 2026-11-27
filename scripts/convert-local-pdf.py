@@ -192,7 +192,10 @@ def body_sections(doc, profile):
                 i += count
                 continue
             same_column = previous and previous["page"] == line["page"] and abs(previous["columnLeft"] - line["columnLeft"]) < 1
-            indented = line["box"][1] >= drop_cap_bottom and line["box"][0] - line["columnLeft"] > profile.get("paragraphIndent", 8)
+            # paragraphIndentMax: lines indented further than this are list-item continuations
+            # (e.g. BMJ bullet lists hang at 15 pt while paragraphs indent 9 pt), not new paragraphs.
+            offset = line["box"][0] - line["columnLeft"]
+            indented = line["box"][1] >= drop_cap_bottom and profile.get("paragraphIndent", 8) < offset <= profile.get("paragraphIndentMax", float("inf"))
             gap = line["box"][1] - previous["box"][3] if same_column else 0
             # Double-spaced manuscripts need a larger gap than typeset pages (paragraphGap, default 4 pt).
             if buffer and (indented or gap > profile.get("paragraphGap", 4) or line["text"].startswith(paragraph_starts)):

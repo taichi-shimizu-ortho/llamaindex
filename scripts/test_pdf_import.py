@@ -53,6 +53,25 @@ class PdfImportTests(unittest.TestCase):
         self.assertEqual(refs[0]["doi"], "10.1234/ref1")
         self.assertTrue(refs[1]["text"].startswith("Second author."))
 
+    def test_deeper_indent_continues_a_list_item_when_capped(self):
+        doc = pymupdf.open()
+        page = doc.new_page(width=600, height=800)
+        for x, y, text in [(50, 30, "DOI: 10.1234/example"), (50, 50, "A complete abstract."),
+                           (50, 80, "BACKGROUND"), (59, 100, "Excluded if:"), (50, 112, "- Played in a"),
+                           (66, 124, "lower league."), (59, 136, "Next paragraph.")]:
+            page.insert_text((x, y), text, fontsize=10)
+        pdf = self.root / "list.pdf"
+        doc.save(pdf)
+        doc.close()
+        profile = {**self.profile, "bodyRegions": [{"page": 1, "box": [49, 68, 250, 140]}],
+                   "referenceRegions": [], "expectedReferences": 0}
+        converter.convert(pdf, {**profile, "paragraphIndentMax": 12}, self.root / "capped")
+        capped = json.loads((self.root / "capped" / "article.json").read_text())["sections"][1]["paragraphs"]
+        self.assertEqual(capped, ["Excluded if: - Played in a lower league.", "Next paragraph."])
+        converter.convert(pdf, profile, self.root / "default")
+        default = json.loads((self.root / "default" / "article.json").read_text())["sections"][1]["paragraphs"]
+        self.assertEqual(len(default), 3)  # without the cap the deeper line still starts a paragraph
+
     def test_wrong_pdf_is_rejected(self):
         self.profile["metadata"]["doi"] = "10.1234/different"
         with self.assertRaisesRegex(ValueError, "DOI"):
